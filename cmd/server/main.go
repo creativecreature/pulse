@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"time"
 
@@ -22,8 +21,6 @@ func main() {
 	// Connect to mongodb. Cancel the context and disconnect from the client before main exits.
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	fmt.Println("URI")
-	fmt.Println(uri)
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	defer func() {
 		if err = client.Disconnect(ctx); err != nil {
