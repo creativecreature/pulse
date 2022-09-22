@@ -5,10 +5,10 @@ Harvesting metadata from your coding sessions.
 I've enjoyed building custom charts ever since I started to code. I also think
 it's fun to get some data-driven insights about the work I do.
 
-Therefore, I've created this project to record some metadata from my coding
-sessions.
+Therefore, I've created this project to generate some statistics about my
+coding sessions.
 
-They are aggregated on a daily basis, and some of the information can be
+The sessions are aggregated on a daily basis, and some of the information can be
 viewied on my [website](https://conner.dev)
 
 ![Screenshot of website](./screenshots/website1.png)
