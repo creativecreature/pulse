@@ -18,7 +18,7 @@ var (
 	ErrWrongSession = errors.New("was called by a client that isn't considered active")
 )
 
-// The structure of the events that are sent by the client
+// Event represents the arguments that are passed to us by the client.
 type Event struct {
 	Id     string
 	Path   string
@@ -41,7 +41,7 @@ func (app *CodeHarvestApp) handleShutdown(errorChannel chan error) {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
-	// Blockslocks until a signal is received.
+	// Blocks until a signal is received.
 	s := <-quit
 	app.logger.PrintInfo("Preparing shutdown.", map[string]string{
 		"signal": s.String(),
@@ -60,7 +60,7 @@ func (app *CodeHarvestApp) handleShutdown(errorChannel chan error) {
 	errorChannel <- nil
 }
 
-// Called by the ECG to determine wheter the current session has gone stale or not.
+// Called by the ECG to determine whether the current session has gone stale or not.
 func (app *CodeHarvestApp) checkHeartbeat() {
 	app.logger.PrintDebug("Checking heartbeat", nil)
 	if app.session != nil && !app.session.IsAlive(heartbeatTTL.Milliseconds()) {
@@ -75,17 +75,17 @@ func (app *CodeHarvestApp) checkHeartbeat() {
 func (app *CodeHarvestApp) saveSession() {
 	app.logger.PrintDebug("Saving the session.", nil)
 
-	session := app.session
+	s := app.session
 	app.activeClientId = ""
 	app.session = nil
 
-	if len(session.Files) < 1 {
+	if len(s.Files) < 1 {
 		app.logger.PrintDebug("The session had no files.", nil)
 		return
 	}
 
 	sessionCollection := app.client.Database("codeharvest").Collection("sessions")
-	_, err := sessionCollection.InsertOne(context.Background(), session)
+	_, err := sessionCollection.InsertOne(context.Background(), s)
 	if err != nil {
 		app.logger.PrintError(err, nil)
 	}
@@ -94,17 +94,18 @@ func (app *CodeHarvestApp) saveSession() {
 }
 
 // FocusGained should be called by the FocusGained autocommand. It gives us information
-// about the curently active client. The duration of a coding session should not increase
+// about the currently active client. The duration of a coding session should not increase
 // by the number of clients (VIM instances) we use. Only one will be tracked at a time.
-// When we jump between them it will switch the one we are counting time for.
+// When we jump between them, it will switch the one we are counting time for.
 func (app *CodeHarvestApp) FocusGained(event Event, reply *string) error {
-	// The hearbeat timer could fire at the exact same time.
+	// The heartbeat timer could fire at the exact same time.
 	app.mutex.Lock()
 	defer app.mutex.Unlock()
 
 	// When I jump between TMUX splits the *FocusGained* event in VIM will fire a
 	// lot. I only want to end the current session, and create a new one, when I
-	// open a new instance of VIM. If I'm, for example, jumping between a VIM
+	// open a new instance of VIM. If I'm, for :w
+	//example, jumping between a VIM
 	// split and a terminal with test output I don't want it to result in a new
 	// coding session.
 	if app.activeClientId == event.Id {
@@ -124,7 +125,7 @@ func (app *CodeHarvestApp) FocusGained(event Event, reply *string) error {
 	// It could be an already existing VIM instance where a file buffer is already
 	// open. If that is the case we can't count on getting the *OpenFile* event.
 	// We might just be jumping between two VIM instances with one buffer each.
-	file, err := file.New(event.Path)
+	f, err := file.New(event.Path)
 	if err != nil {
 		app.logger.PrintDebug("No file is currently being focused. Most likely a fresh VIM instance.", map[string]string{
 			"path":  event.Path,
@@ -133,13 +134,14 @@ func (app *CodeHarvestApp) FocusGained(event Event, reply *string) error {
 		return nil
 	}
 
-	app.session.UpdateCurrentFile(file)
+	app.session.UpdateCurrentFile(f)
+	*reply = "Successfully updated the client being focused."
 	return nil
 }
 
 // OpenFile should be called by the *BufEnter* autocommand.
 func (app *CodeHarvestApp) OpenFile(event Event, reply *string) error {
-	file, err := file.New(event.Path)
+	f, err := file.New(event.Path)
 	if err != nil {
 		app.logger.PrintDebug("Failed to create file from path.", map[string]string{
 			"path":  event.Path,
@@ -160,7 +162,7 @@ func (app *CodeHarvestApp) OpenFile(event Event, reply *string) error {
 		app.session = session.New(event.OS, event.Editor)
 	}
 
-	app.session.UpdateCurrentFile(file)
+	app.session.UpdateCurrentFile(f)
 	*reply = "Successfully updated the current file."
 	return nil
 }
@@ -200,7 +202,7 @@ func (app *CodeHarvestApp) SendHeartbeat(event Event, reply *string) error {
 	return nil
 }
 
-// Should be called by the *VimLeave* autocommand to inform the server that the session is done.
+// EndSession should be called by the *VimLeave* autocommand to inform the server that the session is done.
 func (app *CodeHarvestApp) EndSession(args struct{ Id string }, reply *string) error {
 	app.mutex.Lock()
 	defer app.mutex.Unlock()
@@ -215,7 +217,7 @@ func (app *CodeHarvestApp) EndSession(args struct{ Id string }, reply *string) e
 		return ErrWrongSession
 	}
 
-	// If we go AFK and don't send any hearbeats the session will have ended by
+	// If we go AFK and don't send any heartbeats the session will have ended by
 	// itself. This is different from the case above because if this happens there
 	// shouldn't be another active client.
 	if app.activeClientId == "" && app.session == nil {

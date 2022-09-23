@@ -31,9 +31,9 @@ var fileExtensionFiletypeMap = map[string]string{
 	"yaml": "yaml",
 }
 
-// Tries to extract the filetype from a filename.
+// Get tries to extract the filetype from a filename.
 func Get(filename string) (string, error) {
-	// Start by checking if its a special file
+	// Start by checking if it is a special file
 	file, ok := specialFiles[strings.Split(filename, ".")[0]]
 	if ok {
 		return file, nil

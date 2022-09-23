@@ -19,7 +19,7 @@ var (
 // Helper function to extract a subexpression from a regex.
 func extractSubExp(re *regexp.Regexp, matches []string, subexp string) string {
 	exp := matches[re.SubexpIndex(subexp)]
-	// We should never have a missmatch here.
+	// We should never have a mismatch here.
 	if exp == "" {
 		panic("Could not extract named subgroup. Did you modify the regexp?")
 	}
@@ -75,7 +75,7 @@ func findGitFolder(fs filesystem.FileSystem, dir string) (string, error) {
 	// Check if any of the entries is the .git file/folder.
 	for _, e := range entries {
 		if e.Name() == ".git" {
-			// When I work on projects with long lived branches I use worktrees. If
+			// When I work on projects with long-lived branches I use worktrees. If
 			// that is the case the .git file will point to the path of the bare dir.
 			if !e.IsDir() {
 				return extractBareRepositoryPath(fs, path.Join(dir, ".git"))
@@ -88,7 +88,7 @@ func findGitFolder(fs filesystem.FileSystem, dir string) (string, error) {
 	return findGitFolder(fs, fs.Dir(dir))
 }
 
-// Takes an absolute path of a file and tries to extract the name of the repository that it resides in
+// GetRepositoryFromPath takes an absolute path of a file and tries to extract the name of the repository that it resides in
 func GetRepositoryFromPath(fs filesystem.FileSystem, path string) (string, error) {
 	rootPath, err := findGitFolder(fs, fs.Dir(path))
 
@@ -99,7 +99,7 @@ func GetRepositoryFromPath(fs filesystem.FileSystem, path string) (string, error
 	return extractRepositoryName(fs, rootPath)
 }
 
-// Extracts the path to the file starting from the repository
+// GetRelativePathFromRepo extracts the path to the file starting from the repository
 func GetRelativePathFromRepo(path, repo string) (string, error) {
 	index := strings.Index(path, repo)
 	if index == -1 {

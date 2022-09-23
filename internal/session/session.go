@@ -54,7 +54,7 @@ func New(os, editor string) *Session {
 	}
 }
 
-// Sets the file that is currently being used.
+// UpdateCurrentFile sets the file that is currently being used.
 func (session *Session) UpdateCurrentFile(file *file.File) {
 	session.mutex.Lock()
 	defer session.mutex.Unlock()
@@ -64,21 +64,21 @@ func (session *Session) UpdateCurrentFile(file *file.File) {
 	session.lastHeartBeat = time.Now().UTC().UnixMilli()
 }
 
-// This sets a timestamp for when the session was last active.
+// Heartbeat sets a timestamp for when the session was last active.
 func (session *Session) Heartbeat() {
 	session.mutex.Lock()
 	defer session.mutex.Unlock()
 	session.lastHeartBeat = time.Now().UTC().UnixMilli()
 }
 
-// Returns true if the sessions last heartbeat plus the ttl is greater than time.Now().
+// IsAlive returns true if the sessions last heartbeat plus the ttl is greater than time.Now().
 func (session *Session) IsAlive(ttl int64) bool {
 	session.mutex.Lock()
 	defer session.mutex.Unlock()
 	return (session.lastHeartBeat + ttl) > time.Now().UTC().UnixMilli()
 }
 
-// Ends the coding session.
+// End ends the coding session.
 func (session *Session) End() {
 	session.mutex.Lock()
 	defer session.mutex.Unlock()

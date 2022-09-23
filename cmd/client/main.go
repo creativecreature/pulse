@@ -57,8 +57,8 @@ func (c *CodeHarvestClient) openFile(args []string) {
 	}
 }
 
-func (c *CodeHarvestClient) sendHearbeat(args []string) {
-	hearbeatArgs := struct {
+func (c *CodeHarvestClient) sendHeartbeat(args []string) {
+	heartbeatArgs := struct {
 		Id     string
 		Path   string
 		Editor string
@@ -66,7 +66,7 @@ func (c *CodeHarvestClient) sendHearbeat(args []string) {
 	}{Id: args[0], Path: args[1], Editor: "nvim", OS: runtime.GOOS}
 
 	var reply string
-	err := c.rpcClient.Call("CodeHarvestApp.SendHeartbeat", hearbeatArgs, &reply)
+	err := c.rpcClient.Call("CodeHarvestApp.SendHeartbeat", heartbeatArgs, &reply)
 	if err != nil {
 		log.Printf("An error occured when calling SendHeartbeat :%s\n", err)
 	}
@@ -81,8 +81,7 @@ func (c *CodeHarvestClient) endSession(args []string) {
 	err := c.rpcClient.Call("CodeHarvestApp.EndSession", endSessionArgs, &reply)
 
 	if err != nil {
-		log.Fatal("error", err)
-		log.Printf("An error occured when calling EndSession :%s\n", err)
+		log.Fatal("An error occurred when calling EndSession", err)
 	}
 }
 
@@ -95,7 +94,7 @@ func main() {
 	plugin.Main(func(p *plugin.Plugin) error {
 		p.HandleFunction(&plugin.FunctionOptions{Name: "OnFocusGained"}, client.focusGained)
 		p.HandleFunction(&plugin.FunctionOptions{Name: "OpenFile"}, client.openFile)
-		p.HandleFunction(&plugin.FunctionOptions{Name: "SendHeartbeat"}, client.sendHearbeat)
+		p.HandleFunction(&plugin.FunctionOptions{Name: "SendHeartbeat"}, client.sendHeartbeat)
 		p.HandleFunction(&plugin.FunctionOptions{Name: "EndSession"}, client.endSession)
 		return nil
 	})

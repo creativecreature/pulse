@@ -48,7 +48,7 @@ func New(path string) (*File, error) {
 	name := filepath.Base(relativePathInRepo)
 
 	// Tries to get the filetype from either the file extension or name.
-	filetype, err := filetype.Get(name)
+	ft, err := filetype.Get(name)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func New(path string) (*File, error) {
 		Name:       name,
 		Repository: repository,
 		Path:       path,
-		Filetype:   filetype,
+		Filetype:   ft,
 		OpenedAt:   openedAt,
 		ClosedAt:   0,
 	}

@@ -7,7 +7,7 @@ import (
 )
 
 func TestRunHeartbeats(t *testing.T) {
-	// This is the number of hearbeats that we are going to send.
+	// This is the number of heartbeats that we are going to send.
 	numberOfHeartbeats := 10
 
 	// Create a channel that we'll use to publish heartbeat ticks.
@@ -29,7 +29,7 @@ func TestRunHeartbeats(t *testing.T) {
 	mockHeartBeatCheck := func() {
 		checksPerformed++
 
-		// When we've received the expected number of hearbeats we'll write
+		// When we've received the expected number of heartbeats we'll write
 		// to the shutdownChannel which will unblock the run function.
 		if checksPerformed == numberOfHeartbeats {
 			chanMutex.Lock()
@@ -44,7 +44,7 @@ func TestRunHeartbeats(t *testing.T) {
 		heartbeat: &mockTicker,
 	}
 
-	// Publish hearbeat ticks.
+	// Publish heartbeat ticks.
 	go func() {
 		for i := 0; i < numberOfHeartbeats; i++ {
 			tickerChan <- time.Now()
@@ -52,7 +52,10 @@ func TestRunHeartbeats(t *testing.T) {
 	}()
 
 	// This function blocks until something is published to the "shutdownChannel".
-	run(mockShutdownHandler, &ecg)
+	err := run(mockShutdownHandler, &ecg)
+	if err != nil {
+		t.Errorf("Unexpected error :%s", err)
+	}
 
 	if checksPerformed != numberOfHeartbeats {
 		t.Errorf("unexpected number of hearbeat checks; expected %d got %d", numberOfHeartbeats, checksPerformed)

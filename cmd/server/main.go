@@ -53,7 +53,7 @@ func main() {
 
 	app.logger.PrintDebug("Starting up..", nil)
 
-	// Run blocks untill we receive a shutdown signal or an error.
+	// Run blocks until we receive a shutdown signal or an error.
 	if err = run(app.handleShutdown, &ecg, &rpcServer); err != nil {
 		app.logger.PrintError(err, nil)
 	}

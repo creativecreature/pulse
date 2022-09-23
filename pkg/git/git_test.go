@@ -27,7 +27,7 @@ func TestGetRepositoryFromPath(t *testing.T) {
 			merge = refs/heads/master
 	`
 
-	// Setup the entries we expect to see for each directory.
+	// Set up the entries we expect to see for each directory.
 	directoryEntries := map[string][]fs.DirEntry{
 		"/Users/conner/code/dotfiles/editors/nvim": {
 			filesystem.MockFileEntry{Filename: "init.lua", IsDirectory: false},
@@ -92,7 +92,7 @@ func TestGetRepositoryFromPathBare(t *testing.T) {
 			merge = refs/heads/main
 	`
 
-	// Setup the entries we expect to see for each directory.
+	// Set up the entries we expect to see for each directory.
 	directoryEntries := map[string][]fs.DirEntry{
 		"/Users/conner/code/ore-ui/main/src": {
 			filesystem.MockFileEntry{Filename: "index.ts", IsDirectory: false},

@@ -9,11 +9,9 @@ Therefore, I've created this project to generate some statistics about my
 coding sessions.
 
 The sessions are aggregated on a daily basis, and some of the information can be
-viewied on my [website](https://conner.dev)
+viewed on my [website](https://conner.dev)
 
 ![Screenshot of website](./screenshots/website1.png)
-
-![Screenshot of website](./screenshots/website2.png)
 
 ## Overview
 I was heavily inspired by how language servers use remote procedure calls to
@@ -23,7 +21,7 @@ multiple editors in the future.
 I run the RPC server as a daemon. I've created a small [plugin](https://github.com/creativecreature/vim-code-harvest) for neovim that
 maps different autocommands to remote procedure calls to the server.
 
-The server writes each session to a mongodb database. You can provide an URI in
+The server writes each session to a mongodb database. You can provide a URI in
 the `.envrc` file.
 
 ## Building

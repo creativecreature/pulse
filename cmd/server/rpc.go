@@ -14,15 +14,18 @@ type RPCServer struct {
 }
 
 func (s *RPCServer) start() error {
-	rpc.Register(s.rcvr)
-	rpc.HandleHTTP()
+	err := rpc.Register(s.rcvr)
+	if err != nil {
+		return err
+	}
 
+	rpc.HandleHTTP()
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
 	if err != nil {
 		return err
 	}
-	s.listener = listener
 
+	s.listener = listener
 	return http.Serve(listener, nil)
 }
 

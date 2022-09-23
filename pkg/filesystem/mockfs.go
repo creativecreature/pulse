@@ -5,7 +5,7 @@ import (
 	"io/fs"
 )
 
-// Implements the FileSystem with functions that makes it easy to
+// MockFS implements the FileSystem with functions that makes it easy to
 // test code that accesses the underlying os and file system.
 type MockFS struct {
 	DirectoryIndex int
@@ -15,7 +15,7 @@ type MockFS struct {
 	FileSystem
 }
 
-func (f *MockFS) Dir(path string) string {
+func (f *MockFS) Dir(_ string) string {
 	if f.DirectoryIndex > len(f.Directories)-1 {
 		return ""
 	}
@@ -24,16 +24,16 @@ func (f *MockFS) Dir(path string) string {
 	return dir
 }
 
-func (o *MockFS) ReadDir(dir string) ([]fs.DirEntry, error) {
-	entries, ok := o.Entries[dir]
+func (f *MockFS) ReadDir(dir string) ([]fs.DirEntry, error) {
+	entries, ok := f.Entries[dir]
 	if !ok {
 		return nil, errors.New("no entries for dir")
 	}
 	return entries, nil
 }
 
-func (o *MockFS) ReadFile(filename string) ([]byte, error) {
-	fileContent, ok := o.FileContents[filename]
+func (f *MockFS) ReadFile(filename string) ([]byte, error) {
+	fileContent, ok := f.FileContents[filename]
 	if !ok {
 		return nil, errors.New("no content for this filename")
 	}
