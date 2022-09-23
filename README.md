@@ -13,6 +13,8 @@ viewed on my [website](https://conner.dev)
 
 ![Screenshot of website](./screenshots/website1.png)
 
+![Screenshot of website](./screenshots/website2.png)
+
 ## Overview
 I was heavily inspired by how language servers use remote procedure calls to
 communicate. The latency is low, and it would make it easy to add plugins for
