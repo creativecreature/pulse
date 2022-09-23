@@ -61,16 +61,12 @@ vendor:
 build/server:
 	@echo 'Building...'
 	go build -ldflags="-X main.port=${PORT} -X main.uri=${URI}" -o=./bin/code-harvest-server ./cmd/server
-	GOOS=darwin GOARCH=arm64 go build -ldflags="-X main.port=${PORT} -X main.uri=${URI}" -o=./bin/darwin_arm64/code-harvest-server ./cmd/server
-	GOOS=linux GOARCH=amd64 go build -ldflags="-X main.port=${PORT} -X main.uri=${URI}" -o=./bin/linux_amd64/code-harvest-server ./cmd/server
 
 ## build/client: build the cmd/client application
 .PHONY: build/client
 build/client:
 	@echo 'Building...'
 	go build -ldflags="-X main.port=${PORT} -X main.hostname=${HOSTNAME}" -o=./bin/code-harvest-client ./cmd/client
-	GOOS=darwin GOARCH=arm64 go build -ldflags="-X main.port=${PORT} -X main.hostname=${HOSTNAME}" -o=./bin/darwin_arm64/code-harvest-client ./cmd/client
-	GOOS=linux GOARCH=amd64 go build -ldflags="-X main.port=${PORT} -X main.hostname=${HOSTNAME}" -o=./bin/linux_amd64/code-harvest-client ./cmd/client
 
 ## build: builds the server and client applications
 .PHONY: build
