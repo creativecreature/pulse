@@ -64,6 +64,6 @@ I do have plans to make some changes to this in the future. When I do I will
 update the documentaion accordingly.
 
 [1]: https://conner.dev
-[2]: ./screenshots/website2.png
-[3]: ./screenshots/website3.png
+[2]: ./screenshots/website1.png
+[3]: ./screenshots/website2.png
 [4]: https://github.com/creativecreature/vim-code-harvest
