@@ -129,8 +129,6 @@ func TestGetRepositoryFromPathBare(t *testing.T) {
 		},
 	}
 
-	// Monkey patch the functions that hit the OS/Filesystem with our mocks.
-
 	// This is the absolute path of the file that we want to extract the repository name for.
 	path := "/Users/conner/code/ore-ui/main/src/index.ts"
 	got, _ := GetRepositoryFromPath(&fileSystemMock, path)
