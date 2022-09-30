@@ -1,13 +1,16 @@
-package git
+package git_test
 
 import (
 	"io/fs"
 	"testing"
 
 	"code-harvest.conner.dev/pkg/filesystem"
+	"code-harvest.conner.dev/pkg/git"
 )
 
 func TestGetRepositoryFromPath(t *testing.T) {
+	t.Parallel()
+
 	// The config file that we expect to find within the git directory
 	// OCD vs Correctness. Should obviously not be indented.
 	gitConfigFile := `
@@ -64,7 +67,9 @@ func TestGetRepositoryFromPath(t *testing.T) {
 
 	// This is the absolute path of the file that we want to extract the repository name for.
 	path := "/Users/conner/code/dotfiles/editors/nvim/init.lua"
-	got, _ := GetRepositoryFromPath(&fileSystemMock, path)
+	g := git.New()
+	g.FileSystem = &fileSystemMock
+	got, _ := g.GetRepositoryFromPath(path)
 	// From how the mocks are wired we expect dotfiles to be the repository name.
 	expected := "dotfiles"
 
@@ -74,6 +79,8 @@ func TestGetRepositoryFromPath(t *testing.T) {
 }
 
 func TestGetRepositoryFromPathBare(t *testing.T) {
+	t.Parallel()
+
 	// When I use git worktrees I make .git a file that points to the location of
 	// the bare directory. It's important to note that each worktree has its own .gitfile
 	gitFile := `gitdir: /Users/conner/code/ore-ui/.bare/worktrees/main`
@@ -131,7 +138,9 @@ func TestGetRepositoryFromPathBare(t *testing.T) {
 
 	// This is the absolute path of the file that we want to extract the repository name for.
 	path := "/Users/conner/code/ore-ui/main/src/index.ts"
-	got, _ := GetRepositoryFromPath(&fileSystemMock, path)
+	g := git.New()
+	g.FileSystem = &fileSystemMock
+	got, _ := g.GetRepositoryFromPath(path)
 	// From how the mocks are wired we expect ore-ui to be the repository name.
 	expected := "ore-ui"
 
@@ -141,6 +150,8 @@ func TestGetRepositoryFromPathBare(t *testing.T) {
 }
 
 func TestGetRelativePathFromRepo(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		path       string
 		repository string
@@ -152,7 +163,7 @@ func TestGetRelativePathFromRepo(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		got, _ := GetRelativePathFromRepo(test.path, test.repository)
+		got, _ := git.GetRelativePathFromRepo(test.path, test.repository)
 		if got != test.expected {
 			t.Errorf("GetRelativePathFromRepo(%s, %s) = %s; wanted %s;", test.path, test.repository, got, test.expected)
 		}
