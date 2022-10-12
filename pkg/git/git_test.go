@@ -1,12 +1,59 @@
 package git_test
 
 import (
+	"errors"
 	"io/fs"
 	"testing"
 
-	"code-harvest.conner.dev/pkg/filesystem"
 	"code-harvest.conner.dev/pkg/git"
 )
+
+type MockFS struct {
+	DirectoryIndex int
+	Directories    []string
+	Entries        map[string][]fs.DirEntry
+	FileContents   map[string][]byte
+	git.FileSystem
+}
+
+func (f *MockFS) Dir(_ string) string {
+	if f.DirectoryIndex > len(f.Directories)-1 {
+		return ""
+	}
+	dir := f.Directories[f.DirectoryIndex]
+	f.DirectoryIndex++
+	return dir
+}
+
+func (f *MockFS) ReadDir(dir string) ([]fs.DirEntry, error) {
+	entries, ok := f.Entries[dir]
+	if !ok {
+		return nil, errors.New("no entries for dir")
+	}
+	return entries, nil
+}
+
+func (f *MockFS) ReadFile(filename string) ([]byte, error) {
+	fileContent, ok := f.FileContents[filename]
+	if !ok {
+		return nil, errors.New("no content for this filename")
+	}
+	return fileContent, nil
+}
+
+type MockFileEntry struct {
+	fs.DirEntry
+	Filename    string
+	IsDirectory bool
+}
+
+func (f MockFileEntry) Name() string {
+	return f.Filename
+}
+
+func (f MockFileEntry) IsDir() bool {
+	return f.IsDirectory
+}
 
 func TestGetRepositoryFromPath(t *testing.T) {
 	t.Parallel()
@@ -33,22 +80,22 @@ func TestGetRepositoryFromPath(t *testing.T) {
 	// Set up the entries we expect to see for each directory.
 	directoryEntries := map[string][]fs.DirEntry{
 		"/Users/conner/code/dotfiles/editors/nvim": {
-			filesystem.MockFileEntry{Filename: "init.lua", IsDirectory: false},
-			filesystem.MockFileEntry{Filename: "keybindings.lua", IsDirectory: false},
-			filesystem.MockFileEntry{Filename: "autocommands.lua", IsDirectory: false},
+			MockFileEntry{Filename: "init.lua", IsDirectory: false},
+			MockFileEntry{Filename: "keybindings.lua", IsDirectory: false},
+			MockFileEntry{Filename: "autocommands.lua", IsDirectory: false},
 		},
 		"/Users/conner/code/dotfiles/editors": {
-			filesystem.MockFileEntry{Filename: "nvim", IsDirectory: true},
+			MockFileEntry{Filename: "nvim", IsDirectory: true},
 		},
 		"/Users/conner/code/dotfiles": {
-			filesystem.MockFileEntry{Filename: "editors", IsDirectory: true},
-			filesystem.MockFileEntry{Filename: "bootstrap.sh", IsDirectory: false},
-			filesystem.MockFileEntry{Filename: "install.sh", IsDirectory: false},
-			filesystem.MockFileEntry{Filename: ".git", IsDirectory: true},
+			MockFileEntry{Filename: "editors", IsDirectory: true},
+			MockFileEntry{Filename: "bootstrap.sh", IsDirectory: false},
+			MockFileEntry{Filename: "install.sh", IsDirectory: false},
+			MockFileEntry{Filename: ".git", IsDirectory: true},
 		},
 	}
 
-	fileSystemMock := filesystem.MockFS{
+	fileSystemMock := MockFS{
 		DirectoryIndex: 0,
 		Directories: []string{
 			"/Users/conner/code/dotfiles/editors/nvim",
@@ -102,23 +149,23 @@ func TestGetRepositoryFromPathBare(t *testing.T) {
 	// Set up the entries we expect to see for each directory.
 	directoryEntries := map[string][]fs.DirEntry{
 		"/Users/conner/code/ore-ui/main/src": {
-			filesystem.MockFileEntry{Filename: "index.ts", IsDirectory: false},
-			filesystem.MockFileEntry{Filename: "index.html", IsDirectory: false},
-			filesystem.MockFileEntry{Filename: "components", IsDirectory: true},
+			MockFileEntry{Filename: "index.ts", IsDirectory: false},
+			MockFileEntry{Filename: "index.html", IsDirectory: false},
+			MockFileEntry{Filename: "components", IsDirectory: true},
 		},
 		"/Users/conner/code/ore-ui/main": {
-			filesystem.MockFileEntry{Filename: "src", IsDirectory: true},
-			filesystem.MockFileEntry{Filename: ".git", IsDirectory: false},
+			MockFileEntry{Filename: "src", IsDirectory: true},
+			MockFileEntry{Filename: ".git", IsDirectory: false},
 		},
 		"/Users/conner/code/ore-ui": {
-			filesystem.MockFileEntry{Filename: "main", IsDirectory: true},
-			filesystem.MockFileEntry{Filename: "dev", IsDirectory: true},
-			filesystem.MockFileEntry{Filename: ".bare", IsDirectory: true},
-			filesystem.MockFileEntry{Filename: ".git", IsDirectory: false},
+			MockFileEntry{Filename: "main", IsDirectory: true},
+			MockFileEntry{Filename: "dev", IsDirectory: true},
+			MockFileEntry{Filename: ".bare", IsDirectory: true},
+			MockFileEntry{Filename: ".git", IsDirectory: false},
 		},
 	}
 
-	fileSystemMock := filesystem.MockFS{
+	fileSystemMock := MockFS{
 		DirectoryIndex: 0,
 		Directories: []string{
 			"/Users/conner/code/ore-ui/main/src",

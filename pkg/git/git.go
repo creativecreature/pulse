@@ -2,11 +2,10 @@ package git
 
 import (
 	"errors"
+	"io/fs"
 	"path"
 	"regexp"
 	"strings"
-
-	"code-harvest.conner.dev/pkg/filesystem"
 )
 
 var (
@@ -16,13 +15,20 @@ var (
 	ErrRepositoryDirectoryNameMismatch = errors.New("could not extract relative path in repo")
 )
 
+type FileSystem interface {
+	Dir(string) string
+	ReadDir(string) ([]fs.DirEntry, error)
+	ReadFile(string) ([]byte, error)
+	IsFile(path string) bool
+}
+
 type Git struct {
-	FileSystem filesystem.FileSystem
+	FileSystem FileSystem
 }
 
 func New() *Git {
 	return &Git{
-		FileSystem: filesystem.OsFS{},
+		FileSystem: osFS{},
 	}
 }
 

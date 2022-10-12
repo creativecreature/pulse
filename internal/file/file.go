@@ -2,17 +2,20 @@ package file
 
 import (
 	"errors"
+	"os"
 	"path/filepath"
 	"time"
 
-	"code-harvest.conner.dev/pkg/filesystem"
 	"code-harvest.conner.dev/pkg/filetype"
 	"code-harvest.conner.dev/pkg/git"
 )
 
-var fs = filesystem.OsFS{}
-
 var ErrNotAFile = errors.New("path is dir or temporary buffer")
+
+func isFile(path string) bool {
+	fileInfo, err := os.Stat(path)
+	return err == nil && !fileInfo.IsDir()
+}
 
 type File struct {
 	Name       string `bson:"name"`
@@ -28,7 +31,7 @@ func New(path string) (*File, error) {
 	openedAt := time.Now().UTC().UnixMilli()
 
 	// It could be a temporary buffer
-	if !fs.IsFile(path) {
+	if !isFile(path) {
 		return nil, ErrNotAFile
 	}
 
