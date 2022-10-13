@@ -1,23 +1,21 @@
-package session
+package models
 
 import (
 	"sync"
 	"time"
-
-	"code-harvest.conner.dev/internal/file"
 )
 
 type Session struct {
 	mutex         sync.Mutex
-	currentFile   *file.File
+	currentFile   *File
 	lastHeartBeat int64
-	openFiles     []*file.File
-	StartedAt     int64                 `bson:"started_at"`
-	EndedAt       int64                 `bson:"ended_at"`
-	DurationMs    int64                 `bson:"duration_ms"`
-	OS            string                `bson:"os"`
-	Editor        string                `bson:"editor"`
-	Files         map[string]*file.File `bson:"files"`
+	openFiles     []*File
+	StartedAt     int64            `bson:"started_at"`
+	EndedAt       int64            `bson:"ended_at"`
+	DurationMs    int64            `bson:"duration_ms"`
+	OS            string           `bson:"os"`
+	Editor        string           `bson:"editor"`
+	Files         map[string]*File `bson:"files"`
 }
 
 // Archives the currently opened file.
@@ -44,18 +42,18 @@ func (session *Session) aggregateFiles() {
 	}
 }
 
-func New(os, editor string) *Session {
+func NewSession(os, editor string) *Session {
 	return &Session{
 		lastHeartBeat: time.Now().UTC().UnixMilli(),
 		StartedAt:     time.Now().UTC().UnixMilli(),
 		OS:            os,
 		Editor:        editor,
-		Files:         make(map[string]*file.File),
+		Files:         make(map[string]*File),
 	}
 }
 
 // UpdateCurrentFile sets the file that is currently being used.
-func (session *Session) UpdateCurrentFile(file *file.File) {
+func (session *Session) UpdateCurrentFile(file *File) {
 	session.mutex.Lock()
 	defer session.mutex.Unlock()
 

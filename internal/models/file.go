@@ -1,4 +1,4 @@
-package file
+package models
 
 import (
 	"errors"
@@ -27,7 +27,7 @@ type File struct {
 	ClosedAt   int64  `bson:"-"`
 }
 
-func New(path string) (*File, error) {
+func NewFile(path string) (*File, error) {
 	openedAt := time.Now().UTC().UnixMilli()
 
 	// It could be a temporary buffer

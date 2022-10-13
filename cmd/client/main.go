@@ -6,6 +6,7 @@ import (
 	"net/rpc"
 	"runtime"
 
+	"code-harvest.conner.dev/internal/shared"
 	"github.com/neovim/go-client/nvim/plugin"
 )
 
@@ -35,8 +36,9 @@ func (c *CodeHarvestClient) focusGained(args []string) {
 		OS     string
 	}{Id: args[0], Path: args[1], Editor: "nvim", OS: runtime.GOOS}
 
-	var reply string
-	err := c.rpcClient.Call("CodeHarvestApp.FocusGained", focusGainedArgs, &reply)
+	reply := ""
+	serviceMethod := shared.ServerName + ".FocusGained"
+	err := c.rpcClient.Call(serviceMethod, focusGainedArgs, &reply)
 	if err != nil {
 		log.Printf("An error occured when calling FocusGained :%s\n", err)
 	}
@@ -50,8 +52,9 @@ func (c *CodeHarvestClient) openFile(args []string) {
 		OS     string
 	}{Id: args[0], Path: args[1], Editor: "nvim", OS: runtime.GOOS}
 
-	var reply string
-	err := c.rpcClient.Call("CodeHarvestApp.OpenFile", openFileArgs, &reply)
+	reply := ""
+	serviceMethod := shared.ServerName + ".OpenFile"
+	err := c.rpcClient.Call(serviceMethod, openFileArgs, &reply)
 	if err != nil {
 		log.Printf("An error occured when calling OpenFile :%s\n", err)
 	}
@@ -65,8 +68,9 @@ func (c *CodeHarvestClient) sendHeartbeat(args []string) {
 		OS     string
 	}{Id: args[0], Path: args[1], Editor: "nvim", OS: runtime.GOOS}
 
-	var reply string
-	err := c.rpcClient.Call("CodeHarvestApp.SendHeartbeat", heartbeatArgs, &reply)
+	reply := ""
+	serviceMethod := shared.ServerName + ".SendHeartbeat"
+	err := c.rpcClient.Call(serviceMethod, heartbeatArgs, &reply)
 	if err != nil {
 		log.Printf("An error occured when calling SendHeartbeat :%s\n", err)
 	}
@@ -77,8 +81,9 @@ func (c *CodeHarvestClient) endSession(args []string) {
 		Id string
 	}{Id: args[0]}
 
-	var reply string
-	err := c.rpcClient.Call("CodeHarvestApp.EndSession", endSessionArgs, &reply)
+	reply := ""
+	serviceMethod := shared.ServerName + ".EndSession"
+	err := c.rpcClient.Call(serviceMethod, endSessionArgs, &reply)
 
 	if err != nil {
 		log.Fatal("An error occurred when calling EndSession", err)
