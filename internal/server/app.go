@@ -16,6 +16,7 @@ import (
 	"code-harvest.conner.dev/internal/models"
 	"code-harvest.conner.dev/internal/shared"
 	"code-harvest.conner.dev/internal/storage"
+	"code-harvest.conner.dev/pkg/clock"
 	"code-harvest.conner.dev/pkg/logger"
 )
 
@@ -27,9 +28,11 @@ var (
 )
 
 type App struct {
+	Clock          clock.Clock
 	activeClientId string
-	session        *models.Session
+	lastHeartbeat  int64
 	mutex          sync.Mutex
+	session        *models.Session
 	log            *logger.Logger
 	storage        storage.Storage
 }
@@ -37,7 +40,7 @@ type App struct {
 // Called by the ECG to determine whether the current session has gone stale or not.
 func (app *App) checkHeartbeat() {
 	app.log.PrintDebug("Checking heartbeat", nil)
-	if app.session != nil && !app.session.IsAlive(heartbeatTTL.Milliseconds()) {
+	if app.session != nil && app.lastHeartbeat+heartbeatTTL.Milliseconds() < app.Clock.GetTime() {
 		app.mutex.Lock()
 		defer app.mutex.Unlock()
 		app.session.End()
@@ -76,6 +79,8 @@ func (app *App) FocusGained(event shared.Event, reply *string) error {
 	// The heartbeat timer could fire at the exact same time.
 	app.mutex.Lock()
 	defer app.mutex.Unlock()
+
+	app.lastHeartbeat = app.Clock.GetTime()
 
 	// When I jump between TMUX splits the *FocusGained* event in VIM will fire a
 	// lot. I only want to end the current session, and create a new one, when I
@@ -116,6 +121,12 @@ func (app *App) FocusGained(event shared.Event, reply *string) error {
 
 // OpenFile should be called by the *BufEnter* autocommand.
 func (app *App) OpenFile(event shared.Event, reply *string) error {
+	// To not collide with the heartbeat check that runs on an interval.
+	app.mutex.Lock()
+	defer app.mutex.Unlock()
+
+	app.lastHeartbeat = app.Clock.GetTime()
+
 	f, err := models.NewFile(event.Path)
 	if err != nil {
 		app.log.PrintDebug("Failed to create file from path.", map[string]string{
@@ -124,10 +135,6 @@ func (app *App) OpenFile(event shared.Event, reply *string) error {
 		})
 		return nil
 	}
-
-	// To not collide with the heartbeat check that runs on an interval.
-	app.mutex.Lock()
-	defer app.mutex.Unlock()
 
 	// The app won't receive any heartbeats if we open a buffer and then go AFK.
 	// When that hserverens the session is ended. If we come back and either write the buffer,
@@ -149,6 +156,8 @@ func (app *App) SendHeartbeat(event shared.Event, reply *string) error {
 	// In case the heartbeat check that runs on an interval occurs at the same time.
 	app.mutex.Lock()
 	defer app.mutex.Unlock()
+
+	app.lastHeartbeat = app.Clock.GetTime()
 
 	// If the session haven't expired (which hserverens if we AFK) we can just
 	// update the last heartbeat.
@@ -213,7 +222,7 @@ func (app *App) EndSession(event shared.Event, reply *string) error {
 }
 
 func New(log *logger.Logger, storage storage.Storage) *App {
-	return &App{log: log, storage: storage}
+	return &App{log: log, storage: storage, Clock: clock.New()}
 }
 
 func (app *App) Start(port string) error {

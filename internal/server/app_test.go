@@ -1,9 +1,5 @@
 package server_test
-
-import (
-	"io"
-	"os"
-	"testing"
+import ( "io" "os" "testing"
 
 	"code-harvest.conner.dev/internal/server"
 	"code-harvest.conner.dev/internal/shared"
@@ -133,4 +129,40 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 	if len(storedSessions) != expectedNumberOfSessions {
 		t.Errorf("expected len %d; got %d", expectedNumberOfSessions, len(storedSessions))
 	}
+}
+
+func TestNoActivityShouldEndSession(t *testing.T) {
+	t.Parallel()
+
+	log := logger.New(os.Stdout, logger.LevelDebug)
+	storage := storage.MemoryStorage{}
+
+	reply := ""
+	s := server.New(log, &storage)
+
+	// Send the initial focus event
+	s.FocusGained(shared.Event{
+		Id:     "123",
+		Path:   "",
+		Editor: "nvim",
+		OS:     "Linux",
+	}, &reply)
+
+	// Open a file
+	s.OpenFile(shared.Event{
+		Id:     "123",
+		Path:   "/Users/conner/code/creativecreature/dotfiles/install.sh",
+		Editor: "nvim",
+		OS:     "Linux",
+	}, &reply)
+
+	// TODO: Simulate being AFK for 10 minutes.
+
+	// Open a second file. This should result in a second session even though its the same id.
+	s.OpenFile(shared.Event{
+		Id:     "123",
+		Path:   "/Users/conner/code/creativecreature/dotfiles/cleanup.sh",
+		Editor: "nvim",
+		OS:     "Linux",
+	}, &reply)
 }
