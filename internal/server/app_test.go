@@ -61,7 +61,12 @@ func TestJumpingBetweenInstances(t *testing.T) {
 	}, &reply)
 
 	// End the last session. We should now have 3 finished sessions.
-	s.EndSession(struct{ Id string }{Id: "123"}, &reply)
+	s.EndSession(shared.Event{
+		Id:     "123",
+		Path:   "",
+		Editor: "nvim",
+		OS:     "Linux",
+	}, &reply)
 	expectedNumberOfSessions := 3
 
 	storedSessions := storage.Get()
@@ -116,7 +121,12 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 	// Lets now end the session. This behaviour should not have resulted in any
 	// new sessions being created. We only create a new session and end the current
 	// one if we open VIM in a new split (to not count double time).
-	s.EndSession(struct{ Id string }{Id: "123"}, &reply)
+	s.EndSession(shared.Event{
+		Id:     "123",
+		Path:   "",
+		Editor: "nvim",
+		OS:     "Linux",
+	}, &reply)
 	expectedNumberOfSessions := 1
 
 	storedSessions := storage.Get()

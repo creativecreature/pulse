@@ -8,6 +8,7 @@ import (
 	"net/rpc"
 	"os"
 	"os/signal"
+	"strconv"
 	"sync"
 	"syscall"
 	"time"
@@ -46,8 +47,6 @@ func (app *App) checkHeartbeat() {
 
 // Saves the current session and resets state
 func (app *App) saveSession() {
-	app.log.PrintDebug("Saving the session.", nil)
-
 	s := app.session
 	app.activeClientId = ""
 	app.session = nil
@@ -62,7 +61,11 @@ func (app *App) saveSession() {
 		app.log.PrintError(err, nil)
 	}
 
-	app.log.PrintDebug("The session was saved successfully.", nil)
+	files := make(map[string]string, len(s.Files))
+	for f := range s.Files {
+		files[f] = strconv.Itoa(int(s.Files[f].DurationMs))
+	}
+	app.log.PrintDebug("The session was saved successfully.", files)
 }
 
 // FocusGained should be called by the FocusGained autocommand. It gives us information
@@ -175,16 +178,16 @@ func (app *App) SendHeartbeat(event shared.Event, reply *string) error {
 }
 
 // EndSession should be called by the *VimLeave* autocommand to inform the app that the session is done.
-func (app *App) EndSession(args struct{ Id string }, reply *string) error {
+func (app *App) EndSession(event shared.Event, reply *string) error {
 	app.mutex.Lock()
 	defer app.mutex.Unlock()
 
 	// We have reached an undesired state if we call end session and there is another
 	// active client. It means that the events are sent in an incorrect order.
-	if len(app.activeClientId) > 1 && app.activeClientId != args.Id {
+	if len(app.activeClientId) > 1 && app.activeClientId != event.Id {
 		app.log.PrintFatal(ErrWrongSession, map[string]string{
 			"actualClientId":   app.activeClientId,
-			"expectedClientId": args.Id,
+			"expectedClientId": event.Id,
 		})
 		return ErrWrongSession
 	}
@@ -214,8 +217,8 @@ func New(log *logger.Logger, storage storage.Storage) *App {
 }
 
 func (app *App) Start(port string) error {
-	handlers := NewHandlers(app)
-	err := rpc.RegisterName(shared.ServerName, handlers)
+	proxy := shared.NewServerProxy(app)
+	err := rpc.RegisterName(shared.ServerName, proxy)
 	if err != nil {
 		return err
 	}

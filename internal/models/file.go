@@ -10,6 +10,7 @@ import (
 	"code-harvest.conner.dev/pkg/git"
 )
 
+var ErrEmptyPath = errors.New("path is empty string")
 var ErrNotAFile = errors.New("path is dir or temporary buffer")
 
 func isFile(path string) bool {
@@ -29,6 +30,10 @@ type File struct {
 
 func NewFile(path string) (*File, error) {
 	openedAt := time.Now().UTC().UnixMilli()
+
+	if path == "" {
+		return nil, ErrEmptyPath
+	}
 
 	// It could be a temporary buffer
 	if !isFile(path) {
