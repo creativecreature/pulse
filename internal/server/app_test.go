@@ -1,9 +1,14 @@
 package server_test
-import ( "io" "os" "testing"
+
+import (
+	"io"
+	"os"
+	"testing"
 
 	"code-harvest.conner.dev/internal/server"
 	"code-harvest.conner.dev/internal/shared"
 	"code-harvest.conner.dev/internal/storage"
+	"code-harvest.conner.dev/pkg/clock"
 	"code-harvest.conner.dev/pkg/logger"
 )
 
@@ -140,7 +145,11 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 	reply := ""
 	s := server.New(log, &storage)
 
+	mockClock := clock.MockClock{}
+	s.Clock = &mockClock
+
 	// Send the initial focus event
+	mockClock.SetTime(100)
 	s.FocusGained(shared.Event{
 		Id:     "123",
 		Path:   "",
@@ -148,7 +157,11 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 		OS:     "Linux",
 	}, &reply)
 
-	// Open a file
+	mockClock.SetTime(200)
+	s.CheckHeartbeat()
+
+	// Send an open file event. This should update the time for the last activity to 250.
+	mockClock.SetTime(250)
 	s.OpenFile(shared.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/creativecreature/dotfiles/install.sh",
@@ -156,13 +169,37 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 		OS:     "Linux",
 	}, &reply)
 
-	// TODO: Simulate being AFK for 10 minutes.
+	// Perform another heartbeat check. Remember these checks does not update
+	// the time for when we last saw activity in the session.
+	mockClock.SetTime(300)
+	s.CheckHeartbeat()
 
-	// Open a second file. This should result in a second session even though its the same id.
+	// Heartbeat check that occurs 1 millisecond after the time of last activity
+	// + ttl. This should result in the session being ended and saved.
+	mockClock.SetTime(server.HeartbeatTTL.Milliseconds() + 250 + 1)
+	s.CheckHeartbeat()
+
+	mockClock.SetTime(server.HeartbeatTTL.Milliseconds() + 300)
 	s.OpenFile(shared.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/creativecreature/dotfiles/cleanup.sh",
 		Editor: "nvim",
 		OS:     "Linux",
 	}, &reply)
+
+	mockClock.SetTime(server.HeartbeatTTL.Milliseconds() + 400)
+	s.CheckHeartbeat()
+
+	s.EndSession(shared.Event{
+		Id:     "123",
+		Path:   "",
+		Editor: "nvim",
+		OS:     "Linux",
+	}, &reply)
+
+	expectedNumberOfSessions := 2
+	storedSessions := storage.Get()
+	if len(storedSessions) != expectedNumberOfSessions {
+		t.Errorf("expected len %d; got %d", expectedNumberOfSessions, len(storedSessions))
+	}
 }

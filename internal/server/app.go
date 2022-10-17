@@ -20,7 +20,7 @@ import (
 	"code-harvest.conner.dev/pkg/logger"
 )
 
-var heartbeatTTL = time.Minute * 10
+var HeartbeatTTL = time.Minute * 10
 var heartbeatInterval = time.Second * 10
 
 var (
@@ -38,9 +38,9 @@ type App struct {
 }
 
 // Called by the ECG to determine whether the current session has gone stale or not.
-func (app *App) checkHeartbeat() {
+func (app *App) CheckHeartbeat() {
 	app.log.PrintDebug("Checking heartbeat", nil)
-	if app.session != nil && app.lastHeartbeat+heartbeatTTL.Milliseconds() < app.Clock.GetTime() {
+	if app.session != nil && app.lastHeartbeat+HeartbeatTTL.Milliseconds() < app.Clock.GetTime() {
 		app.mutex.Lock()
 		defer app.mutex.Unlock()
 		app.session.End()
@@ -248,7 +248,7 @@ func (app *App) Start(port string) error {
 	for run {
 		select {
 		case <-ecg.C:
-			app.checkHeartbeat()
+			app.CheckHeartbeat()
 		case <-quit:
 			run = false
 		}
