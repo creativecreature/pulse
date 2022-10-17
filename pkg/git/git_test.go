@@ -116,7 +116,7 @@ func TestGetRepositoryFromPath(t *testing.T) {
 	path := "/Users/conner/code/dotfiles/editors/nvim/init.lua"
 	g := git.New()
 	g.FileSystem = &fileSystemMock
-	got, _ := g.GetRepositoryFromPath(path)
+	got, _ := g.GetRepositoryNameFromPath(path)
 	// From how the mocks are wired we expect dotfiles to be the repository name.
 	expected := "dotfiles"
 
@@ -187,7 +187,7 @@ func TestGetRepositoryFromPathBare(t *testing.T) {
 	path := "/Users/conner/code/ore-ui/main/src/index.ts"
 	g := git.New()
 	g.FileSystem = &fileSystemMock
-	got, _ := g.GetRepositoryFromPath(path)
+	got, _ := g.GetRepositoryNameFromPath(path)
 	// From how the mocks are wired we expect ore-ui to be the repository name.
 	expected := "ore-ui"
 

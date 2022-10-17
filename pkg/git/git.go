@@ -128,7 +128,7 @@ func (g *Git) findGitFolder(dir string) (string, error) {
 }
 
 // GetRepositoryFromPath takes an absolute path of a file and tries to extract the name of the repository that it resides in
-func (g *Git) GetRepositoryFromPath(path string) (string, error) {
+func (g *Git) GetRepositoryNameFromPath(path string) (string, error) {
 	rootPath, err := g.findGitFolder(g.FileSystem.Dir(path))
 
 	if err != nil {
@@ -138,8 +138,8 @@ func (g *Git) GetRepositoryFromPath(path string) (string, error) {
 	return g.extractRepositoryName(rootPath)
 }
 
-func GetRepositoryFromPath(path string) (string, error) {
-	return New().GetRepositoryFromPath(path)
+func GetRepositoryNameFromPath(path string) (string, error) {
+	return New().GetRepositoryNameFromPath(path)
 }
 
 // GetRelativePathFromRepo extracts the path to the file starting from the repository

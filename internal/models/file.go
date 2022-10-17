@@ -41,7 +41,7 @@ func NewFile(path string) (*File, error) {
 	}
 
 	// If the file isn't in a repository I don't want to track time for it.
-	repository, err := git.GetRepositoryFromPath(path)
+	repository, err := git.GetRepositoryNameFromPath(path)
 	if err != nil {
 		return nil, err
 	}
