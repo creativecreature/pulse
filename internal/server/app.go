@@ -8,7 +8,6 @@ import (
 	"net/rpc"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"sync"
 	"syscall"
 	"time"
@@ -16,8 +15,6 @@ import (
 	"code-harvest.conner.dev/internal/models"
 	"code-harvest.conner.dev/internal/shared"
 	"code-harvest.conner.dev/pkg/clock"
-	"code-harvest.conner.dev/pkg/filetype"
-	"code-harvest.conner.dev/pkg/git"
 	"code-harvest.conner.dev/pkg/logger"
 )
 
@@ -30,17 +27,13 @@ var (
 
 type App struct {
 	Clock          clock.Clock
+	MetadataReader MetadataReader
 	mutex          sync.Mutex
 	activeClientId string
 	lastHeartbeat  int64
 	session        *models.Session
 	log            *logger.Logger
 	storage        Storage
-}
-
-func isFile(path string) bool {
-	fileInfo, err := os.Stat(path)
-	return err == nil && !fileInfo.IsDir()
 }
 
 func (app *App) archiveCurrentFile(closedAt int64) {
@@ -53,47 +46,19 @@ func (app *App) archiveCurrentFile(closedAt int64) {
 func (app *App) updateCurrentFile(path string) {
 	openedAt := app.Clock.GetTime()
 
-	if path == "" {
-		app.log.PrintDebug("Path is empty string.", nil)
-		return
-	}
-
-	// It could be a temporary buffer or directory.
-	if !isFile(path) {
-		app.log.PrintDebug("Path is not a valid file.", nil)
-		return
-	}
-
-	// When I aggregate the data I do it on a per project basis. Therefore, if this
-	// is just a one-off edit of some configuration file I won't track time for it.
-	repository, err := git.GetRepositoryNameFromPath(path)
+	fileMetadata, err := app.MetadataReader.Read(path)
 	if err != nil {
-		app.log.PrintDebug("This file isn't under source control.", nil)
-		return
-	}
-
-	// I might potentially fix this but for now I want to make sure the name
-	// of my local directory reflects the repository name.
-	relativePathInRepo, err := git.GetRelativePathFromRepo(path, repository)
-	if err != nil {
-		app.log.PrintDebug("Does the local directory name differ from the repositories name?", nil)
-	}
-
-	name := filepath.Base(relativePathInRepo)
-
-	// Tries to get the filetype from either the file extension or name.
-	ft, err := filetype.Get(name)
-	if err != nil {
-		app.log.PrintDebug("No filetype mapping exists for this file", map[string]string{
-			"file": name,
+		app.log.PrintDebug("Could not extract metadata for the path", map[string]string{
+			"reason": err.Error(),
 		})
+		return
 	}
 
 	file := models.File{
-		Name:       name,
-		Repository: repository,
+		Name:       fileMetadata.Filename,
+		Repository: fileMetadata.RepositoryName,
+		Filetype:   fileMetadata.Filetype,
 		Path:       path,
-		Filetype:   ft,
 		OpenedAt:   openedAt,
 		ClosedAt:   0,
 	}
@@ -156,6 +121,7 @@ func (app *App) saveSession() {
 		app.log.PrintDebug("The session had no files.", map[string]string{
 			"clientId": app.activeClientId,
 		})
+		fmt.Println(app.session.Files)
 		return
 	}
 
@@ -166,7 +132,12 @@ func (app *App) saveSession() {
 }
 
 func New(log *logger.Logger, storage Storage) *App {
-	return &App{log: log, storage: storage, Clock: clock.New()}
+	return &App{
+		log:            log,
+		storage:        storage,
+		Clock:          clock.New(),
+		MetadataReader: FileMetadataReader{},
+	}
 }
 
 func (app *App) Start(port string) error {

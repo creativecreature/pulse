@@ -16,11 +16,14 @@ func TestJumpingBetweenInstances(t *testing.T) {
 
 	log := logger.New(os.Stdout, logger.LevelDebug)
 	storage := server.MemoryStorage{}
+	mockMetadataReader := &server.MockFileMetadataReader{}
 
 	reply := ""
 	s := server.New(log, &storage)
+	s.MetadataReader = mockMetadataReader
 
 	// Open a new VIM instance
+	mockMetadataReader.Metadata = nil
 	s.FocusGained(shared.Event{
 		Id:     "123",
 		Path:   "",
@@ -29,14 +32,20 @@ func TestJumpingBetweenInstances(t *testing.T) {
 	}, &reply)
 
 	// Open a file in the first instance
+	mockMetadataReader.Metadata = &server.FileMetadata{
+		Filename:       "install.sh",
+		Filetype:       "bash",
+		RepositoryName: "dotfiles",
+	}
 	s.OpenFile(shared.Event{
 		Id:     "123",
-		Path:   "/Users/conner/code/creativecreature/dotfiles/install.sh",
+		Path:   "/Users/conner/code/dotfiles/install.sh",
 		Editor: "nvim",
 		OS:     "Linux",
 	}, &reply)
 
 	// Open another vim instance in a new split. This should end the previous session.
+	mockMetadataReader.Metadata = nil
 	s.FocusGained(shared.Event{
 		Id:     "345",
 		Path:   "",
@@ -45,17 +54,27 @@ func TestJumpingBetweenInstances(t *testing.T) {
 	}, &reply)
 
 	// Open a file in the second vim instance
+	mockMetadataReader.Metadata = &server.FileMetadata{
+		Filename:       "bootstrap.sh",
+		Filetype:       "bash",
+		RepositoryName: "dotfiles",
+	}
 	s.OpenFile(shared.Event{
 		Id:     "345",
-		Path:   "/Users/conner/code/creativecreature/dotfiles/bootstrap.sh",
+		Path:   "/Users/conner/code/dotfiles/bootstrap.sh",
 		Editor: "nvim",
 		OS:     "Linux",
 	}, &reply)
 
 	// Move focus back to the first VIM instance. This should end the second session.
+	mockMetadataReader.Metadata = &server.FileMetadata{
+		Filename:       "install.sh",
+		Filetype:       "bash",
+		RepositoryName: "dotfiles",
+	}
 	s.FocusGained(shared.Event{
 		Id:     "123",
-		Path:   "/Users/conner/code/creativecreature/dotfiles/install.sh",
+		Path:   "/Users/conner/code/dotfiles/install.sh",
 		Editor: "nvim",
 		OS:     "Linux",
 	}, &reply)
@@ -80,11 +99,14 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 
 	log := logger.New(io.Discard, logger.LevelDebug)
 	storage := server.MemoryStorage{}
+	mockMetadataReader := &server.MockFileMetadataReader{}
 
 	reply := ""
 	s := server.New(log, &storage)
+	s.MetadataReader = mockMetadataReader
 
 	// Open a new instance of VIM
+	mockMetadataReader.Metadata = nil
 	s.FocusGained(shared.Event{
 		Id:     "123",
 		Path:   "",
@@ -93,9 +115,14 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 	}, &reply)
 
 	// Open a file
+	mockMetadataReader.Metadata = &server.FileMetadata{
+		Filename:       "install.sh",
+		Filetype:       "bash",
+		RepositoryName: "dotfiles",
+	}
 	s.OpenFile(shared.Event{
 		Id:     "123",
-		Path:   "/Users/conner/code/creativecreature/dotfiles/install.sh",
+		Path:   "/Users/conner/code/dotfiles/install.sh",
 		Editor: "nvim",
 		OS:     "Linux",
 	}, &reply)
@@ -117,8 +144,19 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 		Editor: "nvim",
 		OS:     "Linux",
 	}, &reply)
+	mockMetadataReader.Metadata = &server.FileMetadata{
+		Filename:       "bootstrap.sh",
+		Filetype:       "bash",
+		RepositoryName: "dotfiles",
+	}
+	s.OpenFile(shared.Event{
+		Id:     "123",
+		Path:   "/Users/conner/code/dotfiles/bootstrap.sh",
+		Editor: "nvim",
+		OS:     "Linux",
+	}, &reply)
 
-	// Lets now end the session. This behaviour should not have resulted in any
+	// Lets now end the session. This behaviour should *not* have resulted in any
 	// new sessions being created. We only create a new session and end the current
 	// one if we open VIM in a new split (to not count double time).
 	s.EndSession(shared.Event{
@@ -140,12 +178,15 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 
 	log := logger.New(os.Stdout, logger.LevelDebug)
 	storage := server.MemoryStorage{}
+	mockMetadataReader := &server.MockFileMetadataReader{}
+	mockMetadataReader.Metadata = nil
 
 	reply := ""
 	s := server.New(log, &storage)
 
 	mockClock := clock.MockClock{}
 	s.Clock = &mockClock
+	s.MetadataReader = mockMetadataReader
 
 	// Send the initial focus event
 	mockClock.SetTime(100)
@@ -161,9 +202,14 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 
 	// Send an open file event. This should update the time for the last activity to 250.
 	mockClock.SetTime(250)
+	mockMetadataReader.Metadata = &server.FileMetadata{
+		Filename:       "install.sh",
+		Filetype:       "bash",
+		RepositoryName: "dotfiles",
+	}
 	s.OpenFile(shared.Event{
 		Id:     "123",
-		Path:   "/Users/conner/code/creativecreature/dotfiles/install.sh",
+		Path:   "/Users/conner/code/dotfiles/install.sh",
 		Editor: "nvim",
 		OS:     "Linux",
 	}, &reply)
@@ -179,9 +225,14 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 	s.CheckHeartbeat()
 
 	mockClock.SetTime(server.HeartbeatTTL.Milliseconds() + 300)
+	mockMetadataReader.Metadata = &server.FileMetadata{
+		Filename:       "cleanup.sh",
+		Filetype:       "bash",
+		RepositoryName: "dotfiles",
+	}
 	s.OpenFile(shared.Event{
 		Id:     "123",
-		Path:   "/Users/conner/code/creativecreature/dotfiles/cleanup.sh",
+		Path:   "/Users/conner/code/dotfiles/cleanup.sh",
 		Editor: "nvim",
 		OS:     "Linux",
 	}, &reply)
