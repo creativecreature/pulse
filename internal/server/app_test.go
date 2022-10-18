@@ -7,7 +7,6 @@ import (
 
 	"code-harvest.conner.dev/internal/server"
 	"code-harvest.conner.dev/internal/shared"
-	"code-harvest.conner.dev/internal/storage"
 	"code-harvest.conner.dev/pkg/clock"
 	"code-harvest.conner.dev/pkg/logger"
 )
@@ -15,8 +14,8 @@ import (
 func TestJumpingBetweenInstances(t *testing.T) {
 	t.Parallel()
 
-	log := logger.New(io.Discard, logger.LevelOff)
-	storage := storage.MemoryStorage{}
+	log := logger.New(os.Stdout, logger.LevelDebug)
+	storage := server.MemoryStorage{}
 
 	reply := ""
 	s := server.New(log, &storage)
@@ -79,8 +78,8 @@ func TestJumpingBetweenInstances(t *testing.T) {
 func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 	t.Parallel()
 
-	log := logger.New(os.Stdout, logger.LevelDebug)
-	storage := storage.MemoryStorage{}
+	log := logger.New(io.Discard, logger.LevelDebug)
+	storage := server.MemoryStorage{}
 
 	reply := ""
 	s := server.New(log, &storage)
@@ -140,7 +139,7 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 	t.Parallel()
 
 	log := logger.New(os.Stdout, logger.LevelDebug)
-	storage := storage.MemoryStorage{}
+	storage := server.MemoryStorage{}
 
 	reply := ""
 	s := server.New(log, &storage)

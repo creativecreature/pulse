@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"code-harvest.conner.dev/internal/server"
-	"code-harvest.conner.dev/internal/storage"
 	"code-harvest.conner.dev/pkg/logger"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -35,8 +34,7 @@ func main() {
 	}
 
 	log.PrintInfo("Starting up the server...", nil)
-	storage := storage.New(client, "codeharvest", "sessions")
-	server := server.New(log, storage)
-	server.Start(port)
+	storage := server.NewMongoStorage(client, "codeharvest", "sessions")
+	server.New(log, storage).Start(port)
 	log.PrintInfo("Shutting down...", nil)
 }
