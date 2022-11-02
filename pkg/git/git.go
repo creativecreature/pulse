@@ -7,7 +7,6 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
-	"strings"
 )
 
 var (
@@ -140,13 +139,4 @@ func (g *Git) GetRepositoryNameFromPath(path string) (string, error) {
 
 func GetRepositoryNameFromPath(path string) (string, error) {
 	return New().GetRepositoryNameFromPath(path)
-}
-
-// GetRelativePathFromRepo extracts the path to the file starting from the repository
-func GetRelativePathFromRepo(path, repo string) (string, error) {
-	index := strings.Index(path, repo)
-	if index == -1 {
-		return "", ErrRepositoryDirectoryNameMismatch
-	}
-	return path[index:], nil
 }

@@ -195,24 +195,3 @@ func TestGetRepositoryFromPathBare(t *testing.T) {
 		t.Errorf("GetRepositoryFromPath(%s) = %s; expected %s", path, got, expected)
 	}
 }
-
-func TestGetRelativePathFromRepo(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		path       string
-		repository string
-		expected   string
-	}{
-		{"/Users/conner/code/project/src/index.html", "project", "project/src/index.html"},
-		{"/Users/conner/code/dotfiles/editors/nvim/init.lua", "dotfiles", "dotfiles/editors/nvim/init.lua"},
-		{"/Users/conner/code/dotfiles/editors/nvim/init.lua", "dotfiles", "dotfiles/editors/nvim/init.lua"},
-	}
-
-	for _, test := range tests {
-		got, _ := git.GetRelativePathFromRepo(test.path, test.repository)
-		if got != test.expected {
-			t.Errorf("GetRelativePathFromRepo(%s, %s) = %s; wanted %s;", test.path, test.repository, got, test.expected)
-		}
-	}
-}
