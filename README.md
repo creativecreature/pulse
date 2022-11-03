@@ -1,30 +1,17 @@
 # Code harvest
 Harvesting metadata from your coding sessions.
 
-## Background
-I've enjoyed building custom charts ever since I started to code. I also think
-it's fun to get some data-driven insights about the work I do.
-
-Therefore, I've created this project to generate some statistics about my
-coding sessions.
-
-The sessions are aggregated on a daily basis, and some of the information can
-be viewed on my [website][1]
-
-![Screenshot of website][2]
-
-![Screenshot of website][3]
-
 ## Overview
+I created this project to gather some statistics about my coding sessions.
+
 I was heavily inspired by how language servers use remote procedure calls to
-communicate. The latency is low, and it makes it easy to add plugins for other
-editors in the future.
+communicate. The latency is low, and it would also make it easy to add plugins
+for multiple editors in the future.
 
 I run the RPC server as a daemon. I've created a small [plugin][4] for neovim
-that maps different autocommands to remote procedure calls on the server.
+that maps some autocommands to remote procedure calls.
 
-The server writes each session to a mongodb database. You can provide a URI in
-the `.envrc` file.
+The server saves every coding session in a mongodb database.
 
 ## Building
 The `Makefile` has a **build** target for compiling both the server and client.
@@ -40,28 +27,30 @@ are in your `$PATH`.
 
 You are also going to need a mongodb database. To start with I would suggest
 going to the official mongodb website and installing the community edition on
-your own machine. The binaries you build are going to write to that database by
-default (given that you don't modify any of the settings).
+your machine. The binaries you build uses the default uri. You can change that
+in the `.envrc` file
 
-If you don't want to use mongodb you could easily change that by modifying the
-`saveSession` function. You could, for example, write the sessions to disk, send
-them to some API of yours, or use an entirely different database.
+Each instance of neovim has its own coding session. That means that the server
+is going to create a lot of them. I use TMUX with many splits, and I often have
+multiple instances of neovim running at the same time. I don't want the time of
+my coding sessions to multiply by the number of neovim instances that I have
+running. Therefore, everytime I focus a new instance of neovim, I end the
+previous session and create a new one. I then use a cron to aggregate all of
+the sessions into a summary. The cron is currently not part of this repository.
 
-## Making use of the data
-The server is going to create a lot of sessions. I use TMUX with many splits,
-and I often have multiple instances of vim running at the same time. I don't
-want the sessions time to multiply by the number of running instances.
+I would also suggest creating indexes for the `started_at` and `ended_at`
+fields. That will make it quick to aggregate the sessions on a daily, weekly,
+or even monthly basis.
 
-Therefore, everytime I focus a new instance of vim, I end the previous session
-and create a new one. I then use a cron to aggregate all of the sessions into
-a summary.
+## Examples
+I use the data that this project generates to power a dashboard on my [website][1]
 
-I would suggest creating indexes for the `started_at` and `ended_at` fields.
-That will make it quick to aggregate the sessions on a daily, weekly, or even
-monthly basis.
+Here are some screenshots of what it looks like:
 
-I do have plans to make some changes to this in the future. When I do I will
-update the documentaion accordingly.
+![Screenshot of website][2]
+
+![Screenshot of website][3]
+
 
 [1]: https://creativecreature.com
 [2]: ./screenshots/website1.png
