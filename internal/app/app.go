@@ -29,7 +29,7 @@ type storage interface {
 type app struct {
 	mutex          sync.Mutex
 	clock          clock.Clock
-	reader         MetadataReader
+	metadataReader MetadataReader
 	storage        storage
 	activeClientId string
 	lastHeartbeat  int64
@@ -54,7 +54,7 @@ func WithMetadataReader(reader MetadataReader) option {
 		if reader == nil {
 			return errors.New("reader is nil")
 		}
-		a.reader = reader
+		a.metadataReader = reader
 		return nil
 	}
 }
@@ -81,8 +81,8 @@ func WithLog(log *logger.Logger) option {
 
 func New(opts ...option) (*app, error) {
 	a := &app{
-		clock:  clock.New(),
-		reader: FileMetadataReader{},
+		clock:          clock.New(),
+		metadataReader: FileReader{},
 	}
 	for _, opt := range opts {
 		err := opt(a)
@@ -119,7 +119,7 @@ func (app *app) FocusGained(event shared.Event, reply *string) error {
 	}
 
 	app.activeClientId = event.Id
-	app.createSession(event.OS, event.Editor)
+	app.startNewSession(event.OS, event.Editor)
 
 	// It could be an already existing VIM instance where a file buffer is already
 	// open. If that is the case we can't count on getting the *OpenFile* event.
@@ -147,7 +147,7 @@ func (app *app) OpenFile(event shared.Event, reply *string) error {
 	// or open a new file, we have to create a new session first.
 	if app.session == nil {
 		app.activeClientId = event.Id
-		app.createSession(event.OS, event.Editor)
+		app.startNewSession(event.OS, event.Editor)
 	}
 
 	app.updateCurrentFile(event.Path)
@@ -173,7 +173,7 @@ func (app *app) SendHeartbeat(event shared.Event, reply *string) error {
 			"path":     event.Path,
 		})
 		app.activeClientId = event.Id
-		app.createSession(event.OS, event.Editor)
+		app.startNewSession(event.OS, event.Editor)
 		app.updateCurrentFile(event.Path)
 	}
 
@@ -223,17 +223,10 @@ func (app *app) CheckHeartbeat() {
 	}
 }
 
-func (app *app) archiveCurrentFile(closedAt int64) {
-	if app.session.CurrentFile != nil {
-		app.session.CurrentFile.ClosedAt = closedAt
-		app.session.OpenFiles = append(app.session.OpenFiles, app.session.CurrentFile)
-	}
-}
-
 func (app *app) updateCurrentFile(path string) {
 	openedAt := app.clock.GetTime()
 
-	fileMetadata, err := app.reader.Read(path)
+	fileMetadata, err := app.metadataReader.Read(path)
 	if err != nil {
 		app.log.PrintDebug("Could not extract metadata for the path", map[string]string{
 			"reason": err.Error(),
@@ -241,30 +234,26 @@ func (app *app) updateCurrentFile(path string) {
 		return
 	}
 
-	file := models.File{
-		Name:       fileMetadata.Filename,
-		Repository: fileMetadata.RepositoryName,
-		Filetype:   fileMetadata.Filetype,
-		Path:       path,
-		OpenedAt:   openedAt,
-		ClosedAt:   0,
-	}
+	file := models.NewFile(
+		fileMetadata.Filename,
+		fileMetadata.RepositoryName,
+		fileMetadata.Filetype,
+		path,
+		openedAt,
+	)
 
 	// Update the current file.
-	app.archiveCurrentFile(openedAt)
-	app.session.CurrentFile = &file
+	if currentFile := app.session.FileStack.Peek(); currentFile != nil {
+		currentFile.ClosedAt = openedAt
+	}
+	app.session.FileStack.Push(file)
 	app.log.PrintDebug("Successfully updated the current file", map[string]string{
 		"path": path,
 	})
 }
 
-func (app *app) createSession(os, editor string) {
-	app.session = &models.Session{
-		StartedAt: time.Now().UTC().UnixMilli(),
-		OS:        os,
-		Editor:    editor,
-		Files:     make(map[string]*models.File),
-	}
+func (app *app) startNewSession(os, editor string) {
+	app.session = models.NewSession(app.clock.GetTime(), os, editor)
 }
 
 func (app *app) saveSession() {
@@ -281,34 +270,33 @@ func (app *app) saveSession() {
 
 	app.log.PrintDebug("Saving the session.", nil)
 
-	// Set session duration and archive the current file.
+	// Set session duration and set closed at for the current file.
 	endedAt := app.clock.GetTime()
-	app.archiveCurrentFile(endedAt)
+	if currentFile := app.session.FileStack.Peek(); currentFile != nil {
+		currentFile.ClosedAt = endedAt
+	}
 	app.session.EndedAt = endedAt
 	app.session.DurationMs = app.session.EndedAt - app.session.StartedAt
 
-	// The OpenFiles list reflects all files we've opened. Each file has a
-	// OpenedAt and ClosedAt property. Every file can appear more than once.
-	// Before we save the session we aggregate this into a map where the key
-	// is the name of the file and the value is a File with a merged duration
-	// for all edits.
-	if len(app.session.OpenFiles) > 0 {
-		for _, f := range app.session.OpenFiles {
-			currentFile, ok := app.session.Files[f.Path]
-			if !ok {
-				f.DurationMs = f.ClosedAt - f.OpenedAt
-				app.session.Files[f.Path] = f
-			} else {
-				currentFile.DurationMs += f.ClosedAt - f.OpenedAt
-			}
+	// Whenever we open new a buffer that have a corresponding file on disk we
+	// push it to the sessions file stack. Each file can appear more than once.
+	// Before we save the session we aggregate all the edits of the same file
+	// into a map with a total duration of the time we've spent in that file.
+	for app.session.FileStack.Len() > 0 {
+		file := app.session.FileStack.Pop()
+		aggregatedFile, exists := app.session.AggregatedFiles[file.Path]
+		if !exists {
+			file.DurationMs = file.ClosedAt - file.OpenedAt
+			app.session.AggregatedFiles[file.Path] = file
+		} else {
+			aggregatedFile.DurationMs += file.ClosedAt - file.OpenedAt
 		}
 	}
 
-	if len(app.session.Files) < 1 {
+	if len(app.session.AggregatedFiles) < 1 {
 		app.log.PrintDebug("The session had no files.", map[string]string{
 			"clientId": app.activeClientId,
 		})
-		fmt.Println(app.session.Files)
 		return
 	}
 
@@ -321,7 +309,7 @@ func (app *app) saveSession() {
 func startServer(app *app, port string) (net.Listener, error) {
 	// The proxy exposes the functions that we want to make available for remote
 	// procedure calls. Register the proxy as the RPC receiver.
-	proxy := shared.NewServerProxy(app)
+	proxy := shared.NewProxy(app)
 	err := rpc.RegisterName(shared.ServerName, proxy)
 	if err != nil {
 		return nil, err

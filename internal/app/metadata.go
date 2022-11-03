@@ -26,14 +26,14 @@ type MetadataReader interface {
 }
 
 // Extracts metadata from a file
-type FileMetadataReader struct{}
+type FileReader struct{}
 
 func isFile(path string) bool {
 	fileInfo, err := os.Stat(path)
 	return err == nil && !fileInfo.IsDir()
 }
 
-func (f FileMetadataReader) Read(path string) (FileMetadata, error) {
+func (f FileReader) Read(path string) (FileMetadata, error) {
 	if path == "" {
 		return FileMetadata{}, ErrEmptyPath
 	}
@@ -65,15 +65,4 @@ func (f FileMetadataReader) Read(path string) (FileMetadata, error) {
 	}
 
 	return fileMetaData, nil
-}
-
-type MockFileMetadataReader struct {
-	Metadata *FileMetadata
-}
-
-func (f *MockFileMetadataReader) Read(path string) (FileMetadata, error) {
-	if f.Metadata == nil {
-		return FileMetadata{}, errors.New("metadata is nil")
-	}
-	return *f.Metadata, nil
 }

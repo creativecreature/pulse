@@ -12,32 +12,11 @@ import (
 	"code-harvest.conner.dev/pkg/logger"
 )
 
-type MockStorage struct {
-	sessions []*models.Session
-}
-
-func (m *MockStorage) Connect() func() {
-	return func() {}
-}
-
-func (m *MockStorage) Save(s interface{}) error {
-	result, ok := s.(*models.Session)
-	if !ok {
-		return errors.New("Failed to convert interface to slice of session pointers")
-	}
-	m.sessions = append(m.sessions, result)
-	return nil
-}
-
-func (m *MockStorage) Get() []*models.Session {
-	return m.sessions
-}
-
 func TestJumpingBetweenInstances(t *testing.T) {
 	t.Parallel()
 
 	mockStorage := &MockStorage{}
-	mockMetadataReader := &app.MockFileMetadataReader{}
+	mockMetadataReader := &MockFileReader{}
 
 	a, err := app.New(
 		app.WithLog(logger.New(io.Discard, logger.LevelOff)),
@@ -126,7 +105,7 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 	t.Parallel()
 
 	mockStorage := &MockStorage{}
-	mockMetadataReader := &app.MockFileMetadataReader{}
+	mockMetadataReader := &MockFileReader{}
 
 	a, err := app.New(
 		app.WithLog(logger.New(io.Discard, logger.LevelOff)),
@@ -212,7 +191,7 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 
 	mockStorage := &MockStorage{}
 	mockClock := &clock.MockClock{}
-	mockMetadataReader := &app.MockFileMetadataReader{}
+	mockMetadataReader := &MockFileReader{}
 	mockMetadataReader.Metadata = nil
 
 	a, err := app.New(
@@ -291,4 +270,36 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 	if len(storedSessions) != expectedNumberOfSessions {
 		t.Errorf("expected len %d; got %d", expectedNumberOfSessions, len(storedSessions))
 	}
+}
+
+type MockStorage struct {
+	sessions []*models.Session
+}
+
+func (m *MockStorage) Connect() func() {
+	return func() {}
+}
+
+func (m *MockStorage) Save(s interface{}) error {
+	result, ok := s.(*models.Session)
+	if !ok {
+		return errors.New("Failed to convert interface to slice of session pointers")
+	}
+	m.sessions = append(m.sessions, result)
+	return nil
+}
+
+func (m *MockStorage) Get() []*models.Session {
+	return m.sessions
+}
+
+type MockFileReader struct {
+	Metadata *app.FileMetadata
+}
+
+func (f *MockFileReader) Read(path string) (app.FileMetadata, error) {
+	if f.Metadata == nil {
+		return app.FileMetadata{}, errors.New("metadata is nil")
+	}
+	return *f.Metadata, nil
 }

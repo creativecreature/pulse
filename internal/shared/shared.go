@@ -22,27 +22,27 @@ type Server interface {
 	EndSession(event Event, reply *string) error
 }
 
-type ServerProxy struct {
+type Proxy struct {
 	server Server
 }
 
-func NewServerProxy(server Server) *ServerProxy {
-	return &ServerProxy{server: server}
+func NewProxy(server Server) *Proxy {
+	return &Proxy{server: server}
 }
 
-func (p *ServerProxy) FocusGained(event Event, reply *string) error {
+func (p *Proxy) FocusGained(event Event, reply *string) error {
 	return p.server.FocusGained(event, reply)
 }
 
-func (p *ServerProxy) OpenFile(event Event, reply *string) error {
+func (p *Proxy) OpenFile(event Event, reply *string) error {
 	return p.server.OpenFile(event, reply)
 }
 
-func (p *ServerProxy) SendHeartbeat(event Event, reply *string) error {
+func (p *Proxy) SendHeartbeat(event Event, reply *string) error {
 	return p.server.SendHeartbeat(event, reply)
 }
 
-func (p *ServerProxy) EndSession(event Event, reply *string) error {
+func (p *Proxy) EndSession(event Event, reply *string) error {
 	return p.server.EndSession(event, reply)
 }
 
