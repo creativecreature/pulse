@@ -52,7 +52,7 @@ Here are some screenshots of what it looks like:
 ![Screenshot of website][3]
 
 
-[1]: https://creativecreature.com
+[1]: https://conner.dev
 [2]: ./screenshots/website1.png
 [3]: ./screenshots/website2.png
 [4]: https://github.com/creativecreature/vim-code-harvest
