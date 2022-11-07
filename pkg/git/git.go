@@ -3,9 +3,7 @@ package git
 import (
 	"errors"
 	"io/fs"
-	"os"
 	"path"
-	"path/filepath"
 	"regexp"
 )
 
@@ -16,35 +14,19 @@ var (
 	ErrRepositoryDirectoryNameMismatch = errors.New("could not extract relative path in repo")
 )
 
-type FileSystem interface {
+type Filesystem interface {
 	Dir(string) string
 	ReadDir(string) ([]fs.DirEntry, error)
 	ReadFile(string) ([]byte, error)
 }
 
-type osFS struct {
-	FileSystem
-}
-
-func (f osFS) Dir(path string) string {
-	return filepath.Dir(path)
-}
-
-func (f osFS) ReadDir(dir string) ([]fs.DirEntry, error) {
-	return os.ReadDir(dir)
-}
-
-func (f osFS) ReadFile(filename string) ([]byte, error) {
-	return os.ReadFile(filename)
-}
-
 type Git struct {
-	FileSystem FileSystem
+	fsys Filesystem
 }
 
-func New() *Git {
+func New(fsys Filesystem) *Git {
 	return &Git{
-		FileSystem: osFS{},
+		fsys: fsys,
 	}
 }
 
@@ -60,7 +42,7 @@ func extractSubExp(re *regexp.Regexp, matches []string, subexp string) string {
 
 // Extracts the path to the bare repository from the .git file.
 func (g *Git) extractBareRepositoryPath(filepath string) (string, error) {
-	fileContent, err := g.FileSystem.ReadFile(filepath)
+	fileContent, err := g.fsys.ReadFile(filepath)
 	if err != nil {
 		return "", err
 	}
@@ -76,7 +58,7 @@ func (g *Git) extractBareRepositoryPath(filepath string) (string, error) {
 
 // Extracts the actual name of the repository by looking at the url.
 func (g *Git) extractRepositoryName(dirPath string) (string, error) {
-	fileContent, err := g.FileSystem.ReadFile(path.Join(dirPath, "config"))
+	fileContent, err := g.fsys.ReadFile(path.Join(dirPath, "config"))
 	if err != nil {
 		return "", err
 	}
@@ -99,7 +81,7 @@ func (g *Git) findGitFolder(dir string) (string, error) {
 	}
 
 	// Read the directory entries.
-	entries, err := g.FileSystem.ReadDir(dir)
+	entries, err := g.fsys.ReadDir(dir)
 	if err != nil {
 		return "", err
 	}
@@ -117,20 +99,16 @@ func (g *Git) findGitFolder(dir string) (string, error) {
 	}
 
 	// If we didn't find the .git file/folder we'll continue up the path
-	return g.findGitFolder(g.FileSystem.Dir(dir))
+	return g.findGitFolder(g.fsys.Dir(dir))
 }
 
 // GetRepositoryFromPath takes an absolute path of a file and tries to extract the name of the repository that it resides in
 func (g *Git) GetRepositoryNameFromPath(path string) (string, error) {
-	rootPath, err := g.findGitFolder(g.FileSystem.Dir(path))
+	rootPath, err := g.findGitFolder(g.fsys.Dir(path))
 
 	if err != nil {
 		return "", err
 	}
 
 	return g.extractRepositoryName(rootPath)
-}
-
-func GetRepositoryNameFromPath(path string) (string, error) {
-	return New().GetRepositoryNameFromPath(path)
 }

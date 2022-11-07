@@ -21,6 +21,16 @@ import (
 var HeartbeatTTL = time.Minute * 10
 var heartbeatInterval = time.Second * 10
 
+type FileMetadata struct {
+	Filename       string
+	Filetype       string
+	RepositoryName string
+}
+
+type FileMetadataReader interface {
+	Read(uri string) (FileMetadata, error)
+}
+
 type storage interface {
 	Connect() func()
 	Save(s interface{}) error
@@ -29,7 +39,7 @@ type storage interface {
 type app struct {
 	mutex          sync.Mutex
 	clock          clock.Clock
-	metadataReader MetadataReader
+	metadataReader FileMetadataReader
 	storage        storage
 	activeClientId string
 	lastHeartbeat  int64
@@ -49,7 +59,7 @@ func WithClock(clock clock.Clock) option {
 	}
 }
 
-func WithMetadataReader(reader MetadataReader) option {
+func WithMetadataReader(reader FileMetadataReader) option {
 	return func(a *app) error {
 		if reader == nil {
 			return errors.New("reader is nil")
@@ -82,7 +92,7 @@ func WithLog(log *logger.Logger) option {
 func New(opts ...option) (*app, error) {
 	a := &app{
 		clock:          clock.New(),
-		metadataReader: FileReader{},
+		metadataReader: newFileReader(filesystem{}),
 	}
 	for _, opt := range opts {
 		err := opt(a)

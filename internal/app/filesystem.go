@@ -2,6 +2,7 @@ package app
 
 import (
 	"errors"
+	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -9,31 +10,39 @@ import (
 	"code-harvest.conner.dev/pkg/git"
 )
 
+type filesystem struct{}
+
+func (f filesystem) Dir(path string) string {
+	return filepath.Dir(path)
+}
+
+func (f filesystem) ReadDir(dir string) ([]fs.DirEntry, error) {
+	return os.ReadDir(dir)
+}
+
+func (f filesystem) ReadFile(filename string) ([]byte, error) {
+	return os.ReadFile(filename)
+}
+
+// Extracts metadata from a file
+type fileReader struct{ git *git.Git }
+
 var (
 	ErrEmptyPath                 = errors.New("path is empty string")
 	ErrPathNotAFile              = errors.New("the path is not a file")
 	ErrFileNotUnderSourceControl = errors.New("the files does not reside within a repository")
 )
 
-type FileMetadata struct {
-	Filename       string
-	Filetype       string
-	RepositoryName string
+func newFileReader(fsys filesystem) *fileReader {
+	return &fileReader{git: git.New(fsys)}
 }
-
-type MetadataReader interface {
-	Read(uri string) (FileMetadata, error)
-}
-
-// Extracts metadata from a file
-type FileReader struct{}
 
 func isFile(path string) bool {
 	fileInfo, err := os.Stat(path)
 	return err == nil && !fileInfo.IsDir()
 }
 
-func (f FileReader) Read(path string) (FileMetadata, error) {
+func (f *fileReader) Read(path string) (FileMetadata, error) {
 	if path == "" {
 		return FileMetadata{}, ErrEmptyPath
 	}
@@ -45,7 +54,7 @@ func (f FileReader) Read(path string) (FileMetadata, error) {
 
 	// When I aggregate the data I do it on a per project basis. Therefore, if this
 	// is just a one-off edit of some configuration file I won't track time for it.
-	repositoryName, err := git.GetRepositoryNameFromPath(path)
+	repositoryName, err := f.git.GetRepositoryNameFromPath(path)
 	if err != nil {
 		return FileMetadata{}, err
 	}
