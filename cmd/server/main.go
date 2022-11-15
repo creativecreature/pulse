@@ -17,7 +17,6 @@ func main() {
 		app.WithLog(logger.New(os.Stdout, logger.LevelInfo)),
 		app.WithStorage(db.New(uri, "codeharvest", "sessions")),
 	)
-
 	if err != nil {
 		panic(err)
 	}

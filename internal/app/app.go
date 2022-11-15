@@ -18,8 +18,10 @@ import (
 	"code-harvest.conner.dev/pkg/logger"
 )
 
-var HeartbeatTTL = time.Minute * 10
-var heartbeatInterval = time.Second * 10
+var (
+	HeartbeatTTL      = time.Minute * 10
+	heartbeatInterval = time.Second * 10
+)
 
 type FileMetadata struct {
 	Filename       string
