@@ -2,6 +2,7 @@ package clock
 
 import "time"
 
+// Simple abstraction to allow for time based assertions in tests
 type Clock interface {
 	GetTime() int64
 }

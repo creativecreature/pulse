@@ -2,7 +2,6 @@ package git
 
 import (
 	"errors"
-	"io/fs"
 	"path"
 	"regexp"
 )
@@ -14,11 +13,10 @@ var (
 	ErrRepositoryDirectoryNameMismatch = errors.New("could not extract relative path in repo")
 )
 
-type Filesystem interface {
-	Dir(string) string
-	ReadDir(string) ([]fs.DirEntry, error)
-	ReadFile(string) ([]byte, error)
-}
+var (
+	bareRepositoryRegexp = regexp.MustCompile("gitdir: (?P<GitDir>.*)/worktrees")
+	repositoryRegexp     = regexp.MustCompile("url = .*/(?P<RepoName>.*).git")
+)
 
 type Git struct {
 	fsys Filesystem
@@ -46,14 +44,13 @@ func (g *Git) extractBareRepositoryPath(filepath string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	re := regexp.MustCompile("gitdir: (?P<GitDir>.*)/worktrees")
-	matches := re.FindStringSubmatch(string(fileContent))
+	matches := bareRepositoryRegexp.FindStringSubmatch(string(fileContent))
 
 	if len(matches) == 0 {
 		return "", ErrParseBareRepoPath
 	}
 
-	return extractSubExp(re, matches, "GitDir"), nil
+	return extractSubExp(bareRepositoryRegexp, matches, "GitDir"), nil
 }
 
 // Extracts the actual name of the repository by looking at the url.
@@ -62,14 +59,14 @@ func (g *Git) extractRepositoryName(dirPath string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	re := regexp.MustCompile("url = .*/(?P<RepoName>.*).git")
-	matches := re.FindStringSubmatch(string(fileContent))
+
+	matches := repositoryRegexp.FindStringSubmatch(string(fileContent))
 
 	if len(matches) == 0 {
 		return "", ErrParseRepoPath
 	}
 
-	return extractSubExp(re, matches, "RepoName"), nil
+	return extractSubExp(repositoryRegexp, matches, "RepoName"), nil
 }
 
 // Calls itself recursively until it finds a .git file/folder or reaches the root.

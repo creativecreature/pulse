@@ -21,5 +21,5 @@ func main() {
 		panic(err)
 	}
 
-	application.Start(port)
+	application.Run(port)
 }
