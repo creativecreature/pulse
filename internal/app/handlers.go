@@ -199,7 +199,7 @@ func (app *app) EndSession(event shared.Event, reply *string) error {
 	// itself. If we then come back and exit VIM we will get the EndSession event
 	// but won't have any session that we are tracking time for.
 	if app.activeClientId == "" && app.session == nil {
-		message := "The session was already ended, or possibly never started. Was there a previous hearbeat check?"
+		message := "The session was already ended, or possibly never started. Was there a previous heatbeat check?"
 		app.log.PrintDebug(message, nil)
 		return nil
 	}

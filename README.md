@@ -34,7 +34,7 @@ Each instance of neovim has its own coding session. That means that the server
 is going to create a lot of them. I use TMUX with many splits, and I often have
 multiple instances of neovim running at the same time. I don't want the time of
 my coding sessions to multiply by the number of neovim instances that I have
-running. Therefore, everytime I focus a new instance of neovim, I end the
+running. Therefore, every time I focus a new instance of neovim, I end the
 previous session and create a new one. I then use a cron to aggregate all of
 the sessions into a summary. The cron is currently not part of this repository.
 
