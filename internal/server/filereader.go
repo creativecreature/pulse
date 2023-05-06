@@ -39,7 +39,7 @@ func (f *fileReader) Read(path string) (FileMetadata, error) {
 
 	// When I aggregate the data I do it on a per project basis. Therefore, if this
 	// is just a one-off edit of some configuration file I won't track time for it.
-	repositoryName, err := f.git.GetRepositoryNameFromPath(path)
+	repositoryName, err := f.git.RepositoryName(path)
 	if err != nil {
 		return FileMetadata{}, err
 	}

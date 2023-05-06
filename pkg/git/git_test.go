@@ -115,7 +115,7 @@ func TestGetRepositoryFromPath(t *testing.T) {
 	// This is the absolute path of the file that we want to extract the repository name for.
 	path := "/Users/conner/code/dotfiles/editors/nvim/init.lua"
 	g := git.New(&fileSystemMock)
-	got, _ := g.GetRepositoryNameFromPath(path)
+	got, _ := g.RepositoryName(path)
 	// From how the mocks are wired we expect dotfiles to be the repository name.
 	expected := "dotfiles"
 
@@ -185,7 +185,7 @@ func TestGetRepositoryFromPathBare(t *testing.T) {
 	// This is the absolute path of the file that we want to extract the repository name for.
 	path := "/Users/conner/code/ore-ui/main/src/index.ts"
 	g := git.New(&fileSystemMock)
-	got, _ := g.GetRepositoryNameFromPath(path)
+	got, _ := g.RepositoryName(path)
 	// From how the mocks are wired we expect ore-ui to be the repository name.
 	expected := "ore-ui"
 
