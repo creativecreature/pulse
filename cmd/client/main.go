@@ -6,8 +6,10 @@ import (
 )
 
 // These are set by linker flags.
-var port string
-var hostname string
+var (
+	port     string
+	hostname string
+)
 
 func main() {
 	client, err := shared.NewClient(port, hostname)

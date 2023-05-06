@@ -9,8 +9,10 @@ import (
 )
 
 // Set by linker flags
-var uri string
-var port string
+var (
+	uri  string
+	port string
+)
 
 func main() {
 	application, err := app.New(
