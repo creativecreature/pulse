@@ -17,7 +17,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	// Add these functions to NVIM so that I can map them to autocommands.
+
+	// Make these functions accessible in neovim so that I can map them to autocommands.
 	plugin.Main(func(p *plugin.Plugin) error {
 		p.HandleFunction(&plugin.FunctionOptions{Name: "OnFocusGained"}, client.FocusGained)
 		p.HandleFunction(&plugin.FunctionOptions{Name: "OpenFile"}, client.OpenFile)
