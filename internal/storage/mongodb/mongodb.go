@@ -43,6 +43,8 @@ func (m *db) Connect() func() {
 }
 
 func (m *db) Save(item interface{}) error {
-	_, err := m.client.Database(m.database).Collection(m.collection).InsertOne(context.Background(), item)
+	_, err := m.client.Database(m.database).
+		Collection(m.collection).
+		InsertOne(context.Background(), item)
 	return err
 }

@@ -36,7 +36,7 @@ type server struct {
 	log            *logger.Logger
 }
 
-func (server *server) Run(port string) error {
+func (server *server) Start(port string) error {
 	server.log.PrintInfo("Starting up...", nil)
 
 	// Connect to the storage
