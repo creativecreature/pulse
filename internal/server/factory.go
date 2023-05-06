@@ -1,16 +1,17 @@
-package app
+package server
 
 import (
 	"errors"
 
+	"code-harvest.conner.dev/internal/storage"
 	"code-harvest.conner.dev/pkg/clock"
 	"code-harvest.conner.dev/pkg/logger"
 )
 
-type option func(*app) error
+type option func(*server) error
 
 func WithClock(clock clock.Clock) option {
-	return func(a *app) error {
+	return func(a *server) error {
 		if clock == nil {
 			return errors.New("clock is nil")
 		}
@@ -20,7 +21,7 @@ func WithClock(clock clock.Clock) option {
 }
 
 func WithMetadataReader(reader FileMetadataReader) option {
-	return func(a *app) error {
+	return func(a *server) error {
 		if reader == nil {
 			return errors.New("reader is nil")
 		}
@@ -29,8 +30,8 @@ func WithMetadataReader(reader FileMetadataReader) option {
 	}
 }
 
-func WithStorage(storage storage) option {
-	return func(a *app) error {
+func WithStorage(storage storage.Storage) option {
+	return func(a *server) error {
 		if storage == nil {
 			return errors.New("storage is nil")
 		}
@@ -40,7 +41,7 @@ func WithStorage(storage storage) option {
 }
 
 func WithLog(log *logger.Logger) option {
-	return func(a *app) error {
+	return func(a *server) error {
 		if log == nil {
 			return errors.New("log is nil")
 		}
@@ -49,15 +50,16 @@ func WithLog(log *logger.Logger) option {
 	}
 }
 
-func New(opts ...option) (*app, error) {
-	a := &app{
+func New(serverName string, opts ...option) (*server, error) {
+	a := &server{
+		serverName:     serverName,
 		clock:          clock.New(),
 		metadataReader: newFileReader(filesystem{}),
 	}
 	for _, opt := range opts {
 		err := opt(a)
 		if err != nil {
-			return &app{}, err
+			return &server{}, err
 		}
 	}
 	return a, nil

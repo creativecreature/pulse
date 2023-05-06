@@ -1,4 +1,4 @@
-package app
+package server
 
 import (
 	"os"
@@ -12,17 +12,17 @@ var (
 	heartbeatInterval = time.Second * 10
 )
 
-func (app *app) CheckHeartbeat() {
-	app.log.PrintDebug("Checking heartbeat", nil)
-	if app.session != nil && app.lastHeartbeat+HeartbeatTTL.Milliseconds() < app.clock.GetTime() {
-		app.mutex.Lock()
-		defer app.mutex.Unlock()
-		app.saveSession()
+func (server *server) CheckHeartbeat() {
+	server.log.PrintDebug("Checking heartbeat", nil)
+	if server.session != nil && server.lastHeartbeat+HeartbeatTTL.Milliseconds() < server.clock.GetTime() {
+		server.mutex.Lock()
+		defer server.mutex.Unlock()
+		server.saveSession()
 	}
 }
 
 // Listen for shutdown signals and perform heartbeat checks.
-func (app *app) monitorHeartbeat() {
+func (server *server) monitorHeartbeat() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	ecg := time.NewTicker(heartbeatInterval)
@@ -31,7 +31,7 @@ func (app *app) monitorHeartbeat() {
 	for run {
 		select {
 		case <-ecg.C:
-			app.CheckHeartbeat()
+			server.CheckHeartbeat()
 		case <-quit:
 			run = false
 		}

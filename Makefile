@@ -60,13 +60,13 @@ vendor:
 ## build/server: build the cmd/server application
 build/server:
 	@echo 'Building...'
-	go build -ldflags="-X main.port=${PORT} -X main.uri=${URI}" -o=./bin/code-harvest-server ./cmd/server
+	go build -ldflags="-X main.serverName=${SERVER_NAME} -X main.port=${PORT} -X main.uri=${URI}" -o=./bin/code-harvest-server ./cmd/server
 .PHONY:build/server
 
 ## build/client: build the cmd/client application
 build/client:
 	@echo 'Building...'
-	go build -ldflags="-X main.port=${PORT} -X main.hostname=${HOSTNAME}" -o=./bin/code-harvest-client ./cmd/client
+	go build -ldflags="-X main.serverName=${SERVER_NAME} -X main.port=${PORT} -X main.hostname=${HOSTNAME}" -o=./bin/code-harvest-client ./cmd/client
 .PHONY:build/client
 
 ## build: builds the server and client applications

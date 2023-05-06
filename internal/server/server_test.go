@@ -1,13 +1,12 @@
-package app_test
+package server_test
 
 import (
 	"errors"
 	"io"
 	"testing"
 
-	"code-harvest.conner.dev/internal/app"
-	"code-harvest.conner.dev/internal/models"
-	"code-harvest.conner.dev/internal/shared"
+	"code-harvest.conner.dev/internal/domain"
+	"code-harvest.conner.dev/internal/server"
 	"code-harvest.conner.dev/pkg/clock"
 	"code-harvest.conner.dev/pkg/logger"
 )
@@ -18,10 +17,11 @@ func TestJumpingBetweenInstances(t *testing.T) {
 	mockStorage := &MockStorage{}
 	mockMetadataReader := &MockFileReader{}
 
-	a, err := app.New(
-		app.WithLog(logger.New(io.Discard, logger.LevelOff)),
-		app.WithMetadataReader(mockMetadataReader),
-		app.WithStorage(mockStorage),
+	a, err := server.New(
+		"TestApp",
+		server.WithLog(logger.New(io.Discard, logger.LevelOff)),
+		server.WithMetadataReader(mockMetadataReader),
+		server.WithStorage(mockStorage),
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -30,7 +30,7 @@ func TestJumpingBetweenInstances(t *testing.T) {
 	// Open a new VIM instance
 	reply := ""
 	mockMetadataReader.Metadata = nil
-	a.FocusGained(shared.Event{
+	a.FocusGained(domain.Event{
 		Id:     "123",
 		Path:   "",
 		Editor: "nvim",
@@ -38,12 +38,12 @@ func TestJumpingBetweenInstances(t *testing.T) {
 	}, &reply)
 
 	// Open a file in the first instance
-	mockMetadataReader.Metadata = &app.FileMetadata{
+	mockMetadataReader.Metadata = &server.FileMetadata{
 		Filename:       "install.sh",
 		Filetype:       "bash",
 		RepositoryName: "dotfiles",
 	}
-	a.OpenFile(shared.Event{
+	a.OpenFile(domain.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/install.sh",
 		Editor: "nvim",
@@ -52,7 +52,7 @@ func TestJumpingBetweenInstances(t *testing.T) {
 
 	// Open another vim instance in a new split. This should end the previous session.
 	mockMetadataReader.Metadata = nil
-	a.FocusGained(shared.Event{
+	a.FocusGained(domain.Event{
 		Id:     "345",
 		Path:   "",
 		Editor: "nvim",
@@ -60,12 +60,12 @@ func TestJumpingBetweenInstances(t *testing.T) {
 	}, &reply)
 
 	// Open a file in the second vim instance
-	mockMetadataReader.Metadata = &app.FileMetadata{
+	mockMetadataReader.Metadata = &server.FileMetadata{
 		Filename:       "bootstrap.sh",
 		Filetype:       "bash",
 		RepositoryName: "dotfiles",
 	}
-	a.OpenFile(shared.Event{
+	a.OpenFile(domain.Event{
 		Id:     "345",
 		Path:   "/Users/conner/code/dotfiles/bootstrap.sh",
 		Editor: "nvim",
@@ -73,12 +73,12 @@ func TestJumpingBetweenInstances(t *testing.T) {
 	}, &reply)
 
 	// Move focus back to the first VIM instance. This should end the second session.
-	mockMetadataReader.Metadata = &app.FileMetadata{
+	mockMetadataReader.Metadata = &server.FileMetadata{
 		Filename:       "install.sh",
 		Filetype:       "bash",
 		RepositoryName: "dotfiles",
 	}
-	a.FocusGained(shared.Event{
+	a.FocusGained(domain.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/install.sh",
 		Editor: "nvim",
@@ -86,7 +86,7 @@ func TestJumpingBetweenInstances(t *testing.T) {
 	}, &reply)
 
 	// End the last session. We should now have 3 finished sessiona.
-	a.EndSession(shared.Event{
+	a.EndSession(domain.Event{
 		Id:     "123",
 		Path:   "",
 		Editor: "nvim",
@@ -107,10 +107,11 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 	mockStorage := &MockStorage{}
 	mockMetadataReader := &MockFileReader{}
 
-	a, err := app.New(
-		app.WithLog(logger.New(io.Discard, logger.LevelOff)),
-		app.WithMetadataReader(mockMetadataReader),
-		app.WithStorage(mockStorage),
+	a, err := server.New(
+		"testApp",
+		server.WithLog(logger.New(io.Discard, logger.LevelOff)),
+		server.WithMetadataReader(mockMetadataReader),
+		server.WithStorage(mockStorage),
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -119,7 +120,7 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 	// Open a new instance of VIM
 	reply := ""
 	mockMetadataReader.Metadata = nil
-	a.FocusGained(shared.Event{
+	a.FocusGained(domain.Event{
 		Id:     "123",
 		Path:   "",
 		Editor: "nvim",
@@ -127,12 +128,12 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 	}, &reply)
 
 	// Open a file
-	mockMetadataReader.Metadata = &app.FileMetadata{
+	mockMetadataReader.Metadata = &server.FileMetadata{
 		Filename:       "install.sh",
 		Filetype:       "bash",
 		RepositoryName: "dotfiles",
 	}
-	a.OpenFile(shared.Event{
+	a.OpenFile(domain.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/install.sh",
 		Editor: "nvim",
@@ -141,7 +142,7 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 
 	// Lets now imagine we opened another TMUX split to run testa. We then jump
 	// back to VIM which will fire the focus gained event with the same client id.
-	a.FocusGained(shared.Event{
+	a.FocusGained(domain.Event{
 		Id:     "123",
 		Path:   "",
 		Editor: "nvim",
@@ -150,18 +151,18 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 
 	// We repeat the same thing again. Jump to another split in the terminal which makes
 	// VIM lose focus and then back again - which will trigger another focus gained event.
-	a.FocusGained(shared.Event{
+	a.FocusGained(domain.Event{
 		Id:     "123",
 		Path:   "",
 		Editor: "nvim",
 		OS:     "Linux",
 	}, &reply)
-	mockMetadataReader.Metadata = &app.FileMetadata{
+	mockMetadataReader.Metadata = &server.FileMetadata{
 		Filename:       "bootstrap.sh",
 		Filetype:       "bash",
 		RepositoryName: "dotfiles",
 	}
-	a.OpenFile(shared.Event{
+	a.OpenFile(domain.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/bootstrap.sh",
 		Editor: "nvim",
@@ -171,7 +172,7 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 	// Lets now end the session. This behaviour should *not* have resulted in any
 	// new sessions being created. We only create a new session and end the current
 	// one if we open VIM in a new split (to not count double time).
-	a.EndSession(shared.Event{
+	a.EndSession(domain.Event{
 		Id:     "123",
 		Path:   "",
 		Editor: "nvim",
@@ -194,11 +195,12 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 	mockMetadataReader := &MockFileReader{}
 	mockMetadataReader.Metadata = nil
 
-	a, err := app.New(
-		app.WithLog(logger.New(io.Discard, logger.LevelOff)),
-		app.WithClock(mockClock),
-		app.WithMetadataReader(mockMetadataReader),
-		app.WithStorage(mockStorage),
+	a, err := server.New(
+		"testApp",
+		server.WithLog(logger.New(io.Discard, logger.LevelOff)),
+		server.WithClock(mockClock),
+		server.WithMetadataReader(mockMetadataReader),
+		server.WithStorage(mockStorage),
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -207,7 +209,7 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 	// Send the initial focus event
 	mockClock.SetTime(100)
 	reply := ""
-	a.FocusGained(shared.Event{
+	a.FocusGained(domain.Event{
 		Id:     "123",
 		Path:   "",
 		Editor: "nvim",
@@ -219,12 +221,12 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 
 	// Send an open file event. This should update the time for the last activity to 250.
 	mockClock.SetTime(250)
-	mockMetadataReader.Metadata = &app.FileMetadata{
+	mockMetadataReader.Metadata = &server.FileMetadata{
 		Filename:       "install.sh",
 		Filetype:       "bash",
 		RepositoryName: "dotfiles",
 	}
-	a.OpenFile(shared.Event{
+	a.OpenFile(domain.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/install.sh",
 		Editor: "nvim",
@@ -238,26 +240,26 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 
 	// Heartbeat check that occurs 1 millisecond after the time of last activity
 	// + ttl. This should result in the session being ended and saved.
-	mockClock.SetTime(app.HeartbeatTTL.Milliseconds() + 250 + 1)
+	mockClock.SetTime(server.HeartbeatTTL.Milliseconds() + 250 + 1)
 	a.CheckHeartbeat()
 
-	mockClock.SetTime(app.HeartbeatTTL.Milliseconds() + 300)
-	mockMetadataReader.Metadata = &app.FileMetadata{
+	mockClock.SetTime(server.HeartbeatTTL.Milliseconds() + 300)
+	mockMetadataReader.Metadata = &server.FileMetadata{
 		Filename:       "cleanup.sh",
 		Filetype:       "bash",
 		RepositoryName: "dotfiles",
 	}
-	a.OpenFile(shared.Event{
+	a.OpenFile(domain.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/cleanup.sh",
 		Editor: "nvim",
 		OS:     "Linux",
 	}, &reply)
 
-	mockClock.SetTime(app.HeartbeatTTL.Milliseconds() + 400)
+	mockClock.SetTime(server.HeartbeatTTL.Milliseconds() + 400)
 	a.CheckHeartbeat()
 
-	a.EndSession(shared.Event{
+	a.EndSession(domain.Event{
 		Id:     "123",
 		Path:   "",
 		Editor: "nvim",
@@ -273,7 +275,7 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 }
 
 type MockStorage struct {
-	sessions []*models.Session
+	sessions []*domain.Session
 }
 
 func (m *MockStorage) Connect() func() {
@@ -281,7 +283,7 @@ func (m *MockStorage) Connect() func() {
 }
 
 func (m *MockStorage) Save(s interface{}) error {
-	result, ok := s.(*models.Session)
+	result, ok := s.(*domain.Session)
 	if !ok {
 		return errors.New("Failed to convert interface to slice of session pointers")
 	}
@@ -289,17 +291,17 @@ func (m *MockStorage) Save(s interface{}) error {
 	return nil
 }
 
-func (m *MockStorage) Get() []*models.Session {
+func (m *MockStorage) Get() []*domain.Session {
 	return m.sessions
 }
 
 type MockFileReader struct {
-	Metadata *app.FileMetadata
+	Metadata *server.FileMetadata
 }
 
-func (f *MockFileReader) Read(path string) (app.FileMetadata, error) {
+func (f *MockFileReader) Read(path string) (server.FileMetadata, error) {
 	if f.Metadata == nil {
-		return app.FileMetadata{}, errors.New("metadata is nil")
+		return server.FileMetadata{}, errors.New("metadata is nil")
 	}
 	return *f.Metadata, nil
 }

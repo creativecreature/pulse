@@ -1,18 +1,19 @@
 package main
 
 import (
-	"code-harvest.conner.dev/internal/shared"
+	"code-harvest.conner.dev/internal/client"
 	"github.com/neovim/go-client/nvim/plugin"
 )
 
 // These are set by linker flags.
 var (
-	port     string
-	hostname string
+	serverName string
+	port       string
+	hostname   string
 )
 
 func main() {
-	client, err := shared.NewClient(port, hostname)
+	client, err := client.New(serverName, port, hostname)
 	if err != nil {
 		panic(err)
 	}

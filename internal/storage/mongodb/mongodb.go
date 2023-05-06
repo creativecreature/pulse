@@ -1,4 +1,4 @@
-package db
+package mongodb
 
 import (
 	"context"
@@ -8,26 +8,26 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type mongoDB struct {
+type db struct {
 	uri        string
 	database   string
 	collection string
 	client     *mongo.Client
 }
 
-func New(uri, database, collection string) *mongoDB {
-	return &mongoDB{
+func New(uri, database, collection string) *db {
+	return &db{
 		uri:        uri,
 		database:   database,
 		collection: collection,
 	}
 }
 
-func (m *mongoDB) Connect() func() {
+func (m *db) Connect() func() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(m.uri))
-	// I can't proceed without a database connection.
+	// Can't proceed without a database connection.
 	if err != nil {
 		panic(err)
 	}
@@ -42,7 +42,7 @@ func (m *mongoDB) Connect() func() {
 	}
 }
 
-func (m *mongoDB) Save(item interface{}) error {
+func (m *db) Save(item interface{}) error {
 	_, err := m.client.Database(m.database).Collection(m.collection).InsertOne(context.Background(), item)
 	return err
 }

@@ -1,7 +1,6 @@
-package shared
+package domain
 
-var ServerName = "CodeHarvestApp"
-
+// Event that is sent from the client to the server
 type Event struct {
 	Id     string
 	Path   string
