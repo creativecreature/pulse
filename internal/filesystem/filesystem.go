@@ -1,4 +1,4 @@
-package osfilesystem
+package filesystem
 
 import (
 	"io/fs"
@@ -24,7 +24,7 @@ func (f osfs) ReadFile(filename string) ([]byte, error) {
 	return os.ReadFile(filename)
 }
 
-func IsFile(path string) bool {
+func (f osfs) IsFile(path string) bool {
 	fileInfo, err := os.Stat(path)
 	return err == nil && !fileInfo.IsDir()
 }

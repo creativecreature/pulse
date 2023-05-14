@@ -4,9 +4,9 @@ import (
 	"errors"
 
 	"code-harvest.conner.dev/internal/filereader"
+	"code-harvest.conner.dev/internal/filesystem"
 	"code-harvest.conner.dev/internal/storage"
 	"code-harvest.conner.dev/pkg/clock"
-	"code-harvest.conner.dev/pkg/osfilesystem"
 )
 
 type option func(*server) error
@@ -71,7 +71,7 @@ func New(serverName string, opts ...option) (*server, error) {
 	a := &server{
 		serverName:     serverName,
 		clock:          clock.New(),
-		metadataReader: filereader.New(osfilesystem.New()),
+		metadataReader: filereader.New(filesystem.New()),
 	}
 	for _, opt := range opts {
 		err := opt(a)
