@@ -5,7 +5,6 @@ import (
 
 	"code-harvest.conner.dev/internal/storage"
 	"code-harvest.conner.dev/pkg/clock"
-	"code-harvest.conner.dev/pkg/logger"
 )
 
 type option func(*server) error
@@ -40,7 +39,14 @@ func WithStorage(storage storage.Storage) option {
 	}
 }
 
-func WithLog(log *logger.Logger) option {
+type Log interface {
+	PrintDebug(message string, properties map[string]string)
+	PrintInfo(message string, properties map[string]string)
+	PrintError(err error, properties map[string]string)
+	PrintFatal(err error, properties map[string]string)
+}
+
+func WithLog(log Log) option {
 	return func(a *server) error {
 		if log == nil {
 			return errors.New("log is nil")
