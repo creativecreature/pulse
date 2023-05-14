@@ -11,7 +11,6 @@ import (
 	"code-harvest.conner.dev/internal/proxy"
 	"code-harvest.conner.dev/internal/storage"
 	"code-harvest.conner.dev/pkg/clock"
-	"code-harvest.conner.dev/pkg/logger"
 )
 
 type FileMetadata struct {
@@ -33,7 +32,7 @@ type server struct {
 	activeClientId string
 	lastHeartbeat  int64
 	session        *domain.Session
-	log            *logger.Logger
+	log            Log
 }
 
 func (server *server) Start(port string) error {
