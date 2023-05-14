@@ -22,9 +22,9 @@ func (server *server) updateCurrentFile(path string) {
 	}
 
 	file := domain.NewFile(
-		fileMetadata.Filename,
-		fileMetadata.RepositoryName,
-		fileMetadata.Filetype,
+		fileMetadata.Name(),
+		fileMetadata.Repository(),
+		fileMetadata.Filetype(),
 		path,
 		openedAt,
 	)

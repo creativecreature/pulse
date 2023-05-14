@@ -10,24 +10,13 @@ import (
 	"code-harvest.conner.dev/internal/domain"
 	"code-harvest.conner.dev/internal/proxy"
 	"code-harvest.conner.dev/internal/storage"
-	"code-harvest.conner.dev/pkg/clock"
 )
-
-type FileMetadata struct {
-	Filename       string
-	Filetype       string
-	RepositoryName string
-}
-
-type FileMetadataReader interface {
-	Read(uri string) (FileMetadata, error)
-}
 
 type server struct {
 	serverName     string
 	mutex          sync.Mutex
-	clock          clock.Clock
-	metadataReader FileMetadataReader
+	clock          Clock
+	metadataReader MetadataReader
 	storage        storage.Storage
 	activeClientId string
 	lastHeartbeat  int64

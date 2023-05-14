@@ -3,13 +3,20 @@ package server
 import (
 	"errors"
 
+	"code-harvest.conner.dev/internal/filereader"
 	"code-harvest.conner.dev/internal/storage"
 	"code-harvest.conner.dev/pkg/clock"
+	"code-harvest.conner.dev/pkg/osfilesystem"
 )
 
 type option func(*server) error
 
-func WithClock(clock clock.Clock) option {
+// Clock is a simple abstraction I use to allow for time based assertions in tests
+type Clock interface {
+	GetTime() int64
+}
+
+func WithClock(clock Clock) option {
 	return func(a *server) error {
 		if clock == nil {
 			return errors.New("clock is nil")
@@ -19,7 +26,11 @@ func WithClock(clock clock.Clock) option {
 	}
 }
 
-func WithMetadataReader(reader FileMetadataReader) option {
+type MetadataReader interface {
+	Read(uri string) (filereader.File, error)
+}
+
+func WithMetadataReader(reader MetadataReader) option {
 	return func(a *server) error {
 		if reader == nil {
 			return errors.New("reader is nil")
@@ -60,7 +71,7 @@ func New(serverName string, opts ...option) (*server, error) {
 	a := &server{
 		serverName:     serverName,
 		clock:          clock.New(),
-		metadataReader: newFileReader(filesystem{}),
+		metadataReader: filereader.New(osfilesystem.New()),
 	}
 	for _, opt := range opts {
 		err := opt(a)
