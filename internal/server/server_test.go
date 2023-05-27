@@ -8,7 +8,7 @@ import (
 	"code-harvest.conner.dev/internal/server"
 	"code-harvest.conner.dev/internal/storage/mock"
 	"code-harvest.conner.dev/pkg/clock"
-	fileReaderMock "code-harvest.conner.dev/pkg/filereader/mock"
+	mockfs "code-harvest.conner.dev/pkg/filesystem/mock"
 	"code-harvest.conner.dev/pkg/logger"
 )
 
@@ -16,7 +16,7 @@ func TestJumpingBetweenInstances(t *testing.T) {
 	t.Parallel()
 
 	mockStorage := &mock.Storage{}
-	mockMetadataReader := fileReaderMock.NewReader()
+	mockMetadataReader := mockfs.NewReader()
 
 	a, err := server.New(
 		"TestApp",
@@ -38,7 +38,7 @@ func TestJumpingBetweenInstances(t *testing.T) {
 	}, &reply)
 
 	// Open a file in the first instance
-	mockMetadataReader.SetFile(fileReaderMock.NewFile("install.sh", "bash", "dotfiles"))
+	mockMetadataReader.SetFile(mockfs.NewFile("install.sh", "bash", "dotfiles"))
 	a.OpenFile(domain.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/install.sh",
@@ -56,7 +56,7 @@ func TestJumpingBetweenInstances(t *testing.T) {
 	}, &reply)
 
 	// Open a file in the second vim instance
-	mockMetadataReader.SetFile(fileReaderMock.NewFile("bootstrap.sh", "bash", "dotfiles"))
+	mockMetadataReader.SetFile(mockfs.NewFile("bootstrap.sh", "bash", "dotfiles"))
 	a.OpenFile(domain.Event{
 		Id:     "345",
 		Path:   "/Users/conner/code/dotfiles/bootstrap.sh",
@@ -65,7 +65,7 @@ func TestJumpingBetweenInstances(t *testing.T) {
 	}, &reply)
 
 	// Move focus back to the first VIM instance. This should end the second session.
-	mockMetadataReader.SetFile(fileReaderMock.NewFile("install.sh", "bash", "dotfiles"))
+	mockMetadataReader.SetFile(mockfs.NewFile("install.sh", "bash", "dotfiles"))
 	a.FocusGained(domain.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/install.sh",
@@ -93,7 +93,7 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 	t.Parallel()
 
 	mockStorage := &mock.Storage{}
-	mockMetadataReader := fileReaderMock.NewReader()
+	mockMetadataReader := mockfs.NewReader()
 
 	a, err := server.New(
 		"testApp",
@@ -115,7 +115,7 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 	}, &reply)
 
 	// Open a file
-	mockMetadataReader.SetFile(fileReaderMock.NewFile("install.sh", "bash", "dotfiles"))
+	mockMetadataReader.SetFile(mockfs.NewFile("install.sh", "bash", "dotfiles"))
 	a.OpenFile(domain.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/install.sh",
@@ -140,7 +140,7 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 		Editor: "nvim",
 		OS:     "Linux",
 	}, &reply)
-	mockMetadataReader.SetFile(fileReaderMock.NewFile("bootstrap.sh", "bash", "dotfiles"))
+	mockMetadataReader.SetFile(mockfs.NewFile("bootstrap.sh", "bash", "dotfiles"))
 	a.OpenFile(domain.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/bootstrap.sh",
@@ -171,7 +171,7 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 
 	mockStorage := &mock.Storage{}
 	mockClock := &clock.MockClock{}
-	mockMetadataReader := fileReaderMock.NewReader()
+	mockMetadataReader := mockfs.NewReader()
 
 	a, err := server.New(
 		"testApp",
@@ -199,7 +199,7 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 
 	// Send an open file event. This should update the time for the last activity to 250.
 	mockClock.SetTime(250)
-	mockMetadataReader.SetFile(fileReaderMock.NewFile("install.sh", "bash", "dotfiles"))
+	mockMetadataReader.SetFile(mockfs.NewFile("install.sh", "bash", "dotfiles"))
 	a.OpenFile(domain.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/install.sh",
@@ -218,7 +218,7 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 	a.CheckHeartbeat()
 
 	mockClock.SetTime(server.HeartbeatTTL.Milliseconds() + 300)
-	mockMetadataReader.SetFile(fileReaderMock.NewFile("cleanup.sh", "bash", "dotfiles"))
+	mockMetadataReader.SetFile(mockfs.NewFile("cleanup.sh", "bash", "dotfiles"))
 	a.OpenFile(domain.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/cleanup.sh",

@@ -3,14 +3,14 @@ package mock
 import (
 	"errors"
 
-	"code-harvest.conner.dev/pkg/filereader"
+	"code-harvest.conner.dev/pkg/filesystem"
 )
 
 type fileReader struct {
-	file filereader.File
+	file filesystem.File
 }
 
-func (f *fileReader) Read(path string) (filereader.File, error) {
+func (f *fileReader) Read(path string) (filesystem.File, error) {
 	if f.file == nil {
 		return File{}, errors.New("metadata is nil")
 	}

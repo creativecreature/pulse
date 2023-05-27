@@ -4,8 +4,6 @@ import (
 	"errors"
 	"io/fs"
 	"path/filepath"
-
-	"code-harvest.conner.dev/pkg/filetype"
 )
 
 var (
@@ -53,7 +51,7 @@ func (f FileReader) Read(path string) (File, error) {
 	filename := filepath.Base(path)
 
 	// Tries to get the filetype from either the file extension or name.
-	ft, err := filetype.Get(filename)
+	ft, err := Filetype(filename)
 	if err != nil {
 		return file{}, err
 	}

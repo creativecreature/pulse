@@ -1,6 +1,10 @@
-package filetype
+package filesystem_test
 
-import "testing"
+import (
+	"testing"
+
+	"code-harvest.conner.dev/pkg/filesystem"
+)
 
 func TestGet(t *testing.T) {
 	tests := []struct {
@@ -18,7 +22,7 @@ func TestGet(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		got, _ := Get(test.filename)
+		got, _ := filesystem.Filetype(test.filename)
 		if got != test.expected {
 			t.Errorf("Get(%s) = %s; wanted %s", test.filename, got, test.expected)
 		}

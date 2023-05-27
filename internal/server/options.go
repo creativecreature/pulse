@@ -3,10 +3,9 @@ package server
 import (
 	"errors"
 
-	"code-harvest.conner.dev/internal/filesystem"
 	"code-harvest.conner.dev/internal/storage"
 	"code-harvest.conner.dev/pkg/clock"
-	"code-harvest.conner.dev/pkg/filereader"
+	"code-harvest.conner.dev/pkg/filesystem"
 )
 
 type option func(*server) error
@@ -27,7 +26,7 @@ func WithClock(clock Clock) option {
 }
 
 type MetadataReader interface {
-	Read(uri string) (filereader.File, error)
+	Read(uri string) (filesystem.File, error)
 }
 
 func WithMetadataReader(reader MetadataReader) option {
@@ -71,7 +70,7 @@ func New(serverName string, opts ...option) (*server, error) {
 	a := &server{
 		serverName:     serverName,
 		clock:          clock.New(),
-		metadataReader: filereader.New(filesystem.New()),
+		metadataReader: filesystem.NewReader(filesystem.New()),
 	}
 	for _, opt := range opts {
 		err := opt(a)

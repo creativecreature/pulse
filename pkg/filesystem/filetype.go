@@ -1,4 +1,4 @@
-package filetype
+package filesystem
 
 import (
 	"errors"
@@ -32,7 +32,7 @@ var fileExtensionFiletypeMap = map[string]string{
 }
 
 // Get tries to extract the filetype from a filename.
-func Get(filename string) (string, error) {
+func Filetype(filename string) (string, error) {
 	// Start by checking if it is a special file
 	file, ok := specialFiles[strings.Split(filename, ".")[0]]
 	if ok {

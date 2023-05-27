@@ -1,11 +1,11 @@
-package filereader_test
+package filesystem_test
 
 import (
 	"errors"
 	"io/fs"
 	"testing"
 
-	"code-harvest.conner.dev/pkg/filereader"
+	"code-harvest.conner.dev/pkg/filesystem"
 )
 
 type MockFS struct {
@@ -13,7 +13,7 @@ type MockFS struct {
 	Directories    []string
 	Entries        map[string][]fs.DirEntry
 	FileContents   map[string][]byte
-	filereader.Filesystem
+	filesystem.Filesystem
 }
 
 func (f *MockFS) Dir(_ string) string {
@@ -114,7 +114,7 @@ func TestGetRepositoryFromPath(t *testing.T) {
 
 	// This is the absolute path of the file that we want to extract the repository name for.
 	path := "/Users/conner/code/dotfiles/editors/nvim/init.lua"
-	f := filereader.New(&fileSystemMock)
+	f := filesystem.NewReader(&fileSystemMock)
 	got, _ := f.RepositoryName(path)
 	// From how the mocks are wired we expect dotfiles to be the repository name.
 	expected := "dotfiles"
@@ -184,7 +184,7 @@ func TestGetRepositoryFromPathBare(t *testing.T) {
 
 	// This is the absolute path of the file that we want to extract the repository name for.
 	path := "/Users/conner/code/ore-ui/main/src/index.ts"
-	f := filereader.New(&fileSystemMock)
+	f := filesystem.NewReader(&fileSystemMock)
 	got, _ := f.RepositoryName(path)
 	// From how the mocks are wired we expect ore-ui to be the repository name.
 	expected := "ore-ui"
