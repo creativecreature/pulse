@@ -1,13 +1,13 @@
 package server_test
 
 import (
-	"errors"
 	"io"
 	"testing"
 
 	"code-harvest.conner.dev/internal/domain"
-	"code-harvest.conner.dev/internal/filereader"
+	fileReaderMock "code-harvest.conner.dev/internal/filereader/mock"
 	"code-harvest.conner.dev/internal/server"
+	"code-harvest.conner.dev/internal/storage/mock"
 	"code-harvest.conner.dev/pkg/clock"
 	"code-harvest.conner.dev/pkg/logger"
 )
@@ -15,8 +15,8 @@ import (
 func TestJumpingBetweenInstances(t *testing.T) {
 	t.Parallel()
 
-	mockStorage := &MockStorage{}
-	mockMetadataReader := &MockFileReader{}
+	mockStorage := &mock.Storage{}
+	mockMetadataReader := fileReaderMock.NewReader()
 
 	a, err := server.New(
 		"TestApp",
@@ -30,7 +30,6 @@ func TestJumpingBetweenInstances(t *testing.T) {
 
 	// Open a new VIM instance
 	reply := ""
-	mockMetadataReader.file = mockFile{}
 	a.FocusGained(domain.Event{
 		Id:     "123",
 		Path:   "",
@@ -39,11 +38,7 @@ func TestJumpingBetweenInstances(t *testing.T) {
 	}, &reply)
 
 	// Open a file in the first instance
-	mockMetadataReader.file = mockFile{
-		name:       "install.sh",
-		filetype:   "bash",
-		repository: "dotfiles",
-	}
+	mockMetadataReader.SetFile(fileReaderMock.NewFile("install.sh", "bash", "dotfiles"))
 	a.OpenFile(domain.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/install.sh",
@@ -52,7 +47,7 @@ func TestJumpingBetweenInstances(t *testing.T) {
 	}, &reply)
 
 	// Open another vim instance in a new split. This should end the previous session.
-	mockMetadataReader.file = mockFile{}
+	mockMetadataReader.ClearFile()
 	a.FocusGained(domain.Event{
 		Id:     "345",
 		Path:   "",
@@ -61,11 +56,7 @@ func TestJumpingBetweenInstances(t *testing.T) {
 	}, &reply)
 
 	// Open a file in the second vim instance
-	mockMetadataReader.file = mockFile{
-		name:       "bootstrap.sh",
-		filetype:   "bash",
-		repository: "dotfiles",
-	}
+	mockMetadataReader.SetFile(fileReaderMock.NewFile("bootstrap.sh", "bash", "dotfiles"))
 	a.OpenFile(domain.Event{
 		Id:     "345",
 		Path:   "/Users/conner/code/dotfiles/bootstrap.sh",
@@ -74,11 +65,7 @@ func TestJumpingBetweenInstances(t *testing.T) {
 	}, &reply)
 
 	// Move focus back to the first VIM instance. This should end the second session.
-	mockMetadataReader.file = mockFile{
-		name:       "install.sh",
-		filetype:   "bash",
-		repository: "dotfiles",
-	}
+	mockMetadataReader.SetFile(fileReaderMock.NewFile("install.sh", "bash", "dotfiles"))
 	a.FocusGained(domain.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/install.sh",
@@ -105,8 +92,8 @@ func TestJumpingBetweenInstances(t *testing.T) {
 func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 	t.Parallel()
 
-	mockStorage := &MockStorage{}
-	mockMetadataReader := &MockFileReader{}
+	mockStorage := &mock.Storage{}
+	mockMetadataReader := fileReaderMock.NewReader()
 
 	a, err := server.New(
 		"testApp",
@@ -120,7 +107,6 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 
 	// Open a new instance of VIM
 	reply := ""
-	mockMetadataReader.file = mockFile{}
 	a.FocusGained(domain.Event{
 		Id:     "123",
 		Path:   "",
@@ -129,11 +115,7 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 	}, &reply)
 
 	// Open a file
-	mockMetadataReader.file = mockFile{
-		name:       "install.sh",
-		filetype:   "bash",
-		repository: "dotfiles",
-	}
+	mockMetadataReader.SetFile(fileReaderMock.NewFile("install.sh", "bash", "dotfiles"))
 	a.OpenFile(domain.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/install.sh",
@@ -158,11 +140,7 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 		Editor: "nvim",
 		OS:     "Linux",
 	}, &reply)
-	mockMetadataReader.file = mockFile{
-		name:       "bootstrap.sh",
-		filetype:   "bash",
-		repository: "dotfiles",
-	}
+	mockMetadataReader.SetFile(fileReaderMock.NewFile("bootstrap.sh", "bash", "dotfiles"))
 	a.OpenFile(domain.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/bootstrap.sh",
@@ -191,10 +169,9 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 func TestNoActivityShouldEndSession(t *testing.T) {
 	t.Parallel()
 
-	mockStorage := &MockStorage{}
+	mockStorage := &mock.Storage{}
 	mockClock := &clock.MockClock{}
-	mockMetadataReader := &MockFileReader{}
-	mockMetadataReader.file = mockFile{}
+	mockMetadataReader := fileReaderMock.NewReader()
 
 	a, err := server.New(
 		"testApp",
@@ -222,11 +199,7 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 
 	// Send an open file event. This should update the time for the last activity to 250.
 	mockClock.SetTime(250)
-	mockMetadataReader.file = mockFile{
-		name:       "install.sh",
-		filetype:   "bash",
-		repository: "dotfiles",
-	}
+	mockMetadataReader.SetFile(fileReaderMock.NewFile("install.sh", "bash", "dotfiles"))
 	a.OpenFile(domain.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/install.sh",
@@ -245,11 +218,7 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 	a.CheckHeartbeat()
 
 	mockClock.SetTime(server.HeartbeatTTL.Milliseconds() + 300)
-	mockMetadataReader.file = mockFile{
-		name:       "cleanup.sh",
-		filetype:   "bash",
-		repository: "dotfiles",
-	}
+	mockMetadataReader.SetFile(fileReaderMock.NewFile("cleanup.sh", "bash", "dotfiles"))
 	a.OpenFile(domain.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/cleanup.sh",
@@ -273,54 +242,4 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 	if len(storedSessions) != expectedNumberOfSessions {
 		t.Errorf("expected len %d; got %d", expectedNumberOfSessions, len(storedSessions))
 	}
-}
-
-type MockStorage struct {
-	sessions []*domain.Session
-}
-
-func (m *MockStorage) Connect() func() {
-	return func() {}
-}
-
-func (m *MockStorage) Save(s interface{}) error {
-	result, ok := s.(*domain.Session)
-	if !ok {
-		return errors.New("Failed to convert interface to slice of session pointers")
-	}
-	m.sessions = append(m.sessions, result)
-	return nil
-}
-
-func (m *MockStorage) Get() []*domain.Session {
-	return m.sessions
-}
-
-type mockFile struct {
-	name       string
-	filetype   string
-	repository string
-}
-
-func (m mockFile) Name() string {
-	return m.name
-}
-
-func (m mockFile) Filetype() string {
-	return m.filetype
-}
-
-func (m mockFile) Repository() string {
-	return m.repository
-}
-
-type MockFileReader struct {
-	file filereader.File
-}
-
-func (f *MockFileReader) Read(path string) (filereader.File, error) {
-	if f.file == nil {
-		return mockFile{}, errors.New("metadata is nil")
-	}
-	return mockFile{}, nil
 }
