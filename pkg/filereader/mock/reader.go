@@ -3,7 +3,7 @@ package mock
 import (
 	"errors"
 
-	"code-harvest.conner.dev/internal/filereader"
+	"code-harvest.conner.dev/pkg/filereader"
 )
 
 type fileReader struct {

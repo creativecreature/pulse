@@ -3,10 +3,10 @@ package server
 import (
 	"errors"
 
-	"code-harvest.conner.dev/internal/filereader"
 	"code-harvest.conner.dev/internal/filesystem"
 	"code-harvest.conner.dev/internal/storage"
 	"code-harvest.conner.dev/pkg/clock"
+	"code-harvest.conner.dev/pkg/filereader"
 )
 
 type option func(*server) error

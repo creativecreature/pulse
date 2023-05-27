@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	"code-harvest.conner.dev/internal/domain"
-	fileReaderMock "code-harvest.conner.dev/internal/filereader/mock"
 	"code-harvest.conner.dev/internal/server"
 	"code-harvest.conner.dev/internal/storage/mock"
 	"code-harvest.conner.dev/pkg/clock"
+	fileReaderMock "code-harvest.conner.dev/pkg/filereader/mock"
 	"code-harvest.conner.dev/pkg/logger"
 )
 

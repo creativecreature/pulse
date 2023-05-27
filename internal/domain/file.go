@@ -1,6 +1,6 @@
 package domain
 
-// File represents a file in the editor
+// File represents a file that has been opened in the editor
 type file struct {
 	OpenedAt   int64  `bson:"-"`
 	ClosedAt   int64  `bson:"-"`
@@ -23,7 +23,7 @@ func NewFile(name, repo, filetype, path string, openedAt int64) *file {
 	}
 }
 
-// Filestack is a stack of files that has been opened during a coding session
+// filestack represents the stack of file that has been opened during a coding session
 type filestack struct {
 	s []*file
 }
@@ -32,10 +32,12 @@ func (s *filestack) Len() int {
 	return len(s.s)
 }
 
+// Push pushes a file onto the stack
 func (s *filestack) Push(f *file) {
 	s.s = append(s.s, f)
 }
 
+// Pop pops a file off the stack
 func (s *filestack) Pop() *file {
 	l := len(s.s)
 	if l == 0 {
@@ -47,7 +49,7 @@ func (s *filestack) Pop() *file {
 	return res
 }
 
-// Peek returns a pointer to the last file that was opened
+// Peek returns a pointer to the most recently opened file
 func (s *filestack) Peek() *file {
 	l := len(s.s)
 	if l == 0 {

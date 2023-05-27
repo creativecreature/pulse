@@ -5,7 +5,7 @@ import (
 	"io/fs"
 	"testing"
 
-	"code-harvest.conner.dev/internal/filereader"
+	"code-harvest.conner.dev/pkg/filereader"
 )
 
 type MockFS struct {
