@@ -27,10 +27,6 @@ type server struct {
 func (server *server) Start(port string) error {
 	server.log.PrintInfo("Starting up...", nil)
 
-	// Connect to the storage
-	disconnect := server.storage.Connect()
-	defer disconnect()
-
 	// Start the RPC server
 	listener, err := startServer(server, port)
 	if err != nil {
