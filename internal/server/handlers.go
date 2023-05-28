@@ -83,7 +83,7 @@ func (server *server) saveSession() {
 		return
 	}
 
-	err := server.storage.Save(server.session)
+	err := server.storage.Save(*server.session)
 	if err != nil {
 		server.log.PrintError(err, nil)
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"code-harvest.conner.dev/internal/domain"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -42,9 +43,9 @@ func (m *db) Connect() func() {
 	}
 }
 
-func (m *db) Save(item interface{}) error {
+func (m *db) Save(session domain.Session) error {
 	_, err := m.client.Database(m.database).
 		Collection(m.collection).
-		InsertOne(context.Background(), item)
+		InsertOne(context.Background(), session)
 	return err
 }
