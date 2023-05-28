@@ -11,7 +11,7 @@ type Server interface {
 }
 
 // Proxy proxies remote procedure calls to the server without the risk of
-// exposing unwanted methods just because they satisfy the RPC interfac
+// exposing unwanted methods just because they satisfy the RPC interface
 type Proxy struct {
 	server Server
 }
