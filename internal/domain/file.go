@@ -2,13 +2,13 @@ package domain
 
 // File represents a file that has been opened in the editor
 type file struct {
-	OpenedAt   int64  `bson:"-"`
-	ClosedAt   int64  `bson:"-"`
-	Name       string `bson:"name"`
-	Repository string `bson:"repository"`
-	Path       string `bson:"path"`
-	Filetype   string `bson:"filetype"`
-	DurationMs int64  `bson:"duration_ms"`
+	OpenedAt   int64
+	ClosedAt   int64
+	Name       string
+	Repository string
+	Path       string
+	Filetype   string
+	DurationMs int64
 }
 
 // NewFile creates a new file

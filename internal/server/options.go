@@ -39,7 +39,7 @@ func WithMetadataReader(reader MetadataReader) option {
 	}
 }
 
-func WithStorage(storage storage.Storage) option {
+func WithStorage(storage storage.TemporaryStorage) option {
 	return func(a *server) error {
 		if storage == nil {
 			return errors.New("storage is nil")

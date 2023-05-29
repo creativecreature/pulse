@@ -17,7 +17,7 @@ type server struct {
 	mutex          sync.Mutex
 	clock          Clock
 	metadataReader MetadataReader
-	storage        storage.Storage
+	storage        storage.TemporaryStorage
 	activeClientId string
 	lastHeartbeat  int64
 	session        *domain.Session

@@ -2,13 +2,13 @@ package domain
 
 // Session represents a coding session
 type Session struct {
-	Filestack       *filestack       `bson:"-"`
-	StartedAt       int64            `bson:"started_at"`
-	EndedAt         int64            `bson:"ended_at"`
-	DurationMs      int64            `bson:"duration_ms"`
-	OS              string           `bson:"os"`
-	Editor          string           `bson:"editor"`
-	AggregatedFiles map[string]*file `bson:"files"`
+	Filestack       *filestack
+	StartedAt       int64
+	EndedAt         int64
+	DurationMs      int64
+	OS              string
+	Editor          string
+	AggregatedFiles map[string]*file
 }
 
 // NewSession creates a new coding session
