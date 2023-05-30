@@ -24,7 +24,7 @@ func main() {
 	server, err := server.New(
 		serverName,
 		server.WithLog(logger.New(os.Stdout, logger.LevelInfo)),
-		server.WithStorage(storage.Filestorage(path.Join(homeDir, ".code-harvest"))),
+		server.WithStorage(storage.DiskStorage(path.Join(homeDir, ".code-harvest"))),
 	)
 	if err != nil {
 		panic(err)

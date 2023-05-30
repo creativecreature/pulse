@@ -1,4 +1,4 @@
-package data
+package models
 
 // TemporaryFile represents how we store coding session files on disk
 type TemporaryFile struct {

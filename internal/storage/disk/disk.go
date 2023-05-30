@@ -1,18 +1,21 @@
-// Package filestorage implements functions for temporarily storing our coding
+// Package disk implements functions for temporarily storing our coding
 // sessions to disk. The coding sessions are stored in the ~/.code-harvest/tmp
 // directory. Each file in that directory is then being read by a cron job that
 // transforms the data into a more suitable format. That data is then being
 // saved in a database and served by our API.
-package filestorage
+package disk
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/fs"
 	"os"
 	"path"
+	"path/filepath"
 	"time"
 
 	"code-harvest.conner.dev/internal/domain"
-	"code-harvest.conner.dev/internal/storage/data"
+	"code-harvest.conner.dev/internal/storage/models"
 )
 
 const (
@@ -24,7 +27,7 @@ type Storage struct {
 	dataDirPath string
 }
 
-func New(dataDirPath string) Storage {
+func NewStorage(dataDirPath string) Storage {
 	return Storage{dataDirPath}
 }
 
@@ -62,11 +65,33 @@ func (s Storage) Save(domainSession domain.Session) error {
 	}
 	defer file.Close()
 
-	serializedSession, err := data.NewTemporarySession(domainSession).Serialize()
+	serializedSession, err := models.NewTemporarySession(domainSession).Serialize()
 	if err != nil {
 		return err
 	}
 
 	_, err = file.Write(serializedSession)
 	return err
+}
+
+func (s Storage) GetAll() ([]models.TemporarySession, error) {
+	temporarySessions := make([]models.TemporarySession, 0)
+	tmpDir := path.Join(s.dataDirPath, "tmp")
+	err := fs.WalkDir(os.DirFS(tmpDir), ".", func(p string, _ fs.DirEntry, _ error) error {
+		if filepath.Ext(p) == ".json" {
+			content, err := os.ReadFile(path.Join(tmpDir, p))
+			if err != nil {
+				return err
+			}
+			tempSession := models.TemporarySession{}
+			err = json.Unmarshal(content, &tempSession)
+			if err != nil {
+				return err
+			}
+			temporarySessions = append(temporarySessions, tempSession)
+		}
+		return nil
+	})
+
+	return temporarySessions, err
 }

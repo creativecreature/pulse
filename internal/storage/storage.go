@@ -2,25 +2,31 @@ package storage
 
 import (
 	"code-harvest.conner.dev/internal/domain"
-	"code-harvest.conner.dev/internal/storage/data"
-	"code-harvest.conner.dev/internal/storage/filestorage"
-	"code-harvest.conner.dev/internal/storage/mongodb"
+	"code-harvest.conner.dev/internal/storage/disk"
+	"code-harvest.conner.dev/internal/storage/memory"
+	"code-harvest.conner.dev/internal/storage/models"
+	"code-harvest.conner.dev/internal/storage/mongo"
 )
 
 type TemporaryStorage interface {
 	Save(s domain.Session) error
+	GetAll() ([]models.TemporarySession, error)
 }
 
-func Filestorage(dataDirPath string) TemporaryStorage {
-	return filestorage.New(dataDirPath)
+func DiskStorage(dataDirPath string) TemporaryStorage {
+	return disk.NewStorage(dataDirPath)
+}
+
+func MemoryStorage() TemporaryStorage {
+	return memory.NewStorage()
 }
 
 type PermanentStorage interface {
-	Save(s data.TemporarySession) error
+	Save(s models.TemporarySession) error
 }
 
-func MongoDB(uri, database, collection string) PermanentStorage {
-	storage := mongodb.New(uri, database, collection)
+func MongoStorage(uri, database, collection string) PermanentStorage {
+	storage := mongo.NewDB(uri, database, collection)
 	disconnect := storage.Connect()
 	defer disconnect()
 	return storage

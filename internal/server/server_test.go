@@ -6,7 +6,7 @@ import (
 
 	"code-harvest.conner.dev/internal/domain"
 	"code-harvest.conner.dev/internal/server"
-	"code-harvest.conner.dev/internal/storage/mock"
+	"code-harvest.conner.dev/internal/storage"
 	"code-harvest.conner.dev/pkg/clock"
 	mockfs "code-harvest.conner.dev/pkg/filesystem/mock"
 	"code-harvest.conner.dev/pkg/logger"
@@ -15,7 +15,7 @@ import (
 func TestJumpingBetweenInstances(t *testing.T) {
 	t.Parallel()
 
-	mockStorage := &mock.Storage{}
+	mockStorage := storage.MemoryStorage()
 	mockMetadataReader := mockfs.NewReader()
 
 	a, err := server.New(
@@ -82,7 +82,7 @@ func TestJumpingBetweenInstances(t *testing.T) {
 	}, &reply)
 
 	expectedNumberOfSessions := 3
-	storedSessions := mockStorage.Get()
+	storedSessions, _ := mockStorage.GetAll()
 
 	if len(storedSessions) != expectedNumberOfSessions {
 		t.Errorf("expected len %d; got %d", expectedNumberOfSessions, len(storedSessions))
@@ -92,7 +92,7 @@ func TestJumpingBetweenInstances(t *testing.T) {
 func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 	t.Parallel()
 
-	mockStorage := &mock.Storage{}
+	mockStorage := storage.MemoryStorage()
 	mockMetadataReader := mockfs.NewReader()
 
 	a, err := server.New(
@@ -159,7 +159,7 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 	}, &reply)
 
 	expectedNumberOfSessions := 1
-	storedSessions := mockStorage.Get()
+	storedSessions, _ := mockStorage.GetAll()
 
 	if len(storedSessions) != expectedNumberOfSessions {
 		t.Errorf("expected len %d; got %d", expectedNumberOfSessions, len(storedSessions))
@@ -169,7 +169,7 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 func TestNoActivityShouldEndSession(t *testing.T) {
 	t.Parallel()
 
-	mockStorage := &mock.Storage{}
+	mockStorage := storage.MemoryStorage()
 	mockClock := &clock.MockClock{}
 	mockMetadataReader := mockfs.NewReader()
 
@@ -237,7 +237,7 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 	}, &reply)
 
 	expectedNumberOfSessions := 2
-	storedSessions := mockStorage.Get()
+	storedSessions, _ := mockStorage.GetAll()
 
 	if len(storedSessions) != expectedNumberOfSessions {
 		t.Errorf("expected len %d; got %d", expectedNumberOfSessions, len(storedSessions))

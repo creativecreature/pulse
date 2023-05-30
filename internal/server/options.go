@@ -10,7 +10,7 @@ import (
 
 type option func(*server) error
 
-// Clock is a simple abstraction I use to allow for time based assertions in tests
+// Clock is a simple abstraction that can be used to simplify time based assertions in tests
 type Clock interface {
 	GetTime() int64
 }
