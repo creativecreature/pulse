@@ -95,3 +95,8 @@ func (s Storage) GetAll() ([]models.TemporarySession, error) {
 
 	return temporarySessions, err
 }
+
+func (s Storage) RemoveAll() error {
+	tmpDir := path.Join(s.dataDirPath, "tmp")
+	return os.RemoveAll(tmpDir)
+}

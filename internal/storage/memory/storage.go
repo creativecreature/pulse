@@ -21,3 +21,8 @@ func (m *Storage) Save(s domain.Session) error {
 func (m *Storage) GetAll() ([]models.TemporarySession, error) {
 	return m.sessions, nil
 }
+
+func (m *Storage) RemoveAll() error {
+	m.sessions = make([]models.TemporarySession, 0)
+	return nil
+}

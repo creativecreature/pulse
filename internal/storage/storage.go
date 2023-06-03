@@ -11,6 +11,7 @@ import (
 type TemporaryStorage interface {
 	Save(s domain.Session) error
 	GetAll() ([]models.TemporarySession, error)
+	RemoveAll() error
 }
 
 func DiskStorage(dataDirPath string) TemporaryStorage {
