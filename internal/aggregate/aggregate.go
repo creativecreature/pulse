@@ -1,7 +1,6 @@
-package cron
+package aggregate
 
 import (
-	"fmt"
 	"os"
 	"path"
 	"time"
@@ -88,10 +87,10 @@ func repositories(tempSessions []models.TemporarySession) []models.Repository {
 	return repositories
 }
 
-// aggregate takes a map where the key is the day and the value is a slice of
+// sessions takes a map where the key is the day and the value is a slice of
 // temporary sessions that have occurred during that day. It returns the
 // aggregated sessions.
-func aggregate(buckets map[int64][]models.TemporarySession) []models.AggregatedSession {
+func sessions(buckets map[int64][]models.TemporarySession) []models.AggregatedSession {
 	sessions := make([]models.AggregatedSession, 0)
 	for date, tempSessions := range buckets {
 		dateString := time.Unix(0, date*int64(time.Millisecond)).Format("2006-01-02")
@@ -107,13 +106,12 @@ func aggregate(buckets map[int64][]models.TemporarySession) []models.AggregatedS
 }
 
 // AggregateSessions aggregates all of the sessions inside the tmp directory
-func TemporarySessions() {
+func TemporarySessions() []models.AggregatedSession {
 	tempStorage := storage.DiskStorage(codeharvestDir())
-	sessions, err := tempStorage.GetAll()
+	tempSessions, err := tempStorage.GetAll()
 	if err != nil {
 		panic(err)
 	}
-	buckets := group(sessions)
-	s := aggregate(buckets)
-	fmt.Println(s)
+	buckets := group(tempSessions)
+	return sessions(buckets)
 }
