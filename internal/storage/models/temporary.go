@@ -6,6 +6,19 @@ import (
 	"code-harvest.conner.dev/internal/domain"
 )
 
+// NOTE: In this file, we have defined structs that correspond to the raw
+// format of our coding sessions. These structs are used to save the data
+// temporarily to disk. Subsequently, a cron job will aggregate and consolidate
+// the data on a daily basis.
+
+// TemporaryFile represents how we store coding session files on disk
+type TemporaryFile struct {
+	Name       string `json:"name"`
+	Repository string `json:"repository"`
+	Filetype   string `json:"filetype"`
+	DurationMs int64  `json:"duration_ms"`
+}
+
 // TemporarySession represents how we store coding session data on disk
 type TemporarySession struct {
 	StartedAt  int64           `json:"started_at"`
