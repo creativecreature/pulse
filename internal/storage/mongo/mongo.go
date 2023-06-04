@@ -95,8 +95,14 @@ func (m *db) getByDateRange(minDate, maxDate int64) ([]models.AggregatedSession,
 func mergeFiles(prevFiles, newFiles []models.AggregatedFile) []models.AggregatedFile {
 	prevFilesMap := make(map[string]models.AggregatedFile)
 	newFilesMap := make(map[string]models.AggregatedFile)
-	mergedFiles := make([]models.AggregatedFile, 0)
+	for _, file := range prevFiles {
+		prevFilesMap[file.Name] = file
+	}
+	for _, file := range newFiles {
+		newFilesMap[file.Name] = file
+	}
 
+	mergedFiles := make([]models.AggregatedFile, 0)
 	for _, prevFile := range prevFiles {
 		// This file haven't been worked on in the new session. We'll just
 		// add it to the final slice
@@ -127,9 +133,15 @@ func mergeFiles(prevFiles, newFiles []models.AggregatedFile) []models.Aggregated
 
 func mergeRepositories(previousRepositories, newRepositories []models.Repository) []models.Repository {
 	prevReposMap := make(map[string]models.Repository)
-	newReposMap := make(map[string]models.Repository)
-	mergedRepositories := make([]models.Repository, 0)
+  newReposMap := make(map[string]models.Repository)
+	for _, repository := range previousRepositories {
+		prevReposMap[repository.Name] = repository
+	}
+	for _, repository := range newRepositories {
+		newReposMap[repository.Name] = repository
+	}
 
+	mergedRepositories := make([]models.Repository, 0)
 	for _, prevRepo := range previousRepositories {
 		// This repository haven't been worked on in the new session. We'll just
 		// add it to the final slice

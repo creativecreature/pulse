@@ -83,10 +83,14 @@ func sessions(buckets map[int64][]models.TemporarySession) []models.AggregatedSe
 	sessions := make([]models.AggregatedSession, 0)
 	for date, tempSessions := range buckets {
 		dateString := time.Unix(0, date*int64(time.Millisecond)).Format("2006-01-02")
+		var totalTime int64 = 0
+		for _, tempSession := range tempSessions {
+			totalTime += tempSession.DurationMs
+		}
 		session := models.AggregatedSession{
 			Date:         date,
 			DateString:   dateString,
-			TotalTimeMs:  0,
+			TotalTimeMs:  totalTime,
 			Repositories: repositories(tempSessions),
 		}
 		sessions = append(sessions, session)
