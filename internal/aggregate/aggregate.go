@@ -1,22 +1,11 @@
 package aggregate
 
 import (
-	"os"
-	"path"
 	"time"
 
 	"code-harvest.conner.dev/internal/storage"
 	"code-harvest.conner.dev/internal/storage/models"
 )
-
-// TODO: Move this logic elsewhere. It is used in other places too.
-func codeharvestDir() string {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		panic(err)
-	}
-	return path.Join(homeDir, ".code-harvest")
-}
 
 // day is used to group unix timestamps into days
 func day(timestamp int64) int64 {
@@ -107,7 +96,7 @@ func sessions(buckets map[int64][]models.TemporarySession) []models.AggregatedSe
 
 // AggregateSessions aggregates all of the sessions inside the tmp directory
 func TemporarySessions() []models.AggregatedSession {
-	tempStorage := storage.DiskStorage(codeharvestDir())
+	tempStorage := storage.DiskStorage()
 	tempSessions, err := tempStorage.GetAll()
 	if err != nil {
 		panic(err)

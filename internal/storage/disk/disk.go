@@ -27,7 +27,12 @@ type Storage struct {
 	dataDirPath string
 }
 
-func NewStorage(dataDirPath string) Storage {
+func NewStorage() Storage {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		panic(err)
+	}
+	dataDirPath := path.Join(homeDir, ".code-harvest")
 	return Storage{dataDirPath}
 }
 
@@ -77,6 +82,7 @@ func (s Storage) Save(domainSession domain.Session) error {
 func (s Storage) GetAll() ([]models.TemporarySession, error) {
 	temporarySessions := make([]models.TemporarySession, 0)
 	tmpDir := path.Join(s.dataDirPath, "tmp")
+  fmt.Println(tmpDir)
 	err := fs.WalkDir(os.DirFS(tmpDir), ".", func(p string, _ fs.DirEntry, _ error) error {
 		if filepath.Ext(p) == ".json" {
 			content, err := os.ReadFile(path.Join(tmpDir, p))

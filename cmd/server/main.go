@@ -2,7 +2,6 @@ package main
 
 import (
 	"os"
-	"path"
 
 	"code-harvest.conner.dev/internal/server"
 	"code-harvest.conner.dev/internal/storage"
@@ -16,15 +15,10 @@ var (
 )
 
 func main() {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		panic(err)
-	}
-
 	server, err := server.New(
 		serverName,
 		server.WithLog(logger.New(os.Stdout, logger.LevelInfo)),
-		server.WithStorage(storage.DiskStorage(path.Join(homeDir, ".code-harvest"))),
+		server.WithStorage(storage.DiskStorage()),
 	)
 	if err != nil {
 		panic(err)

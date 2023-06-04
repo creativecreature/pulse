@@ -14,8 +14,8 @@ type TemporaryStorage interface {
 	RemoveAll() error
 }
 
-func DiskStorage(dataDirPath string) TemporaryStorage {
-	return disk.NewStorage(dataDirPath)
+func DiskStorage() TemporaryStorage {
+	return disk.NewStorage()
 }
 
 func MemoryStorage() TemporaryStorage {
@@ -23,12 +23,11 @@ func MemoryStorage() TemporaryStorage {
 }
 
 type PermanentStorage interface {
-	Save(s models.TemporarySession) error
+	SaveAll(s []models.AggregatedSession) error
 }
 
-func MongoStorage(uri, database, collection string) PermanentStorage {
+func MongoStorage(uri, database, collection string) (mongoStorage PermanentStorage, disconnect func()) {
 	storage := mongo.NewDB(uri, database, collection)
-	disconnect := storage.Connect()
-	defer disconnect()
-	return storage
+	disconnect = storage.Connect()
+	return storage, disconnect
 }
