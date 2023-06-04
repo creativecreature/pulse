@@ -4,6 +4,7 @@ type File struct {
 	name       string
 	filetype   string
 	repository string
+	path       string
 }
 
 func (m File) Name() string {
@@ -18,6 +19,10 @@ func (m File) Repository() string {
 	return m.repository
 }
 
-func NewFile(name, filetype, repository string) File {
-	return File{name, filetype, repository}
+func (m File) Path() string {
+	return m.path
+}
+
+func NewFile(name, filetype, repository, path string) File {
+	return File{name, filetype, repository, path}
 }

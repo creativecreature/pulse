@@ -43,6 +43,7 @@ func repositories(tempSessions []models.TemporarySession) []models.Repository {
 			if _, ok := repositoryFileMap[file.Repository][file.Name]; !ok {
 				repositoryFileMap[file.Repository][file.Name] = &models.AggregatedFile{
 					Name:       file.Name,
+					Path:       file.Path,
 					Filetype:   file.Filetype,
 					DurationMs: file.DurationMs,
 				}

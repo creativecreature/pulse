@@ -96,17 +96,17 @@ func mergeFiles(prevFiles, newFiles []models.AggregatedFile) []models.Aggregated
 	prevFilesMap := make(map[string]models.AggregatedFile)
 	newFilesMap := make(map[string]models.AggregatedFile)
 	for _, file := range prevFiles {
-		prevFilesMap[file.Name] = file
+		prevFilesMap[file.Path] = file
 	}
 	for _, file := range newFiles {
-		newFilesMap[file.Name] = file
+		newFilesMap[file.Path] = file
 	}
 
 	mergedFiles := make([]models.AggregatedFile, 0)
 	for _, prevFile := range prevFiles {
 		// This file haven't been worked on in the new session. We'll just
 		// add it to the final slice
-		newFile, ok := newFilesMap[prevFile.Name]
+		newFile, ok := newFilesMap[prevFile.Path]
 		if !ok {
 			mergedFiles = append(mergedFiles, prevFile)
 			continue
@@ -114,6 +114,7 @@ func mergeFiles(prevFiles, newFiles []models.AggregatedFile) []models.Aggregated
 
 		mergedFile := models.AggregatedFile{
 			Name:       prevFile.Name,
+			Path:       prevFile.Path,
 			Filetype:   prevFile.Filetype,
 			DurationMs: prevFile.DurationMs + newFile.DurationMs,
 		}
@@ -123,7 +124,7 @@ func mergeFiles(prevFiles, newFiles []models.AggregatedFile) []models.Aggregated
 	for _, newFile := range newFiles {
 		// We have already handled the merging in the loop above. Here we'll just
 		// add the new file which haven't been worked on in the previous session.
-		if _, ok := prevFilesMap[newFile.Name]; !ok {
+		if _, ok := prevFilesMap[newFile.Path]; !ok {
 			mergedFiles = append(mergedFiles, newFile)
 		}
 	}
@@ -133,7 +134,7 @@ func mergeFiles(prevFiles, newFiles []models.AggregatedFile) []models.Aggregated
 
 func mergeRepositories(previousRepositories, newRepositories []models.Repository) []models.Repository {
 	prevReposMap := make(map[string]models.Repository)
-  newReposMap := make(map[string]models.Repository)
+	newReposMap := make(map[string]models.Repository)
 	for _, repository := range previousRepositories {
 		prevReposMap[repository.Name] = repository
 	}

@@ -1,6 +1,7 @@
 package filesystem
 
 import (
+	"fmt"
 	"path"
 	"regexp"
 )
@@ -81,11 +82,24 @@ func (f FileReader) findGitFolder(dir string) (string, error) {
 	return f.findGitFolder(f.fsys.Dir(dir))
 }
 
-func (f FileReader) RepositoryName(path string) (string, error) {
-	rootPath, err := f.findGitFolder(f.fsys.Dir(path))
+func (f FileReader) RepositoryName(absolutePath string) (string, error) {
+	gitDirPath, err := f.findGitFolder(f.fsys.Dir(absolutePath))
 	if err != nil {
 		return "", err
 	}
 
-	return f.extractRepositoryName(rootPath)
+	return f.extractRepositoryName(gitDirPath)
+}
+
+// PathInProject returns the files relative path within the directory
+func (f FileReader) PathInProject(absolutePath, repositoryName string) (string, error) {
+	gitDirPath, err := f.findGitFolder(f.fsys.Dir(absolutePath))
+	if err != nil {
+		return "", err
+	}
+
+	// The project could be cloned under a different name. We want to use the
+	// name of the actual repository.
+	pathFromGitDir := absolutePath[len(gitDirPath)-len(".git"):]
+	return fmt.Sprintf("%s/%s", repositoryName, pathFromGitDir), nil
 }

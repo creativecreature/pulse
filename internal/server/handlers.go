@@ -10,10 +10,10 @@ func (server *server) startNewSession(os, editor string) {
 	server.session = domain.NewSession(server.clock.GetTime(), os, editor)
 }
 
-func (server *server) updateCurrentFile(path string) {
+func (server *server) updateCurrentFile(absolutePath string) {
 	openedAt := server.clock.GetTime()
 
-	fileMetadata, err := server.metadataReader.Read(path)
+	fileMetadata, err := server.metadataReader.Read(absolutePath)
 	if err != nil {
 		server.log.PrintDebug("Could not extract metadata for the path", map[string]string{
 			"reason": err.Error(),
@@ -25,7 +25,7 @@ func (server *server) updateCurrentFile(path string) {
 		fileMetadata.Name(),
 		fileMetadata.Repository(),
 		fileMetadata.Filetype(),
-		path,
+		fileMetadata.Path(),
 		openedAt,
 	)
 
@@ -35,7 +35,7 @@ func (server *server) updateCurrentFile(path string) {
 	}
 	server.session.Filestack.Push(file)
 	server.log.PrintDebug("Successfully updated the current file", map[string]string{
-		"path": path,
+		"path": absolutePath,
 	})
 }
 

@@ -6,6 +6,7 @@ package models
 
 type AggregatedFile struct {
 	Name       string `bson:"name"`
+	Path       string `bson:"path"`
 	Filetype   string `bson:"filetype"`
 	DurationMs int64  `bson:"duration_ms"`
 }

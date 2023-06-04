@@ -38,7 +38,7 @@ func TestJumpingBetweenInstances(t *testing.T) {
 	}, &reply)
 
 	// Open a file in the first instance
-	mockMetadataReader.SetFile(mockfs.NewFile("install.sh", "bash", "dotfiles"))
+	mockMetadataReader.SetFile(mockfs.NewFile("install.sh", "bash", "dotfiles", "dotfiles/install.sh"))
 	a.OpenFile(domain.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/install.sh",
@@ -56,7 +56,7 @@ func TestJumpingBetweenInstances(t *testing.T) {
 	}, &reply)
 
 	// Open a file in the second vim instance
-	mockMetadataReader.SetFile(mockfs.NewFile("bootstrap.sh", "bash", "dotfiles"))
+	mockMetadataReader.SetFile(mockfs.NewFile("bootstrap.sh", "bash", "dotfiles", "dotfiles/bootstrap.sh"))
 	a.OpenFile(domain.Event{
 		Id:     "345",
 		Path:   "/Users/conner/code/dotfiles/bootstrap.sh",
@@ -65,7 +65,7 @@ func TestJumpingBetweenInstances(t *testing.T) {
 	}, &reply)
 
 	// Move focus back to the first VIM instance. This should end the second session.
-	mockMetadataReader.SetFile(mockfs.NewFile("install.sh", "bash", "dotfiles"))
+	mockMetadataReader.SetFile(mockfs.NewFile("install.sh", "bash", "dotfiles", "dotfiles/install.sh"))
 	a.FocusGained(domain.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/install.sh",
@@ -115,7 +115,7 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 	}, &reply)
 
 	// Open a file
-	mockMetadataReader.SetFile(mockfs.NewFile("install.sh", "bash", "dotfiles"))
+	mockMetadataReader.SetFile(mockfs.NewFile("install.sh", "bash", "dotfiles", "dotfiles/install.sh"))
 	a.OpenFile(domain.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/install.sh",
@@ -140,7 +140,7 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 		Editor: "nvim",
 		OS:     "Linux",
 	}, &reply)
-	mockMetadataReader.SetFile(mockfs.NewFile("bootstrap.sh", "bash", "dotfiles"))
+	mockMetadataReader.SetFile(mockfs.NewFile("bootstrap.sh", "bash", "dotfiles", "dotfiles/bootstrap.sh"))
 	a.OpenFile(domain.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/bootstrap.sh",
@@ -199,7 +199,7 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 
 	// Send an open file event. This should update the time for the last activity to 250.
 	mockClock.SetTime(250)
-	mockMetadataReader.SetFile(mockfs.NewFile("install.sh", "bash", "dotfiles"))
+	mockMetadataReader.SetFile(mockfs.NewFile("install.sh", "bash", "dotfiles", "dotfiles/install.sh"))
 	a.OpenFile(domain.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/install.sh",
@@ -218,7 +218,7 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 	a.CheckHeartbeat()
 
 	mockClock.SetTime(server.HeartbeatTTL.Milliseconds() + 300)
-	mockMetadataReader.SetFile(mockfs.NewFile("cleanup.sh", "bash", "dotfiles"))
+	mockMetadataReader.SetFile(mockfs.NewFile("cleanup.sh", "bash", "dotfiles", "dotfiles/cleanup.sh"))
 	a.OpenFile(domain.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/cleanup.sh",

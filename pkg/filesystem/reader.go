@@ -31,24 +31,28 @@ func NewReader(fsys Filesystem) FileReader {
 	return FileReader{fsys}
 }
 
-func (f FileReader) Read(path string) (File, error) {
-	if path == "" {
+func (f FileReader) Read(absolutePath string) (File, error) {
+	if absolutePath == "" {
 		return file{}, ErrEmptyPath
 	}
 
 	// It could be a temporary buffer or directory.
-	if !f.fsys.IsFile(path) {
+	if !f.fsys.IsFile(absolutePath) {
 		return file{}, ErrPathNotAFile
 	}
 
 	// When I aggregate the data I do it on a per project basis. Therefore, if this
 	// is just a one-off edit of some configuration file I won't track time for it.
-	repositoryName, err := f.RepositoryName(path)
+	repositoryName, err := f.RepositoryName(absolutePath)
 	if err != nil {
 		return file{}, err
 	}
 
-	filename := filepath.Base(path)
+	filename := filepath.Base(absolutePath)
+	path, err := f.PathInProject(absolutePath, repositoryName)
+	if err != nil {
+		return file{}, err
+	}
 
 	// Tries to get the filetype from either the file extension or name.
 	ft, err := Filetype(filename)
@@ -56,6 +60,6 @@ func (f FileReader) Read(path string) (File, error) {
 		return file{}, err
 	}
 
-	fileMetaData := file{filename, ft, repositoryName}
+	fileMetaData := file{filename, ft, repositoryName, path}
 	return fileMetaData, nil
 }

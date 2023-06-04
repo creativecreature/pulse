@@ -14,6 +14,7 @@ import (
 // TemporaryFile represents how we store coding session files on disk
 type TemporaryFile struct {
 	Name       string `json:"name"`
+	Path       string `json:"path"`
 	Repository string `json:"repository"`
 	Filetype   string `json:"filetype"`
 	DurationMs int64  `json:"duration_ms"`
@@ -34,6 +35,7 @@ func NewTemporarySession(s domain.Session) TemporarySession {
 	for _, f := range s.AggregatedFiles {
 		file := TemporaryFile{
 			Name:       f.Name,
+			Path:       f.Path,
 			Repository: f.Repository,
 			Filetype:   f.Filetype,
 			DurationMs: f.DurationMs,

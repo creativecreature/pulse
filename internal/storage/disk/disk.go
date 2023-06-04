@@ -58,13 +58,13 @@ func filename(s domain.Session) string {
 }
 
 func (s Storage) Save(domainSession domain.Session) error {
-	fname := filename(domainSession)
+	sessionFilename := filename(domainSession)
 	dirPath, err := dir(s.dataDirPath)
 	if err != nil {
 		return err
 	}
 
-	file, err := os.Create(path.Join(dirPath, fname))
+	file, err := os.Create(path.Join(dirPath, sessionFilename))
 	if err != nil {
 		return err
 	}
