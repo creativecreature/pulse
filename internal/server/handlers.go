@@ -7,7 +7,7 @@ import (
 )
 
 func (server *server) startNewSession(os, editor string) {
-	server.session = domain.NewSession(server.clock.GetTime(), os, editor)
+	server.session = domain.NewActiveSession(server.clock.GetTime(), os, editor)
 }
 
 func (server *server) updateCurrentFile(absolutePath string) {
@@ -21,7 +21,7 @@ func (server *server) updateCurrentFile(absolutePath string) {
 		return
 	}
 
-	file := domain.NewFile(
+	file := domain.NewActiveFile(
 		fileMetadata.Name(),
 		fileMetadata.Repository(),
 		fileMetadata.Filetype(),

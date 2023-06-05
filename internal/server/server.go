@@ -20,7 +20,7 @@ type server struct {
 	storage        storage.TemporaryStorage
 	activeClientId string
 	lastHeartbeat  int64
-	session        *domain.Session
+	session        *domain.ActiveSession
 	log            Log
 }
 

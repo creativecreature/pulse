@@ -2,27 +2,26 @@ package memory
 
 import (
 	"code-harvest.conner.dev/internal/domain"
-	"code-harvest.conner.dev/internal/storage/models"
 )
 
 type Storage struct {
-	sessions []models.TemporarySession
+	sessions []domain.Session
 }
 
 func NewStorage() *Storage {
-	return &Storage{sessions: []models.TemporarySession{}}
+	return &Storage{sessions: []domain.Session{}}
 }
 
-func (m *Storage) Save(s domain.Session) error {
-	m.sessions = append(m.sessions, models.NewTemporarySession(s))
+func (m *Storage) Save(s domain.ActiveSession) error {
+	m.sessions = append(m.sessions, domain.NewSession(s))
 	return nil
 }
 
-func (m *Storage) GetAll() ([]models.TemporarySession, error) {
+func (m *Storage) GetAll() ([]domain.Session, error) {
 	return m.sessions, nil
 }
 
 func (m *Storage) RemoveAll() error {
-	m.sessions = make([]models.TemporarySession, 0)
+	m.sessions = make([]domain.Session, 0)
 	return nil
 }

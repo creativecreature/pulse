@@ -1,7 +1,7 @@
 package domain
 
-// File represents a file that has been opened in the editor
-type file struct {
+// File represents a ActiveFile that has been opened in the editor
+type ActiveFile struct {
 	OpenedAt   int64
 	ClosedAt   int64
 	Name       string
@@ -11,9 +11,9 @@ type file struct {
 	DurationMs int64
 }
 
-// NewFile creates a new file
-func NewFile(name, repo, filetype, path string, openedAt int64) *file {
-	return &file{
+// NewActiveFile creates a new file
+func NewActiveFile(name, repo, filetype, path string, openedAt int64) *ActiveFile {
+	return &ActiveFile{
 		Name:       name,
 		Repository: repo,
 		Filetype:   filetype,
@@ -23,37 +23,20 @@ func NewFile(name, repo, filetype, path string, openedAt int64) *file {
 	}
 }
 
-// filestack represents the stack of file that has been opened during a coding session
-type filestack struct {
-	s []*file
+// File represents the files for any given coding session
+type File struct {
+	Name       string `json:"name"`
+	Path       string `json:"path"`
+	Repository string `json:"repository"`
+	Filetype   string `json:"filetype"`
+	DurationMs int64  `json:"duration_ms"`
 }
 
-func (s *filestack) Len() int {
-	return len(s.s)
-}
-
-// Push pushes a file onto the stack
-func (s *filestack) Push(f *file) {
-	s.s = append(s.s, f)
-}
-
-// Pop pops a file off the stack
-func (s *filestack) Pop() *file {
-	l := len(s.s)
-	if l == 0 {
-		return nil
-	}
-
-	res := s.s[l-1]
-	s.s = s.s[:l-1]
-	return res
-}
-
-// Peek returns a pointer to the most recently opened file
-func (s *filestack) Peek() *file {
-	l := len(s.s)
-	if l == 0 {
-		return nil
-	}
-	return s.s[len(s.s)-1]
+// DailyFile represents all the work that has been done in a patricular file for a
+// given day
+type DailyFile struct {
+	Name       string `bson:"name"`
+	Path       string `bson:"path"`
+	Filetype   string `bson:"filetype"`
+	DurationMs int64  `bson:"duration_ms"`
 }

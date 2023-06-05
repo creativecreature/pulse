@@ -14,7 +14,12 @@ var (
 
 func (server *server) CheckHeartbeat() {
 	server.log.PrintDebug("Checking heartbeat", nil)
-	if server.session != nil && server.lastHeartbeat+HeartbeatTTL.Milliseconds() < server.clock.GetTime() {
+	if server.session == nil {
+		return
+	}
+
+	// Check if too much time has passed since the last heartbeat
+	if server.lastHeartbeat+HeartbeatTTL.Milliseconds() < server.clock.GetTime() {
 		server.mutex.Lock()
 		defer server.mutex.Unlock()
 		server.saveSession()

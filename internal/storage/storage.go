@@ -4,13 +4,12 @@ import (
 	"code-harvest.conner.dev/internal/domain"
 	"code-harvest.conner.dev/internal/storage/disk"
 	"code-harvest.conner.dev/internal/storage/memory"
-	"code-harvest.conner.dev/internal/storage/models"
 	"code-harvest.conner.dev/internal/storage/mongo"
 )
 
 type TemporaryStorage interface {
-	Save(s domain.Session) error
-	GetAll() ([]models.TemporarySession, error)
+	Save(s domain.ActiveSession) error
+	GetAll() ([]domain.Session, error)
 	RemoveAll() error
 }
 
@@ -23,7 +22,7 @@ func MemoryStorage() TemporaryStorage {
 }
 
 type PermanentStorage interface {
-	SaveAll(s []models.AggregatedSession) error
+	SaveAll(s []domain.AggregatedSession) error
 }
 
 func MongoStorage(uri, database, collection string) (mongoStorage PermanentStorage, disconnect func()) {

@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"code-harvest.conner.dev/internal/domain"
-	"code-harvest.conner.dev/internal/storage/models"
 )
 
 const (
@@ -49,7 +48,7 @@ func dir(dataDirPath string) (string, error) {
 }
 
 // Returns a filename that we'll use when writing the session to disk
-func filename(s domain.Session) string {
+func filename(s domain.ActiveSession) string {
 	startDuration := time.Duration(s.StartedAt) * time.Millisecond
 	startTime := time.Unix(0, startDuration.Nanoseconds())
 	endDuration := time.Duration(s.EndedAt) * time.Millisecond
@@ -57,7 +56,7 @@ func filename(s domain.Session) string {
 	return fmt.Sprintf("%s-%s.json", startTime.Format(HHMMSSSSS), endTime.Format(HHMMSSSSS))
 }
 
-func (s Storage) Save(domainSession domain.Session) error {
+func (s Storage) Save(domainSession domain.ActiveSession) error {
 	sessionFilename := filename(domainSession)
 	dirPath, err := dir(s.dataDirPath)
 	if err != nil {
@@ -70,7 +69,7 @@ func (s Storage) Save(domainSession domain.Session) error {
 	}
 	defer file.Close()
 
-	serializedSession, err := models.NewTemporarySession(domainSession).Serialize()
+	serializedSession, err := domain.NewSession(domainSession).Serialize()
 	if err != nil {
 		return err
 	}
@@ -79,17 +78,16 @@ func (s Storage) Save(domainSession domain.Session) error {
 	return err
 }
 
-func (s Storage) GetAll() ([]models.TemporarySession, error) {
-	temporarySessions := make([]models.TemporarySession, 0)
+func (s Storage) GetAll() ([]domain.Session, error) {
+	temporarySessions := make([]domain.Session, 0)
 	tmpDir := path.Join(s.dataDirPath, "tmp")
-	fmt.Println(tmpDir)
 	err := fs.WalkDir(os.DirFS(tmpDir), ".", func(p string, _ fs.DirEntry, _ error) error {
 		if filepath.Ext(p) == ".json" {
 			content, err := os.ReadFile(path.Join(tmpDir, p))
 			if err != nil {
 				return err
 			}
-			tempSession := models.TemporarySession{}
+			tempSession := domain.Session{}
 			err = json.Unmarshal(content, &tempSession)
 			if err != nil {
 				return err

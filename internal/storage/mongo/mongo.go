@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"code-harvest.conner.dev/internal/storage/models"
+	"code-harvest.conner.dev/internal/domain"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -58,14 +58,14 @@ func max(a, b int64) int64 {
 	return b
 }
 
-func dateRange(sessions []models.AggregatedSession) (minDate, maxDate int64) {
+func dateRange(sessions []domain.AggregatedSession) (minDate, maxDate int64) {
 	for _, s := range sessions {
 		minDate, maxDate = min(minDate, s.Date), max(maxDate, s.Date)
 	}
 	return minDate, maxDate
 }
 
-func (m *db) getByDateRange(minDate, maxDate int64) ([]models.AggregatedSession, error) {
+func (m *db) getByDateRange(minDate, maxDate int64) ([]domain.AggregatedSession, error) {
 	filter := bson.D{
 		{
 			Key: "$and",
@@ -81,20 +81,20 @@ func (m *db) getByDateRange(minDate, maxDate int64) ([]models.AggregatedSession,
 		Collection(m.collection).
 		Find(context.Background(), filter, opts)
 	if err != nil {
-		return []models.AggregatedSession{}, err
+		return []domain.AggregatedSession{}, err
 	}
 
-	results := make([]models.AggregatedSession, 0)
+	results := make([]domain.AggregatedSession, 0)
 	err = cursor.All(context.Background(), &results)
 	if err != nil {
-		return []models.AggregatedSession{}, err
+		return []domain.AggregatedSession{}, err
 	}
 	return results, nil
 }
 
-func mergeFiles(prevFiles, newFiles []models.AggregatedFile) []models.AggregatedFile {
-	prevFilesMap := make(map[string]models.AggregatedFile)
-	newFilesMap := make(map[string]models.AggregatedFile)
+func mergeFiles(prevFiles, newFiles []domain.DailyFile) []domain.DailyFile {
+	prevFilesMap := make(map[string]domain.DailyFile)
+	newFilesMap := make(map[string]domain.DailyFile)
 	for _, file := range prevFiles {
 		prevFilesMap[file.Path] = file
 	}
@@ -102,7 +102,7 @@ func mergeFiles(prevFiles, newFiles []models.AggregatedFile) []models.Aggregated
 		newFilesMap[file.Path] = file
 	}
 
-	mergedFiles := make([]models.AggregatedFile, 0)
+	mergedFiles := make([]domain.DailyFile, 0)
 	for _, prevFile := range prevFiles {
 		// This file haven't been worked on in the new session. We'll just
 		// add it to the final slice
@@ -112,7 +112,7 @@ func mergeFiles(prevFiles, newFiles []models.AggregatedFile) []models.Aggregated
 			continue
 		}
 
-		mergedFile := models.AggregatedFile{
+		mergedFile := domain.DailyFile{
 			Name:       prevFile.Name,
 			Path:       prevFile.Path,
 			Filetype:   prevFile.Filetype,
@@ -132,9 +132,9 @@ func mergeFiles(prevFiles, newFiles []models.AggregatedFile) []models.Aggregated
 	return mergedFiles
 }
 
-func mergeRepositories(previousRepositories, newRepositories []models.Repository) []models.Repository {
-	prevReposMap := make(map[string]models.Repository)
-	newReposMap := make(map[string]models.Repository)
+func mergeRepositories(previousRepositories, newRepositories []domain.Repository) []domain.Repository {
+	prevReposMap := make(map[string]domain.Repository)
+	newReposMap := make(map[string]domain.Repository)
 	for _, repository := range previousRepositories {
 		prevReposMap[repository.Name] = repository
 	}
@@ -142,7 +142,7 @@ func mergeRepositories(previousRepositories, newRepositories []models.Repository
 		newReposMap[repository.Name] = repository
 	}
 
-	mergedRepositories := make([]models.Repository, 0)
+	mergedRepositories := make([]domain.Repository, 0)
 	for _, prevRepo := range previousRepositories {
 		// This repository haven't been worked on in the new session. We'll just
 		// add it to the final slice
@@ -154,7 +154,7 @@ func mergeRepositories(previousRepositories, newRepositories []models.Repository
 
 		// This repository has been worked on in both sessions. We'll have to merge them
 		mergedFiles := mergeFiles(prevRepo.Files, newRepo.Files)
-		mergedRepository := models.Repository{
+		mergedRepository := domain.Repository{
 			Name:       prevRepo.Name,
 			DurationMs: prevRepo.DurationMs + newRepo.DurationMs,
 			Files:      mergedFiles,
@@ -176,18 +176,19 @@ func mergeRepositories(previousRepositories, newRepositories []models.Repository
 
 // mergeWithPreviousSessions merges the new sessions with old sessions that
 // have occurred during the same day
-func mergeWithPreviousSessions(previousSessions, newSessions []models.AggregatedSession) []models.AggregatedSession {
-	datePrevSession := make(map[string]models.AggregatedSession)
+func mergeWithPreviousSessions(previousSessions, newSessions []domain.AggregatedSession) []domain.AggregatedSession {
+	datePrevSession := make(map[string]domain.AggregatedSession)
 	for _, prevSession := range previousSessions {
 		datePrevSession[prevSession.DateString] = prevSession
 	}
-	mergedSessions := make([]models.AggregatedSession, 0)
+	mergedSessions := make([]domain.AggregatedSession, 0)
 	for _, newSession := range newSessions {
 		// Check if we should merge this with a previous session
 		if prevSession, ok := datePrevSession[newSession.DateString]; ok {
 			repositories := mergeRepositories(prevSession.Repositories, newSession.Repositories)
-			session := models.AggregatedSession{
+			session := domain.AggregatedSession{
 				ID:           prevSession.ID,
+				Period:       prevSession.Period,
 				Date:         newSession.Date,
 				DateString:   newSession.DateString,
 				TotalTimeMs:  prevSession.TotalTimeMs + newSession.TotalTimeMs,
@@ -219,7 +220,7 @@ func (m *db) deleteByDateRange(minDate, maxDate int64) error {
 	return err
 }
 
-func (m *db) insertAll(sessions []models.AggregatedSession) error {
+func (m *db) insertAll(sessions []domain.AggregatedSession) error {
 	documents := make([]interface{}, 0)
 	for _, session := range sessions {
 		documents = append(documents, session)
@@ -230,7 +231,7 @@ func (m *db) insertAll(sessions []models.AggregatedSession) error {
 	return err
 }
 
-func (m *db) SaveAll(sessions []models.AggregatedSession) error {
+func (m *db) SaveAll(sessions []domain.AggregatedSession) error {
 	minDate, maxDate := dateRange(sessions)
 	previousSessionsForRange, err := m.getByDateRange(minDate, maxDate)
 	if err != nil {
