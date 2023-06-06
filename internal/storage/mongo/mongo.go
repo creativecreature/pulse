@@ -92,9 +92,9 @@ func (m *db) getByDateRange(minDate, maxDate int64) ([]domain.AggregatedSession,
 	return results, nil
 }
 
-func mergeFiles(prevFiles, newFiles []domain.DailyFile) []domain.DailyFile {
-	prevFilesMap := make(map[string]domain.DailyFile)
-	newFilesMap := make(map[string]domain.DailyFile)
+func mergeFiles(prevFiles, newFiles []domain.AggregatedFile) []domain.AggregatedFile {
+	prevFilesMap := make(map[string]domain.AggregatedFile)
+	newFilesMap := make(map[string]domain.AggregatedFile)
 	for _, file := range prevFiles {
 		prevFilesMap[file.Path] = file
 	}
@@ -102,7 +102,7 @@ func mergeFiles(prevFiles, newFiles []domain.DailyFile) []domain.DailyFile {
 		newFilesMap[file.Path] = file
 	}
 
-	mergedFiles := make([]domain.DailyFile, 0)
+	mergedFiles := make([]domain.AggregatedFile, 0)
 	for _, prevFile := range prevFiles {
 		// This file haven't been worked on in the new session. We'll just
 		// add it to the final slice
@@ -112,7 +112,7 @@ func mergeFiles(prevFiles, newFiles []domain.DailyFile) []domain.DailyFile {
 			continue
 		}
 
-		mergedFile := domain.DailyFile{
+		mergedFile := domain.AggregatedFile{
 			Name:       prevFile.Name,
 			Path:       prevFile.Path,
 			Filetype:   prevFile.Filetype,

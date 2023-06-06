@@ -57,18 +57,24 @@ vendor:
 # ==================================================================================== #
 #
 
-## build/server: build the cmd/server application
+## build/server: build cmd/server
 build/server:
-	@echo 'Building...'
+	@echo 'Compiling server...'
 	go build -ldflags="-X main.serverName=${SERVER_NAME} -X main.port=${PORT}" -o=./bin/code-harvest-server ./cmd/server
 .PHONY:build/server
 
-## build/client: build the cmd/client application
+## build/client: build cmd/client
 build/client:
-	@echo 'Building...'
+	@echo 'Compiling client...'
 	go build -ldflags="-X main.serverName=${SERVER_NAME} -X main.port=${PORT} -X main.hostname=${HOSTNAME}" -o=./bin/code-harvest-client ./cmd/client
 .PHONY:build/client
 
+## build/cron: build cmd/cron
+build/cron:
+	@echo 'Compiling cron...'
+	go build -ldflags="-X main.uri=${URI} -X main.db=${DB} -X main.collection=${COLLECTION}" -o=./bin/code-harvest-cron ./cmd/cron
+.PHONY:build/client
+
 ## build: builds the server and client applications
-build: audit build/server build/client
+build: audit build/server build/client build/cron
 .PHONY:build

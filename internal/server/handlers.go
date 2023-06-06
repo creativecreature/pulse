@@ -21,7 +21,7 @@ func (server *server) updateCurrentFile(absolutePath string) {
 		return
 	}
 
-	file := domain.NewActiveFile(
+	file := domain.NewBuffer(
 		fileMetadata.Name(),
 		fileMetadata.Repository(),
 		fileMetadata.Filetype(),
@@ -30,11 +30,11 @@ func (server *server) updateCurrentFile(absolutePath string) {
 	)
 
 	// Update the current file.
-	if currentFile := server.session.Filestack.Peek(); currentFile != nil {
-		currentFile.ClosedAt = openedAt
+	if currentBuffer := server.session.Peek(); currentBuffer != nil {
+		currentBuffer.ClosedAt = openedAt
 	}
-	server.session.Filestack.Push(file)
-	server.log.PrintDebug("Successfully updated the current file", map[string]string{
+	server.session.PushBuffer(file)
+	server.log.PrintDebug("Successfully updated the current buffer", map[string]string{
 		"path": absolutePath,
 	})
 }
@@ -55,28 +55,32 @@ func (server *server) saveSession() {
 
 	// Set session duration and set closed at for the current file.
 	endedAt := server.clock.GetTime()
-	if currentFile := server.session.Filestack.Peek(); currentFile != nil {
+	if currentFile := server.session.Peek(); currentFile != nil {
 		currentFile.ClosedAt = endedAt
 	}
 	server.session.EndedAt = endedAt
 	server.session.DurationMs = server.session.EndedAt - server.session.StartedAt
 
 	// Whenever we open new a buffer that have a corresponding file on disk we
-	// push it to the sessions file stack. Each file can serverear more than once.
-	// Before we save the session we aggregate all the edits of the same file
-	// into a map with a total duration of the time we've spent in that file.
-	for server.session.Filestack.Len() > 0 {
-		file := server.session.Filestack.Pop()
-		aggregatedFile, exists := server.session.AggregatedFiles[file.Path]
+	// push it to the sessions file stack. Each buffer can be opened more than
+	// once. Before we save the session we aggregate all the edits of the same
+	// file into a map with a total duration of the time we've spent in that
+	// file.
+	for {
+		buffer := server.session.PopBuffer()
+		if buffer == nil {
+			break
+		}
+		mergedBuffer, exists := server.session.MergedBuffers[buffer.Filepath]
 		if !exists {
-			file.DurationMs = file.ClosedAt - file.OpenedAt
-			server.session.AggregatedFiles[file.Path] = file
+			buffer.DurationMs = buffer.ClosedAt - buffer.OpenedAt
+			server.session.MergedBuffers[buffer.Filepath] = buffer
 		} else {
-			aggregatedFile.DurationMs += file.ClosedAt - file.OpenedAt
+			mergedBuffer.DurationMs += buffer.ClosedAt - buffer.OpenedAt
 		}
 	}
 
-	if len(server.session.AggregatedFiles) < 1 {
+	if len(server.session.MergedBuffers) < 1 {
 		server.log.PrintDebug("The session had no files.", map[string]string{
 			"clientId": server.activeClientId,
 		})
