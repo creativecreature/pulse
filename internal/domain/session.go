@@ -1,6 +1,9 @@
 package domain
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"time"
+)
 
 // ActiveSession represents a coding session that is active in one of the clients.
 type ActiveSession struct {
@@ -72,6 +75,12 @@ const (
 	Year
 )
 
+// truncateDay is used to cluster unix timestamps into days
+func truncateDay(timestamp int64) int64 {
+	var dayInMs int64 = 24 * 60 * 60 * 1000
+	return timestamp - (timestamp % dayInMs)
+}
+
 // AggregatedSession represents several TempSessions that have been merged together
 // for a given interval.
 type AggregatedSession struct {
@@ -81,4 +90,38 @@ type AggregatedSession struct {
 	DateString   string       `bson:"date_string"` // yyyy-mm-dd
 	TotalTimeMs  int64        `bson:"total_time_ms"`
 	Repositories []Repository `bson:"repositories"`
+}
+
+// groupByDay groups the temporary sessions by day
+func groupByDay(session []Session) map[int64][]Session {
+	buckets := make(map[int64][]Session)
+	for _, s := range session {
+		d := truncateDay(s.StartedAt)
+		buckets[d] = append(buckets[d], s)
+	}
+	return buckets
+}
+
+// aggregateByDay takes a map where the key is the day and the value is a slice of
+// temporary aggregateByDay that have occurred during that day. It returns the
+// aggregated aggregateByDay.
+func AggregateByDay(sessions []Session) []AggregatedSession {
+	sessionsPerDay := groupByDay(sessions)
+	aggregatedSessions := make([]AggregatedSession, 0)
+	for date, tempSessions := range sessionsPerDay {
+		dateString := time.Unix(0, date*int64(time.Millisecond)).Format("2006-01-02")
+		var totalTime int64 = 0
+		for _, tempSession := range tempSessions {
+			totalTime += tempSession.DurationMs
+		}
+		session := AggregatedSession{
+			Period:       Day,
+			Date:         date,
+			DateString:   dateString,
+			TotalTimeMs:  totalTime,
+			Repositories: repositories(tempSessions),
+		}
+		aggregatedSessions = append(aggregatedSessions, session)
+	}
+	return aggregatedSessions
 }

@@ -9,7 +9,7 @@ func New() clock {
 type clock struct{}
 
 func (c clock) GetTime() int64 {
-	return time.Now().UnixMilli()
+	return time.Now().UTC().UnixMilli()
 }
 
 type MockClock struct {
