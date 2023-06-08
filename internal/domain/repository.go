@@ -2,9 +2,9 @@ package domain
 
 // Repository represents all work that has been done in a repository during a day
 type Repository struct {
-	Name       string           `bson:"name"`
-	Files      []AggregatedFile `bson:"files"`
-	DurationMs int64            `bson:"duration_ms"`
+	Name       string          `bson:"name"`
+	Files      AggregatedFiles `bson:"files"`
+	DurationMs int64           `bson:"duration_ms"`
 }
 
 func repositoryFileMap(sessions []StoredSession) map[string]map[string]*AggregatedFile {

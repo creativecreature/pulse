@@ -8,5 +8,5 @@ type AggregatedSession struct {
 	Date         int64        `bson:"date"`
 	DateString   string       `bson:"date_string"` // yyyy-mm-dd
 	TotalTimeMs  int64        `bson:"total_time_ms"`
-	Repositories []Repository `bson:"repositories"`
+	Repositories Repositories `bson:"repositories"`
 }
