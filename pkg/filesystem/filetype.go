@@ -29,6 +29,7 @@ var fileExtensionFiletypeMap = map[string]string{
 	"vim":  "vimscript",
 	"yml":  "yaml",
 	"yaml": "yaml",
+	"json": "json",
 }
 
 // Get tries to extract the filetype from a filename.
