@@ -17,20 +17,25 @@ var (
 func main() {
 	log := logger.New(os.Stdout, logger.LevelInfo)
 	diskStorage := storage.DiskStorage()
+	properties := map[string]string{}
+	properties["uri"] = uri
+	properties["db"] = db
+	properties["collection"] = collection
+
 	sessions, err := diskStorage.GetAll()
 	if err != nil {
-		log.PrintFatal(err, nil)
+		log.PrintFatal(err, properties)
 	}
 
 	permStorage, disconnect := storage.MongoStorage(uri, db, collection)
 	defer disconnect()
 	err = permStorage.SaveAll(sessions.AggregateByDay())
 	if err != nil {
-		log.PrintFatal(err, nil)
+		log.PrintFatal(err, properties)
 	}
 
 	err = diskStorage.RemoveAll()
 	if err != nil {
-		log.PrintFatal(err, nil)
+		log.PrintFatal(err, properties)
 	}
 }

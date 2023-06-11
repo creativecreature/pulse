@@ -15,14 +15,23 @@ var (
 )
 
 func main() {
+	log := logger.New(os.Stdout, logger.LevelInfo)
 	server, err := server.New(
 		serverName,
-		server.WithLog(logger.New(os.Stdout, logger.LevelInfo)),
+		server.WithLog(log),
 		server.WithStorage(storage.DiskStorage()),
 	)
+
+	properties := map[string]string{}
+	properties["serverName"] = serverName
+	properties["port"] = port
+
 	if err != nil {
-		panic(err)
+		log.PrintFatal(err, properties)
 	}
 
-	server.Start(port)
+	err = server.Start(port)
+	if err != nil {
+		log.PrintFatal(err, properties)
+	}
 }
