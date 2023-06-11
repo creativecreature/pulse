@@ -22,7 +22,7 @@ func NewActiveSession(startedAt int64, os, editor string) *ActiveSession {
 	}
 }
 
-func (session *ActiveSession) Peek() *Buffer {
+func (session *ActiveSession) PeekBuffer() *Buffer {
 	return session.bufStack.peek()
 }
 

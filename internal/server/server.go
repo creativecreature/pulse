@@ -48,7 +48,7 @@ func (server *server) updateCurrentFile(absolutePath string) {
 	)
 
 	// Update the current file.
-	if currentBuffer := server.session.Peek(); currentBuffer != nil {
+	if currentBuffer := server.session.PeekBuffer(); currentBuffer != nil {
 		currentBuffer.ClosedAt = openedAt
 	}
 	server.session.PushBuffer(file)
@@ -73,7 +73,7 @@ func (server *server) saveSession() {
 
 	// Set session duration and set closed at for the current file.
 	endedAt := server.clock.GetTime()
-	if currentFile := server.session.Peek(); currentFile != nil {
+	if currentFile := server.session.PeekBuffer(); currentFile != nil {
 		currentFile.ClosedAt = endedAt
 	}
 	server.session.EndedAt = endedAt
