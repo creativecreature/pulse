@@ -2,6 +2,7 @@ package mongo
 
 import (
 	"context"
+	"math"
 	"time"
 
 	"code-harvest.conner.dev/internal/domain"
@@ -59,6 +60,8 @@ func max(a, b int64) int64 {
 }
 
 func dateRange(sessions []domain.AggregatedSession) (minDate, maxDate int64) {
+	minDate = math.MaxInt64
+	maxDate = math.MinInt64
 	for _, s := range sessions {
 		minDate, maxDate = min(minDate, s.Date), max(maxDate, s.Date)
 	}
