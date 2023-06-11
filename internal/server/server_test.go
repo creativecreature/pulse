@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"code-harvest.conner.dev/internal/domain"
+	"code-harvest.conner.dev/internal/mock"
 	"code-harvest.conner.dev/internal/server"
 	"code-harvest.conner.dev/internal/storage"
-	"code-harvest.conner.dev/mock"
 	"code-harvest.conner.dev/pkg/logger"
 )
 
