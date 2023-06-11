@@ -10,8 +10,9 @@ type Server interface {
 	EndSession(event domain.Event, reply *string) error
 }
 
-// Proxy proxies remote procedure calls to the server without the risk of
-// exposing unwanted methods just because they satisfy the RPC interface
+// Proxy is the layer between our client and server. It forwards remote
+// procedure calls to the server without the risk of exposing unwanted methods
+// just because they satisfy the RPC interface
 type Proxy struct {
 	server Server
 }
