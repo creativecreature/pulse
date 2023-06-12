@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"code-harvest.conner.dev/pkg/filereader"
-	"code-harvest.conner.dev/pkg/filesystem"
 	"code-harvest.conner.dev/pkg/filetypes"
 )
 
@@ -25,12 +23,12 @@ var (
 	ErrParseBareRepoPath = errors.New("failed to parse bare repository path")
 )
 
-type Git struct {
-	fsys filereader.FileReader
+type GitFileReader struct {
+	Reader FileReader
 }
 
-func New(fsys filereader.FileReader) Git {
-	return Git{fsys}
+func NewFileReader() GitFileReader {
+	return GitFileReader{fileReader{}}
 }
 
 // Helper function to extract a subexpression from a regex.
@@ -44,8 +42,8 @@ func extractSubExp(re *regexp.Regexp, matches []string, subexp string) string {
 }
 
 // Extracts the path to the bare repository from the .git file.
-func (f Git) extractBareRepositoryPath(filepath string) (string, error) {
-	fileContent, err := f.fsys.ReadFile(filepath)
+func (g GitFileReader) extractBareRepositoryPath(filepath string) (string, error) {
+	fileContent, err := g.Reader.ReadFile(filepath)
 	if err != nil {
 		return "", err
 	}
@@ -60,14 +58,14 @@ func (f Git) extractBareRepositoryPath(filepath string) (string, error) {
 
 // Calls itself recursively until it finds a .git file/folder or reaches the root.
 // If it finds a .git file/folder it will try to extract the name of the repository.
-func (f Git) findGitFolder(dir string) (string, error) {
+func (g GitFileReader) findGitFolder(dir string) (string, error) {
 	// Stop the recursion if we have reached the root.
 	if dir == "/" {
 		return "", ErrReachedRoot
 	}
 
 	// Read the directory entries.
-	entries, err := f.fsys.ReadDir(dir)
+	entries, err := g.Reader.ReadDir(dir)
 	if err != nil {
 		return "", err
 	}
@@ -78,19 +76,19 @@ func (f Git) findGitFolder(dir string) (string, error) {
 			// When I work on projects with long-lived branches I use worktrees. If
 			// that is the case the .git file will point to the path of the bare dir.
 			if !e.IsDir() {
-				return f.extractBareRepositoryPath(path.Join(dir, ".git"))
+				return g.extractBareRepositoryPath(path.Join(dir, ".git"))
 			}
 			return path.Join(dir, ".git"), nil
 		}
 	}
 
 	// If we didn't find the .git file/folder we'll continue up the path
-	return f.findGitFolder(f.fsys.Dir(dir))
+	return g.findGitFolder(g.Reader.Dir(dir))
 }
 
 // Extracts the actual name of the repository by looking at the url.
-func (f Git) extractRepositoryName(dirPath string) (string, error) {
-	fileContent, err := f.fsys.ReadFile(path.Join(dirPath, "config"))
+func (git GitFileReader) extractRepositoryName(dirPath string) (string, error) {
+	fileContent, err := git.Reader.ReadFile(path.Join(dirPath, "config"))
 	if err != nil {
 		return "", err
 	}
@@ -104,24 +102,24 @@ func (f Git) extractRepositoryName(dirPath string) (string, error) {
 	return extractSubExp(regularRepoExp, matches, "RepoName"), nil
 }
 
-func (f Git) File(absolutePath string) (filesystem.GitFile, error) {
+func (g GitFileReader) GitFile(absolutePath string) (File, error) {
 	if absolutePath == "" {
 		return file{}, ErrEmptyPath
 	}
 
 	// It could be a temporary buffer or directory.
-	if !f.fsys.IsFile(absolutePath) {
+	if !g.Reader.IsFile(absolutePath) {
 		return file{}, ErrPathNotAFile
 	}
 
 	// When I aggregate the data I do it on a per project basis. Therefore, if this
 	// is just a one-off edit of some configuration file I won't track time for it.
-	gitFolderPath, err := f.findGitFolder(f.fsys.Dir(absolutePath))
+	gitFolderPath, err := g.findGitFolder(g.Reader.Dir(absolutePath))
 	if err != nil {
 		return file{}, err
 	}
 
-	repositoryName, err := f.extractRepositoryName(gitFolderPath)
+	repositoryName, err := g.extractRepositoryName(gitFolderPath)
 	if err != nil {
 		return file{}, err
 	}

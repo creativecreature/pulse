@@ -1,6 +1,12 @@
 package git
 
-// file implements the GitFile interface from the filesystem package
+type File interface {
+	Name() string
+	Filetype() string
+	Repository() string
+	Path() string
+}
+
 type file struct {
 	name       string
 	filetype   string

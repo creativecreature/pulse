@@ -1,4 +1,4 @@
-package filereader
+package git
 
 import (
 	"io/fs"
@@ -13,21 +13,21 @@ type FileReader interface {
 	IsFile(string) bool
 }
 
-type OSFileReader struct{}
+type fileReader struct{}
 
-func (f OSFileReader) Dir(path string) string {
+func (f fileReader) Dir(path string) string {
 	return filepath.Dir(path)
 }
 
-func (f OSFileReader) ReadDir(dir string) ([]fs.DirEntry, error) {
+func (f fileReader) ReadDir(dir string) ([]fs.DirEntry, error) {
 	return os.ReadDir(dir)
 }
 
-func (f OSFileReader) ReadFile(filename string) ([]byte, error) {
+func (f fileReader) ReadFile(filename string) ([]byte, error) {
 	return os.ReadFile(filename)
 }
 
-func (f OSFileReader) IsFile(path string) bool {
+func (f fileReader) IsFile(path string) bool {
 	fileInfo, err := os.Stat(path)
 	return err == nil && !fileInfo.IsDir()
 }

@@ -31,7 +31,7 @@ func (server *server) startNewSession(os, editor string) {
 func (server *server) updateCurrentFile(absolutePath string) {
 	openedAt := server.clock.GetTime()
 
-	fileData, err := server.fileReader.File(absolutePath)
+	fileData, err := server.fileReader.GitFile(absolutePath)
 	if err != nil {
 		server.log.PrintDebug("Could not extract metadata for the path", map[string]string{
 			"reason": err.Error(),

@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-var (
+const (
 	HeartbeatTTL      = time.Minute * 10
 	heartbeatInterval = time.Second * 10
 )

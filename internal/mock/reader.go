@@ -3,14 +3,14 @@ package mock
 import (
 	"errors"
 
-	"code-harvest.conner.dev/pkg/filesystem"
+	"code-harvest.conner.dev/pkg/git"
 )
 
 type fileReader struct {
-	file filesystem.GitFile
+	file git.File
 }
 
-func (f *fileReader) File(path string) (filesystem.GitFile, error) {
+func (f *fileReader) GitFile(path string) (git.File, error) {
 	if f.file == nil {
 		return File{}, errors.New("metadata is nil")
 	}
