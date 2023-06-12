@@ -10,7 +10,7 @@ type fileReader struct {
 	file filesystem.GitFile
 }
 
-func (f *fileReader) GitFile(path string) (filesystem.GitFile, error) {
+func (f *fileReader) File(path string) (filesystem.GitFile, error) {
 	if f.file == nil {
 		return File{}, errors.New("metadata is nil")
 	}

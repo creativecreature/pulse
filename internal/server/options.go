@@ -7,6 +7,7 @@ import (
 	"code-harvest.conner.dev/pkg/clock"
 	"code-harvest.conner.dev/pkg/filereader"
 	"code-harvest.conner.dev/pkg/filesystem"
+	"code-harvest.conner.dev/pkg/git"
 )
 
 type option func(*server) error
@@ -27,7 +28,7 @@ func WithClock(clock Clock) option {
 }
 
 type FileReader interface {
-	GitFile(uri string) (filesystem.GitFile, error)
+	File(uri string) (filesystem.GitFile, error)
 }
 
 func WithFileReader(reader FileReader) option {
@@ -71,7 +72,7 @@ func New(serverName string, opts ...option) (*server, error) {
 	a := &server{
 		serverName: serverName,
 		clock:      clock.New(),
-		fileReader: filereader.NewReader(osfs{}),
+		fileReader: git.New(filereader.OSFileReader{}),
 	}
 	for _, opt := range opts {
 		err := opt(a)

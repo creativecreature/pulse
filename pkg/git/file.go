@@ -1,4 +1,4 @@
-package filereader
+package git
 
 // file implements the GitFile interface from the filesystem package
 type file struct {

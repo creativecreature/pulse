@@ -1,4 +1,4 @@
-package filereader_test
+package git_test
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"code-harvest.conner.dev/pkg/filereader"
-	"code-harvest.conner.dev/pkg/filesystem"
+	"code-harvest.conner.dev/pkg/git"
 )
 
 type MockFS struct {
@@ -15,7 +15,7 @@ type MockFS struct {
 	Directories    []string
 	Entries        map[string][]fs.DirEntry
 	FileContents   map[string][]byte
-	filesystem.Filesystem
+	filereader.FileReader
 }
 
 func (f *MockFS) Dir(_ string) string {
@@ -124,8 +124,8 @@ func TestGetRepositoryFromPath(t *testing.T) {
 
 	// This is the absolute path of the file that we want to extract the repository name for.
 	path := "/Users/conner/code/dotfiles/editors/nvim/init.lua"
-	f := filereader.NewReader(&fileSystemMock)
-	file, err := f.GitFile(path)
+	f := git.New(&fileSystemMock)
+	file, err := f.File(path)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -199,8 +199,8 @@ func TestGetRepositoryFromPathBare(t *testing.T) {
 
 	// This is the absolute path of the file that we want to extract the repository name for.
 	path := "/Users/conner/code/ore-ui/main/src/index.ts"
-	f := filereader.NewReader(&fileSystemMock)
-	file, err := f.GitFile(path)
+	f := git.New(&fileSystemMock)
+	file, err := f.File(path)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -274,8 +274,8 @@ func TestPathInBareProject(t *testing.T) {
 
 	// This is the absolute path of the file that we want to extract the repository name for.
 	path := "/Users/conner/code/ore-ui/main/src/index.ts"
-	f := filereader.NewReader(&fileSystemMock)
-	file, err := f.GitFile(path)
+	f := git.New(&fileSystemMock)
+	file, err := f.File(path)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -347,8 +347,8 @@ func TestPathInProject(t *testing.T) {
 
 	// This is the absolute path of the file that we want to extract the repository name for.
 	path := "/Users/conner/code/dotfiles/editors/nvim/init.lua"
-	f := filereader.NewReader(&fileSystemMock)
-	file, err := f.GitFile(path)
+	f := git.New(&fileSystemMock)
+	file, err := f.File(path)
 	if err != nil {
 		t.Fatal(err)
 	}
