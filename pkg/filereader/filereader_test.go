@@ -1,10 +1,12 @@
-package filesystem_test
+package filereader_test
 
 import (
-	"errors"
+	"fmt"
 	"io/fs"
+	"strings"
 	"testing"
 
+	"code-harvest.conner.dev/pkg/filereader"
 	"code-harvest.conner.dev/pkg/filesystem"
 )
 
@@ -28,7 +30,7 @@ func (f *MockFS) Dir(_ string) string {
 func (f *MockFS) ReadDir(dir string) ([]fs.DirEntry, error) {
 	entries, ok := f.Entries[dir]
 	if !ok {
-		return nil, errors.New("no entries for dir")
+		return nil, fmt.Errorf("no entries for dir: %s", dir)
 	}
 	return entries, nil
 }
@@ -36,9 +38,18 @@ func (f *MockFS) ReadDir(dir string) ([]fs.DirEntry, error) {
 func (f *MockFS) ReadFile(filename string) ([]byte, error) {
 	fileContent, ok := f.FileContents[filename]
 	if !ok {
-		return nil, errors.New("no content for this filename")
+		return nil, fmt.Errorf("no file content for file: %s", filename)
 	}
 	return fileContent, nil
+}
+
+func (f *MockFS) IsFile(filename string) bool {
+	return true
+}
+
+func (f *MockFS) Filename(path string) string {
+	s := strings.Split(path, "/")
+	return s[len(s)-1]
 }
 
 type MockFileEntry struct {
@@ -59,7 +70,6 @@ func TestGetRepositoryFromPath(t *testing.T) {
 	t.Parallel()
 
 	// The config file that we expect to find within the git directory
-	// OCD vs Correctness. Should obviously not be indented.
 	gitConfigFile := `
 		[core]
 			repositoryformatversion = 0
@@ -114,10 +124,15 @@ func TestGetRepositoryFromPath(t *testing.T) {
 
 	// This is the absolute path of the file that we want to extract the repository name for.
 	path := "/Users/conner/code/dotfiles/editors/nvim/init.lua"
-	f := filesystem.NewReader(&fileSystemMock)
-	got, _ := f.RepositoryName(path)
+	f := filereader.NewReader(&fileSystemMock)
+	file, err := f.GitFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	// From how the mocks are wired we expect dotfiles to be the repository name.
 	expected := "dotfiles"
+	got := file.Repository()
 
 	if got != expected {
 		t.Errorf("GetRepositoryFromPath(%s) = %s; expected %s", path, got, expected)
@@ -184,79 +199,15 @@ func TestGetRepositoryFromPathBare(t *testing.T) {
 
 	// This is the absolute path of the file that we want to extract the repository name for.
 	path := "/Users/conner/code/ore-ui/main/src/index.ts"
-	f := filesystem.NewReader(&fileSystemMock)
-	got, _ := f.RepositoryName(path)
+	f := filereader.NewReader(&fileSystemMock)
+	file, err := f.GitFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	// From how the mocks are wired we expect ore-ui to be the repository name.
 	expected := "ore-ui"
-
-	if got != expected {
-		t.Errorf("GetRepositoryFromPath(%s) = %s; expected %s", path, got, expected)
-	}
-}
-
-func TestPathInProject(t *testing.T) {
-	t.Parallel()
-
-	// The config file that we expect to find within the git directory
-	// OCD vs Correctness. Should obviously not be indented.
-	gitConfigFile := `
-		[core]
-			repositoryformatversion = 0
-			filemode = true
-			bare = false
-			logallrefupdates = true
-			ignorecase = true
-			precomposeunicode = true
-		[remote "origin"]
-			url = git@github.com:creativecreature/dotfiles.git
-			fetch = +refs/heads/*:refs/remotes/origin/*
-			gh-resolved = base
-		[branch "master"]
-			remote = origin
-			merge = refs/heads/master
-	`
-
-	// Set up the entries we expect to see for each directory.
-	directoryEntries := map[string][]fs.DirEntry{
-		"/Users/conner/code/dotfiles/editors/nvim": {
-			MockFileEntry{Filename: "init.lua", IsDirectory: false},
-			MockFileEntry{Filename: "keybindings.lua", IsDirectory: false},
-			MockFileEntry{Filename: "autocommands.lua", IsDirectory: false},
-		},
-		"/Users/conner/code/dotfiles/editors": {
-			MockFileEntry{Filename: "nvim", IsDirectory: true},
-		},
-		"/Users/conner/code/dotfiles": {
-			MockFileEntry{Filename: "editors", IsDirectory: true},
-			MockFileEntry{Filename: "bootstrap.sh", IsDirectory: false},
-			MockFileEntry{Filename: "install.sh", IsDirectory: false},
-			MockFileEntry{Filename: ".git", IsDirectory: true},
-		},
-	}
-
-	fileSystemMock := MockFS{
-		DirectoryIndex: 0,
-		Directories: []string{
-			"/Users/conner/code/dotfiles/editors/nvim",
-			"/Users/conner/code/dotfiles/editors",
-			"/Users/conner/code/dotfiles",
-			"/Users/conner/code",
-			"/Users/conner",
-			"/Users",
-			"/",
-		},
-		Entries: directoryEntries,
-		FileContents: map[string][]byte{
-			"/Users/conner/code/dotfiles/.git/config": []byte(gitConfigFile),
-		},
-	}
-
-	// This is the absolute path of the file that we want to extract the repository name for.
-	path := "/Users/conner/code/dotfiles/editors/nvim/init.lua"
-	f := filesystem.NewReader(&fileSystemMock)
-	got, _ := f.PathInProject(path, "dotfiles")
-	// From how the mocks are wired we expect dotfiles to be the repository name.
-	expected := "dotfiles/editors/nvim/init.lua"
+	got := file.Repository()
 
 	if got != expected {
 		t.Errorf("GetRepositoryFromPath(%s) = %s; expected %s", path, got, expected)
@@ -323,10 +274,88 @@ func TestPathInBareProject(t *testing.T) {
 
 	// This is the absolute path of the file that we want to extract the repository name for.
 	path := "/Users/conner/code/ore-ui/main/src/index.ts"
-	f := filesystem.NewReader(&fileSystemMock)
-	got, _ := f.RepositoryName(path)
+	f := filereader.NewReader(&fileSystemMock)
+	file, err := f.GitFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	// From how the mocks are wired we expect ore-ui to be the repository name.
 	expected := "ore-ui"
+	got := file.Repository()
+
+	if got != expected {
+		t.Errorf("GetRepositoryFromPath(%s) = %s; expected %s", path, got, expected)
+	}
+}
+
+func TestPathInProject(t *testing.T) {
+	t.Parallel()
+
+	// The config file that we expect to find within the git directory
+	gitConfigFile := `
+		[core]
+			repositoryformatversion = 0
+			filemode = true
+			bare = false
+			logallrefupdates = true
+			ignorecase = true
+			precomposeunicode = true
+		[remote "origin"]
+			url = git@github.com:creativecreature/dotfiles.git
+			fetch = +refs/heads/*:refs/remotes/origin/*
+			gh-resolved = base
+		[branch "master"]
+			remote = origin
+			merge = refs/heads/master
+	`
+
+	// Set up the entries we expect to see for each directory.
+	directoryEntries := map[string][]fs.DirEntry{
+		"/Users/conner/code/dotfiles/editors/nvim": {
+			MockFileEntry{Filename: "init.lua", IsDirectory: false},
+			MockFileEntry{Filename: "keybindings.lua", IsDirectory: false},
+			MockFileEntry{Filename: "autocommands.lua", IsDirectory: false},
+		},
+		"/Users/conner/code/dotfiles/editors": {
+			MockFileEntry{Filename: "nvim", IsDirectory: true},
+		},
+		"/Users/conner/code/dotfiles": {
+			MockFileEntry{Filename: "editors", IsDirectory: true},
+			MockFileEntry{Filename: "bootstrap.sh", IsDirectory: false},
+			MockFileEntry{Filename: "install.sh", IsDirectory: false},
+			MockFileEntry{Filename: ".git", IsDirectory: true},
+		},
+	}
+
+	fileSystemMock := MockFS{
+		DirectoryIndex: 0,
+		Directories: []string{
+			"/Users/conner/code/dotfiles/editors/nvim",
+			"/Users/conner/code/dotfiles/editors",
+			"/Users/conner/code/dotfiles",
+			"/Users/conner/code",
+			"/Users/conner",
+			"/Users",
+			"/",
+		},
+		Entries: directoryEntries,
+		FileContents: map[string][]byte{
+			"/Users/conner/code/dotfiles/.git/config": []byte(gitConfigFile),
+		},
+	}
+
+	// This is the absolute path of the file that we want to extract the repository name for.
+	path := "/Users/conner/code/dotfiles/editors/nvim/init.lua"
+	f := filereader.NewReader(&fileSystemMock)
+	file, err := f.GitFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// From how the mocks are wired we expect dotfiles to be the repository name.
+	expected := "dotfiles/editors/nvim/init.lua"
+	got := file.Path()
 
 	if got != expected {
 		t.Errorf("GetRepositoryFromPath(%s) = %s; expected %s", path, got, expected)

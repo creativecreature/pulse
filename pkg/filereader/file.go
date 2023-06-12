@@ -1,12 +1,6 @@
-package filesystem
+package filereader
 
-type File interface {
-	Name() string
-	Filetype() string
-	Repository() string
-	Path() string
-}
-
+// file implements the GitFile interface from the filesystem package
 type file struct {
 	name       string
 	filetype   string

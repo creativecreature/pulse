@@ -1,9 +1,9 @@
-package filesystem_test
+package filetypes_test
 
 import (
 	"testing"
 
-	"code-harvest.conner.dev/pkg/filesystem"
+	"code-harvest.conner.dev/pkg/filetypes"
 )
 
 func TestGet(t *testing.T) {
@@ -22,7 +22,7 @@ func TestGet(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		got, _ := filesystem.Filetype(test.filename)
+		got, _ := filetypes.Type(test.filename)
 		if got != test.expected {
 			t.Errorf("Get(%s) = %s; wanted %s", test.filename, got, test.expected)
 		}

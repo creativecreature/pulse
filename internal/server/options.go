@@ -5,6 +5,7 @@ import (
 
 	"code-harvest.conner.dev/internal/storage"
 	"code-harvest.conner.dev/pkg/clock"
+	"code-harvest.conner.dev/pkg/filereader"
 	"code-harvest.conner.dev/pkg/filesystem"
 )
 
@@ -25,16 +26,16 @@ func WithClock(clock Clock) option {
 	}
 }
 
-type MetadataReader interface {
-	Read(uri string) (filesystem.File, error)
+type FileReader interface {
+	GitFile(uri string) (filesystem.GitFile, error)
 }
 
-func WithMetadataReader(reader MetadataReader) option {
+func WithFileReader(reader FileReader) option {
 	return func(a *server) error {
 		if reader == nil {
 			return errors.New("reader is nil")
 		}
-		a.metadataReader = reader
+		a.fileReader = reader
 		return nil
 	}
 }
@@ -68,9 +69,9 @@ func WithLog(log Log) option {
 
 func New(serverName string, opts ...option) (*server, error) {
 	a := &server{
-		serverName:     serverName,
-		clock:          clock.New(),
-		metadataReader: filesystem.NewReader(filesystem.New()),
+		serverName: serverName,
+		clock:      clock.New(),
+		fileReader: filereader.NewReader(osfs{}),
 	}
 	for _, opt := range opts {
 		err := opt(a)

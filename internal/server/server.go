@@ -17,7 +17,7 @@ type server struct {
 	clock          Clock
 	lastHeartbeat  int64
 	log            Log
-	metadataReader MetadataReader
+	fileReader     FileReader
 	mutex          sync.Mutex
 	serverName     string
 	session        *domain.ActiveSession
@@ -31,7 +31,7 @@ func (server *server) startNewSession(os, editor string) {
 func (server *server) updateCurrentFile(absolutePath string) {
 	openedAt := server.clock.GetTime()
 
-	fileMetadata, err := server.metadataReader.Read(absolutePath)
+	fileData, err := server.fileReader.GitFile(absolutePath)
 	if err != nil {
 		server.log.PrintDebug("Could not extract metadata for the path", map[string]string{
 			"reason": err.Error(),
@@ -40,10 +40,10 @@ func (server *server) updateCurrentFile(absolutePath string) {
 	}
 
 	file := domain.NewBuffer(
-		fileMetadata.Name(),
-		fileMetadata.Repository(),
-		fileMetadata.Filetype(),
-		fileMetadata.Path(),
+		fileData.Name(),
+		fileData.Repository(),
+		fileData.Filetype(),
+		fileData.Path(),
 		openedAt,
 	)
 

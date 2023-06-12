@@ -7,10 +7,10 @@ import (
 )
 
 type fileReader struct {
-	file filesystem.File
+	file filesystem.GitFile
 }
 
-func (f *fileReader) Read(path string) (filesystem.File, error) {
+func (f *fileReader) GitFile(path string) (filesystem.GitFile, error) {
 	if f.file == nil {
 		return File{}, errors.New("metadata is nil")
 	}
