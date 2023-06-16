@@ -6,6 +6,9 @@
 *.dylib
 bin
 
+# environment variables
+.envrc
+
 # Test binary, built with `go test -c`
 *.test
 
