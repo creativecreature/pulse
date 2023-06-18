@@ -78,8 +78,8 @@ func (s Storage) Save(domainSession domain.ActiveSession) error {
 	return err
 }
 
-func (s Storage) GetAll() (domain.StoredSessions, error) {
-	temporarySessions := make(domain.StoredSessions, 0)
+func (s Storage) GetAll() (domain.Sessions, error) {
+	temporarySessions := make(domain.Sessions, 0)
 	tmpDir := path.Join(s.dataDirPath, "tmp")
 	err := fs.WalkDir(os.DirFS(tmpDir), ".", func(p string, _ fs.DirEntry, _ error) error {
 		if filepath.Ext(p) == ".json" {
@@ -87,7 +87,7 @@ func (s Storage) GetAll() (domain.StoredSessions, error) {
 			if err != nil {
 				return err
 			}
-			tempSession := domain.StoredSession{}
+			tempSession := domain.Session{}
 			err = json.Unmarshal(content, &tempSession)
 			if err != nil {
 				return err

@@ -7,7 +7,7 @@ type Repository struct {
 	DurationMs int64           `bson:"duration_ms"`
 }
 
-func repositoryFileMap(sessions []StoredSession) map[string]map[string]*AggregatedFile {
+func repositoryFileMap(sessions []Session) map[string]map[string]*AggregatedFile {
 	repositoryFiles := make(map[string]map[string]*AggregatedFile)
 	for _, session := range sessions {
 		for _, file := range session.Files {
@@ -39,7 +39,7 @@ func repositoryFileMap(sessions []StoredSession) map[string]map[string]*Aggregat
 
 // You could work on several different repositories during one
 // coding session. This function groups the work by repository
-func repositoriesFromSessions(sessions StoredSessions) []Repository {
+func repositoriesFromSessions(sessions Sessions) []Repository {
 	repositoryFiles := repositoryFileMap(sessions)
 	repositories := make([]Repository, 0)
 

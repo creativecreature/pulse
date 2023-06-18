@@ -9,7 +9,7 @@ import (
 
 type TemporaryStorage interface {
 	Save(s domain.ActiveSession) error
-	GetAll() (domain.StoredSessions, error)
+	GetAll() (domain.Sessions, error)
 	RemoveAll() error
 }
 

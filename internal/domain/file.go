@@ -1,7 +1,7 @@
 package domain
 
-// StoredFile represents a file that has been stored for a coding session
-type StoredFile struct {
+// File represents a file that has been stored for a coding session
+type File struct {
 	Name       string `json:"name"`
 	Path       string `json:"path"`
 	Repository string `json:"repository"`

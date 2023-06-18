@@ -5,11 +5,11 @@ import (
 )
 
 type Storage struct {
-	sessions domain.StoredSessions
+	sessions domain.Sessions
 }
 
 func NewStorage() *Storage {
-	return &Storage{sessions: domain.StoredSessions{}}
+	return &Storage{sessions: domain.Sessions{}}
 }
 
 func (m *Storage) Save(s domain.ActiveSession) error {
@@ -17,11 +17,11 @@ func (m *Storage) Save(s domain.ActiveSession) error {
 	return nil
 }
 
-func (m *Storage) GetAll() (domain.StoredSessions, error) {
+func (m *Storage) GetAll() (domain.Sessions, error) {
 	return m.sessions, nil
 }
 
 func (m *Storage) RemoveAll() error {
-	m.sessions = make(domain.StoredSessions, 0)
+	m.sessions = make(domain.Sessions, 0)
 	return nil
 }
