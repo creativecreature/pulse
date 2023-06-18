@@ -5,7 +5,7 @@ import (
 	"github.com/neovim/go-client/nvim/plugin"
 )
 
-// These are set by linker flags.
+// ldflags
 var (
 	serverName string
 	port       string
@@ -18,7 +18,6 @@ func main() {
 		panic(err)
 	}
 
-	// Make these functions accessible in neovim so that I can map them to autocommands.
 	plugin.Main(func(p *plugin.Plugin) error {
 		p.HandleFunction(&plugin.FunctionOptions{Name: "OnFocusGained"}, client.FocusGained)
 		p.HandleFunction(&plugin.FunctionOptions{Name: "OpenFile"}, client.OpenFile)

@@ -6,6 +6,7 @@ import (
 	"code-harvest.conner.dev/pkg/git"
 )
 
+// fileReader is a mock for the FileReader interface
 type fileReader struct {
 	file git.File
 }

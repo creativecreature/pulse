@@ -3,39 +3,28 @@ package main
 import (
 	"os"
 
+	"code-harvest.conner.dev/internal/aggregate"
 	"code-harvest.conner.dev/internal/storage"
 	"code-harvest.conner.dev/pkg/logger"
 )
 
-// Set by linker flags
+// ldflags
 var (
-	uri        string
-	db         string
-	collection string
+	uri string
+	db  string
 )
 
 func main() {
 	log := logger.New(os.Stdout, logger.LevelInfo)
+
 	diskStorage := storage.DiskStorage()
-	properties := map[string]string{}
-	properties["uri"] = uri
-	properties["db"] = db
-	properties["collection"] = collection
-
-	sessions, err := diskStorage.GetAll()
-	if err != nil {
-		log.PrintFatal(err, properties)
-	}
-
-	permStorage, disconnect := storage.MongoStorage(uri, db, collection)
+	permStorage, disconnect := storage.MongoStorage(uri, db, "sessions")
 	defer disconnect()
-	err = permStorage.SaveAll(sessions.AggregateByDay())
+
+	err := aggregate.Day(diskStorage, permStorage)
 	if err != nil {
-		log.PrintFatal(err, properties)
+		log.PrintFatal(err, nil)
 	}
 
-	err = diskStorage.RemoveAll()
-	if err != nil {
-		log.PrintFatal(err, properties)
-	}
+	log.PrintInfo("All temporary sessions were aggregated successfully", nil)
 }

@@ -8,7 +8,7 @@ import (
 	"code-harvest.conner.dev/pkg/logger"
 )
 
-// Set by linker flags
+// ldflags
 var (
 	serverName string
 	port       string
