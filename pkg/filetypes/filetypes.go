@@ -24,6 +24,7 @@ var extensions = map[string]string{
 	"yml":  "yaml",
 	"yaml": "yaml",
 	"json": "json",
+	"toml": "toml",
 }
 
 var specialFiles = map[string]string{
