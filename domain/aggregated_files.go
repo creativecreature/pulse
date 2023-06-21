@@ -2,17 +2,19 @@ package domain
 
 type AggregatedFiles []AggregatedFile
 
+func createPathFileMap(files AggregatedFiles) map[string]AggregatedFile {
+	pathFileMap := make(map[string]AggregatedFile)
+	for _, f := range files {
+		pathFileMap[f.Path] = f
+	}
+	return pathFileMap
+}
+
 // merge merges two AggregatedFile slices
 func (a AggregatedFiles) merge(b AggregatedFiles) AggregatedFiles {
 	mergedFiles := make([]AggregatedFile, 0)
-	aFileMap := make(map[string]AggregatedFile)
-	bFileMap := make(map[string]AggregatedFile)
-	for _, f := range a {
-		aFileMap[f.Path] = f
-	}
-	for _, f := range b {
-		bFileMap[f.Path] = f
-	}
+	aFileMap := createPathFileMap(a)
+	bFileMap := createPathFileMap(b)
 
 	// Add files that are unique for a and merge collisions
 	for _, aFile := range a {

@@ -2,6 +2,7 @@ package domain
 
 import (
 	"code-harvest.conner.dev/truncate"
+	"golang.org/x/exp/maps"
 )
 
 type AggregatedSessions []AggregatedSession
@@ -16,11 +17,7 @@ func merge(sessions AggregatedSessions, createKey func(s AggregatedSession) int6
 			sessionMap[key] = s.merge(session, createKey(s), timePeriod)
 		}
 	}
-	mergedSessions := make(AggregatedSessions, 0)
-	for _, s := range sessionMap {
-		mergedSessions = append(mergedSessions, s)
-	}
-	return mergedSessions
+	return maps.Values(sessionMap)
 }
 
 func (sessions AggregatedSessions) MergeByDay() AggregatedSessions {

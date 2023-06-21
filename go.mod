@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/neovim/go-client v1.2.1
 	go.mongodb.org/mongo-driver v1.11.7
+	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 )
 
 require (

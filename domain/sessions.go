@@ -37,7 +37,7 @@ func (sessions Sessions) Aggregate() []AggregatedSession {
 			Date:         date,
 			DateString:   dateString,
 			TotalTimeMs:  totalTime,
-			Repositories: repositoriesFromSessions(tempSessions),
+			Repositories: sessionRepositories(tempSessions),
 		}
 		aggregatedSessions = append(aggregatedSessions, session)
 	}

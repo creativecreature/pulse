@@ -8,3 +8,13 @@ type File struct {
 	Filetype   string `json:"filetype"`
 	DurationMs int64  `json:"duration_ms"`
 }
+
+func fileFromBuffer(b Buffer) File {
+	return File{
+		Name:       b.Filename,
+		Path:       b.Filepath,
+		Repository: b.Repository,
+		Filetype:   b.Filetype,
+		DurationMs: b.DurationMs,
+	}
+}

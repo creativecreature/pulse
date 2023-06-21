@@ -25,7 +25,7 @@ type server struct {
 }
 
 func (server *server) startNewSession(os, editor string) {
-	server.session = domain.NewActiveSession(server.clock.GetTime(), os, editor)
+	server.session = domain.StartSession(server.clock.GetTime(), os, editor)
 }
 
 func (server *server) updateCurrentFile(absolutePath string) {

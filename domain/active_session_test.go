@@ -8,7 +8,7 @@ import (
 
 func TestActiveSession(t *testing.T) {
 	// Start a new coding session
-	activeSession := domain.NewActiveSession(100, "linux", "nvim")
+	activeSession := domain.StartSession(100, "linux", "nvim")
 
 	// Open the first buffer
 	bufferOne := domain.NewBuffer(
@@ -61,6 +61,6 @@ func TestActiveSession(t *testing.T) {
 
 	// Assert that the buffer in the middle has the correct duration too
 	if finishedSession.Files[1].DurationMs != 310 {
-		t.Errorf("Expected the duration for plugins.lua to be 289, got %d", finishedSession.Files[1].DurationMs)
+		t.Errorf("Expected the duration for plugins.lua to be 310, got %d", finishedSession.Files[1].DurationMs)
 	}
 }

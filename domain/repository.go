@@ -15,7 +15,7 @@ func (a Repository) merge(b Repository) Repository {
 	}
 }
 
-func repositoryFileMap(sessions []Session) map[string]map[string]AggregatedFile {
+func aggregateFilesByRepo(sessions []Session) map[string]map[string]AggregatedFile {
 	repositoryFiles := make(map[string]map[string]AggregatedFile)
 	for _, session := range sessions {
 		for _, file := range session.Files {
