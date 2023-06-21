@@ -72,7 +72,7 @@ build/client:
 ## build/cron: build cmd/cron
 build/cron:
 	@echo 'Compiling cron...'
-	go build -ldflags="-X main.uri=${URI} -X main.db=${DB} -X main.collection=${COLLECTION}" -o=./bin/code-harvest-cron ./cmd/cron
+	go build -ldflags="-X main.uri=${URI} -X main.db=${DB}" -o=./bin/code-harvest-cron ./cmd/cron
 .PHONY:build/client
 
 ## build: builds the server and client applications
