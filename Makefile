@@ -26,7 +26,6 @@ run:
 	@go run ./cmd/server
 .PHONY:run
 
-
 # ==================================================================================== #
 # QUALITY CONTROL
 # ==================================================================================== #
@@ -69,12 +68,12 @@ build/client:
 	go build -ldflags="-X main.serverName=${SERVER_NAME} -X main.port=${PORT} -X main.hostname=${HOSTNAME}" -o=./bin/code-harvest-client ./cmd/client
 .PHONY:build/client
 
-## build/cron: build cmd/cron
-build/cron:
-	@echo 'Compiling cron...'
-	go build -ldflags="-X main.uri=${URI} -X main.db=${DB}" -o=./bin/code-harvest-cron ./cmd/cron
+## build/aggregate: build cmd/aggregate
+build/aggregate:
+	@echo 'Compiling aggregate...'
+	go build -ldflags="-X main.uri=${URI} -X main.db=${DB}" -o=./bin/code-harvest-aggregate ./cmd/aggregate
 .PHONY:build/client
 
 ## build: builds the server and client applications
-build: audit build/server build/client build/cron
+build: audit build/server build/client build/aggregate
 .PHONY:build
