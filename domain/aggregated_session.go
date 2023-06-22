@@ -6,7 +6,7 @@ type AggregatedSession struct {
 	ID           string       `bson:"_id,omitempty"`
 	Period       TimePeriod   `bson:"period"`
 	Date         int64        `bson:"date"`
-	DateString   string       `bson:"date_string"` // yyyy-mm-dd
+	DateString   string       `bson:"date_string"`
 	TotalTimeMs  int64        `bson:"total_time_ms"`
 	Repositories Repositories `bson:"repositories"`
 }

@@ -36,7 +36,7 @@ func (s *bufferStack) pop() (Buffer, error) {
 	return res, nil
 }
 
-// slice takes the stack of buffers, merges them, and returns a slice
+// slice takes the stack of buffers, merges them by filepath, and returns a slice
 func (s *bufferStack) slice() []Buffer {
 	mergedBuffers := map[string]Buffer{}
 	for buffer, err := s.pop(); err == nil; buffer, err = s.pop() {
