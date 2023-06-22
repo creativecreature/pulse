@@ -11,5 +11,7 @@ func (m *db) deleteByDateRange(minDate, maxDate int64) error {
 }
 
 func (m *db) deleteCollection(collection string) error {
-	return m.client.Database(m.database).Collection(collection).Drop(context.Background())
+	return m.client.Database(m.database).
+		Collection(collection).
+		Drop(context.Background())
 }

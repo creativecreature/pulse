@@ -15,7 +15,7 @@ func TestJumpingBetweenInstances(t *testing.T) {
 	t.Parallel()
 
 	mockStorage := storage.MemoryStorage()
-	mockFileReader := mock.NewReader()
+	mockFileReader := mock.NewFileReader()
 
 	a, err := server.New(
 		"TestApp",
@@ -37,7 +37,14 @@ func TestJumpingBetweenInstances(t *testing.T) {
 	}, &reply)
 
 	// Open a file in the first instance
-	mockFileReader.SetFile(mock.NewFile("install.sh", "bash", "dotfiles", "dotfiles/install.sh"))
+	mockFileReader.SetFile(
+		domain.GitFile{
+			Name:       "install.sh",
+			Filetype:   "bash",
+			Repository: "dotfiles",
+			Path:       "dotfiles/install.sh",
+		},
+	)
 	a.OpenFile(domain.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/install.sh",
@@ -46,7 +53,6 @@ func TestJumpingBetweenInstances(t *testing.T) {
 	}, &reply)
 
 	// Open another vim instance in a new split. This should end the previous session.
-	mockFileReader.ClearFile()
 	a.FocusGained(domain.Event{
 		Id:     "345",
 		Path:   "",
@@ -55,7 +61,14 @@ func TestJumpingBetweenInstances(t *testing.T) {
 	}, &reply)
 
 	// Open a file in the second vim instance
-	mockFileReader.SetFile(mock.NewFile("bootstrap.sh", "bash", "dotfiles", "dotfiles/bootstrap.sh"))
+	mockFileReader.SetFile(
+		domain.GitFile{
+			Name:       "bootstrap.sh",
+			Filetype:   "bash",
+			Repository: "dotfiles",
+			Path:       "dotfiles/bootstrap.sh",
+		},
+	)
 	a.OpenFile(domain.Event{
 		Id:     "345",
 		Path:   "/Users/conner/code/dotfiles/bootstrap.sh",
@@ -64,7 +77,14 @@ func TestJumpingBetweenInstances(t *testing.T) {
 	}, &reply)
 
 	// Move focus back to the first VIM instance. This should end the second session.
-	mockFileReader.SetFile(mock.NewFile("install.sh", "bash", "dotfiles", "dotfiles/install.sh"))
+	mockFileReader.SetFile(
+		domain.GitFile{
+			Name:       "install.sh",
+			Filetype:   "bash",
+			Repository: "dotfiles",
+			Path:       "dotfiles/install.sh",
+		},
+	)
 	a.FocusGained(domain.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/install.sh",
@@ -92,7 +112,7 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 	t.Parallel()
 
 	mockStorage := storage.MemoryStorage()
-	mockFilereader := mock.NewReader()
+	mockFilereader := mock.NewFileReader()
 
 	a, err := server.New(
 		"testApp",
@@ -114,7 +134,14 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 	}, &reply)
 
 	// Open a file
-	mockFilereader.SetFile(mock.NewFile("install.sh", "bash", "dotfiles", "dotfiles/install.sh"))
+	mockFilereader.SetFile(
+		domain.GitFile{
+			Name:       "install.sh",
+			Filetype:   "bash",
+			Repository: "dotfiles",
+			Path:       "dotfiles/install.sh",
+		},
+	)
 	a.OpenFile(domain.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/install.sh",
@@ -139,7 +166,14 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 		Editor: "nvim",
 		OS:     "Linux",
 	}, &reply)
-	mockFilereader.SetFile(mock.NewFile("bootstrap.sh", "bash", "dotfiles", "dotfiles/bootstrap.sh"))
+	mockFilereader.SetFile(
+		domain.GitFile{
+			Name:       "bootstrap.sh",
+			Filetype:   "bash",
+			Repository: "dotfiles",
+			Path:       "dotfiles/bootstrap.sh",
+		},
+	)
 	a.OpenFile(domain.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/bootstrap.sh",
@@ -170,7 +204,7 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 
 	mockStorage := storage.MemoryStorage()
 	mockClock := &mock.Clock{}
-	mockFilereader := mock.NewReader()
+	mockFilereader := mock.NewFileReader()
 
 	a, err := server.New(
 		"testApp",
@@ -198,7 +232,14 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 
 	// Send an open file event. This should update the time for the last activity to 250.
 	mockClock.SetTime(250)
-	mockFilereader.SetFile(mock.NewFile("install.sh", "bash", "dotfiles", "dotfiles/install.sh"))
+	mockFilereader.SetFile(
+		domain.GitFile{
+			Name:       "install.sh",
+			Filetype:   "bash",
+			Repository: "dotfiles",
+			Path:       "dotfiles/install.sh",
+		},
+	)
 	a.OpenFile(domain.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/install.sh",
@@ -217,7 +258,14 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 	a.CheckHeartbeat()
 
 	mockClock.SetTime(server.HeartbeatTTL.Milliseconds() + 300)
-	mockFilereader.SetFile(mock.NewFile("cleanup.sh", "bash", "dotfiles", "dotfiles/cleanup.sh"))
+	mockFilereader.SetFile(
+		domain.GitFile{
+			Name:       "cleanup.sh",
+			Filetype:   "bash",
+			Repository: "dotfiles",
+			Path:       "dotfiles/cleanup.sh",
+		},
+	)
 	a.OpenFile(domain.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/cleanup.sh",

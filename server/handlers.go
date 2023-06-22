@@ -6,9 +6,10 @@ import (
 	"code-harvest.conner.dev/domain"
 )
 
-// FocusGained should be called by the FocusGained autocommand. It gives us information
-// about the currently active client. The duration of a coding session should not increase
-// by the number of clients (VIM instances) we use. Only one will be tracked at a time.
+// FocusGained gets invoked by the FocusGained autocommand. It gives us
+// information about the currently active client. The duration of a coding
+// session should not increase by the number of clients (VIM instances) we use.
+// Only one will be tracked at a time.
 func (server *server) FocusGained(event domain.Event, reply *string) error {
 	// The heartbeat timer could fire at the exact same time.
 	server.mutex.Lock()
@@ -21,12 +22,13 @@ func (server *server) FocusGained(event domain.Event, reply *string) error {
 	// open a new instance of VIM. If I'm, for example, jumping between a VIM split
 	// and a terminal with test output I don't want it to result in a new coding session.
 	if server.activeClientId == event.Id {
-		server.log.PrintDebug("Jumped back to the same instance of VIM.", nil)
+		server.log.PrintDebug("Jumped back to the same neovim instance", nil)
 		return nil
 	}
 
-	// If the focus event is for the first instance of VIM we won't have any previous session.
-	// That only occurs when using multiple splits with multiple instances of VIM.
+	// Check to see if we have another instance of neovim that is running in
+	// another tmux pane. If so, we'll stop recording time for that session
+	// before creating a new one.
 	if server.session != nil {
 		server.saveSession()
 	}
@@ -38,12 +40,11 @@ func (server *server) FocusGained(event domain.Event, reply *string) error {
 	// open. If that is the case we can't count on getting the *OpenFile* event.
 	// We might just be jumping between two VIM instances with one buffer each.
 	server.updateCurrentFile(event.Path)
-
 	*reply = "Successfully updated the client being focused."
 	return nil
 }
 
-// OpenFile should be called by the *BufEnter* autocommand.
+// OpenFile gets invoked by the *BufEnter* autocommand
 func (server *server) OpenFile(event domain.Event, reply *string) error {
 	server.log.PrintDebug("Received OpenFile event", map[string]string{
 		"path": event.Path,
@@ -68,8 +69,8 @@ func (server *server) OpenFile(event domain.Event, reply *string) error {
 	return nil
 }
 
-// SendHeartbeat should be called when we want to inform the server that the session
-// is still active. If we, for example, only edit a single file for a long time we
+// SendHeartbeat should be called to inform the server that the session is
+// still active. If we, for example, only edit a single file for a long time we
 // can send it on a *BufWrite* autocommand.
 func (server *server) SendHeartbeat(event domain.Event, reply *string) error {
 	// In case the heartbeat check that runs on an interval occurs at the same time.
@@ -92,18 +93,19 @@ func (server *server) SendHeartbeat(event domain.Event, reply *string) error {
 
 	// Update the time for the last heartbeat.
 	server.lastHeartbeat = server.clock.GetTime()
-
 	*reply = "Successfully sent heartbeat"
 	return nil
 }
 
-// EndSession should be called by the *VimLeave* autocommand to inform the server that the session is done.
+// EndSession should be called by the *VimLeave* autocommand to inform the
+// server that the session is done.
 func (server *server) EndSession(event domain.Event, reply *string) error {
 	server.mutex.Lock()
 	defer server.mutex.Unlock()
 
-	// We have reached an undesired state if we call end session and there is another
-	// active client. It means that the events are sent in an incorrect order.
+	// We have reached an undesired state if we call end session, and there is
+	// another active client. It means that the events are sent in an incorrect
+	// order.
 	if len(server.activeClientId) > 1 && server.activeClientId != event.Id {
 		server.log.PrintFatal(errors.New("was called by a client that isn't considered active"), map[string]string{
 			"actualClientId":   server.activeClientId,
@@ -115,13 +117,12 @@ func (server *server) EndSession(event domain.Event, reply *string) error {
 	// itself. If we then come back and exit VIM we will get the EndSession event
 	// but won't have any session that we are tracking time for.
 	if server.activeClientId == "" && server.session == nil {
-		message := "The session was already ended, or possibly never started. Was there a previous heatbeat check?"
+		message := "The session was already ended, or possibly never started"
 		server.log.PrintDebug(message, nil)
 		return nil
 	}
 
 	server.saveSession()
-
 	*reply = "The session was ended successfully."
 	return nil
 }

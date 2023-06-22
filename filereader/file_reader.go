@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"regexp"
 
+	"code-harvest.conner.dev/domain"
 	"code-harvest.conner.dev/filetypes"
 )
 
@@ -102,26 +103,26 @@ func (git FileReader) extractRepositoryName(dirPath string) (string, error) {
 	return extractSubExp(regularRepoExp, matches, "RepoName"), nil
 }
 
-func (g FileReader) GitFile(absolutePath string) (File, error) {
+func (g FileReader) GitFile(absolutePath string) (domain.GitFile, error) {
 	if absolutePath == "" {
-		return file{}, ErrEmptyPath
+		return domain.GitFile{}, ErrEmptyPath
 	}
 
 	// It could be a temporary buffer or directory.
 	if !g.Reader.IsFile(absolutePath) {
-		return file{}, ErrPathNotAFile
+		return domain.GitFile{}, ErrPathNotAFile
 	}
 
 	// When I aggregate the data I do it on a per project basis. Therefore, if this
 	// is just a one-off edit of some configuration file I won't track time for it.
 	gitFolderPath, err := g.findGitFolder(g.Reader.Dir(absolutePath))
 	if err != nil {
-		return file{}, err
+		return domain.GitFile{}, err
 	}
 
 	repositoryName, err := g.extractRepositoryName(gitFolderPath)
 	if err != nil {
-		return file{}, err
+		return domain.GitFile{}, err
 	}
 
 	pathFromGitFolder := absolutePath[len(gitFolderPath)-len(".git"):]
@@ -131,9 +132,14 @@ func (g FileReader) GitFile(absolutePath string) (File, error) {
 	filename := filepath.Base(absolutePath)
 	ft, err := filetypes.Type(filename)
 	if err != nil {
-		return file{}, err
+		return domain.GitFile{}, err
 	}
 
-	fileMetaData := file{filename, ft, repositoryName, path}
-	return fileMetaData, nil
+	gitFile := domain.GitFile{
+		Name:       filename,
+		Filetype:   ft,
+		Repository: repositoryName,
+		Path:       path,
+	}
+	return gitFile, nil
 }

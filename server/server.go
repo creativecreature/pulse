@@ -39,10 +39,10 @@ func (server *server) updateCurrentFile(absolutePath string) {
 	}
 
 	file := domain.NewBuffer(
-		fileData.Name(),
-		fileData.Repository(),
-		fileData.Filetype(),
-		fileData.Path(),
+		fileData.Name,
+		fileData.Repository,
+		fileData.Filetype,
+		fileData.Path,
 		openedAt,
 	)
 
@@ -53,12 +53,6 @@ func (server *server) updateCurrentFile(absolutePath string) {
 }
 
 func (server *server) saveSession() {
-	// Regardless of how we exit this function we want to reset these values.
-	defer func() {
-		server.activeClientId = ""
-		server.session = nil
-	}()
-
 	if server.session == nil {
 		server.log.PrintDebug("There was no session to save.", nil)
 		return
@@ -74,6 +68,9 @@ func (server *server) saveSession() {
 	if err != nil {
 		server.log.PrintError(err, nil)
 	}
+
+	server.activeClientId = ""
+	server.session = nil
 }
 
 func (server *server) Start(port string) error {

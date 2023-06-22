@@ -1,69 +1,12 @@
 package filereader_test
 
 import (
-	"fmt"
 	"io/fs"
-	"strings"
 	"testing"
 
 	"code-harvest.conner.dev/filereader"
+	"code-harvest.conner.dev/mock"
 )
-
-type fileReaderMock struct {
-	directoryIndex int
-	directories    []string
-	entries        map[string][]fs.DirEntry
-	fileContents   map[string][]byte
-	filereader.Reader
-}
-
-func (f *fileReaderMock) Dir(_ string) string {
-	if f.directoryIndex > len(f.directories)-1 {
-		return ""
-	}
-	dir := f.directories[f.directoryIndex]
-	f.directoryIndex++
-	return dir
-}
-
-func (f *fileReaderMock) ReadDir(dir string) ([]fs.DirEntry, error) {
-	entries, ok := f.entries[dir]
-	if !ok {
-		return nil, fmt.Errorf("no entries for dir: %s", dir)
-	}
-	return entries, nil
-}
-
-func (f *fileReaderMock) ReadFile(filename string) ([]byte, error) {
-	fileContent, ok := f.fileContents[filename]
-	if !ok {
-		return nil, fmt.Errorf("no file content for file: %s", filename)
-	}
-	return fileContent, nil
-}
-
-func (f *fileReaderMock) IsFile(filename string) bool {
-	return true
-}
-
-func (f *fileReaderMock) Filename(path string) string {
-	s := strings.Split(path, "/")
-	return s[len(s)-1]
-}
-
-type fileEntryMock struct {
-	fs.DirEntry
-	Filename    string
-	IsDirectory bool
-}
-
-func (f fileEntryMock) Name() string {
-	return f.Filename
-}
-
-func (f fileEntryMock) IsDir() bool {
-	return f.IsDirectory
-}
 
 func TestGetRepositoryFromPath(t *testing.T) {
 	t.Parallel()
@@ -89,24 +32,24 @@ func TestGetRepositoryFromPath(t *testing.T) {
 	// Set up the entries we expect to see for each directory.
 	directoryEntries := map[string][]fs.DirEntry{
 		"/Users/conner/code/dotfiles/editors/nvim": {
-			fileEntryMock{Filename: "init.lua", IsDirectory: false},
-			fileEntryMock{Filename: "keybindings.lua", IsDirectory: false},
-			fileEntryMock{Filename: "autocommands.lua", IsDirectory: false},
+			mock.NewFileEntry("init.lua", false),
+			mock.NewFileEntry("keybindings.lua", false),
+			mock.NewFileEntry("autocommands.lua", false),
 		},
 		"/Users/conner/code/dotfiles/editors": {
-			fileEntryMock{Filename: "nvim", IsDirectory: true},
+			mock.NewFileEntry("nvim", true),
 		},
 		"/Users/conner/code/dotfiles": {
-			fileEntryMock{Filename: "editors", IsDirectory: true},
-			fileEntryMock{Filename: "bootstrap.sh", IsDirectory: false},
-			fileEntryMock{Filename: "install.sh", IsDirectory: false},
-			fileEntryMock{Filename: ".git", IsDirectory: true},
+			mock.NewFileEntry("editors", true),
+			mock.NewFileEntry("bootstrap.sh", false),
+			mock.NewFileEntry("install.sh", false),
+			mock.NewFileEntry(".git", true),
 		},
 	}
 
-	fileSystemMock := fileReaderMock{
-		directoryIndex: 0,
-		directories: []string{
+	fileSystemMock := mock.Reader{
+		DirectoryIndex: 0,
+		Directories: []string{
 			"/Users/conner/code/dotfiles/editors/nvim",
 			"/Users/conner/code/dotfiles/editors",
 			"/Users/conner/code/dotfiles",
@@ -115,8 +58,8 @@ func TestGetRepositoryFromPath(t *testing.T) {
 			"/Users",
 			"/",
 		},
-		entries: directoryEntries,
-		fileContents: map[string][]byte{
+		Entries: directoryEntries,
+		FileContents: map[string][]byte{
 			"/Users/conner/code/dotfiles/.git/config": []byte(gitConfigFile),
 		},
 	}
@@ -133,7 +76,7 @@ func TestGetRepositoryFromPath(t *testing.T) {
 
 	// From how the mocks are wired we expect dotfiles to be the repository name.
 	expected := "dotfiles"
-	got := file.Repository()
+	got := file.Repository
 
 	if got != expected {
 		t.Errorf("GetRepositoryFromPath(%s) = %s; expected %s", path, got, expected)
@@ -164,25 +107,25 @@ func TestGetRepositoryFromPathBare(t *testing.T) {
 	// Set up the entries we expect to see for each directory.
 	directoryEntries := map[string][]fs.DirEntry{
 		"/Users/conner/code/ore-ui/main/src": {
-			fileEntryMock{Filename: "index.ts", IsDirectory: false},
-			fileEntryMock{Filename: "index.html", IsDirectory: false},
-			fileEntryMock{Filename: "components", IsDirectory: true},
+			mock.NewFileEntry("index.ts", false),
+			mock.NewFileEntry("index.html", false),
+			mock.NewFileEntry("components", true),
 		},
 		"/Users/conner/code/ore-ui/main": {
-			fileEntryMock{Filename: "src", IsDirectory: true},
-			fileEntryMock{Filename: ".git", IsDirectory: false},
+			mock.NewFileEntry("src", true),
+			mock.NewFileEntry(".git", false),
 		},
 		"/Users/conner/code/ore-ui": {
-			fileEntryMock{Filename: "main", IsDirectory: true},
-			fileEntryMock{Filename: "dev", IsDirectory: true},
-			fileEntryMock{Filename: ".bare", IsDirectory: true},
-			fileEntryMock{Filename: ".git", IsDirectory: false},
+			mock.NewFileEntry("main", true),
+			mock.NewFileEntry("dev", true),
+			mock.NewFileEntry(".bare", true),
+			mock.NewFileEntry(".git", false),
 		},
 	}
 
-	fileSystemMock := fileReaderMock{
-		directoryIndex: 0,
-		directories: []string{
+	fileSystemMock := mock.Reader{
+		DirectoryIndex: 0,
+		Directories: []string{
 			"/Users/conner/code/ore-ui/main/src",
 			"/Users/conner/code/ore-ui/main",
 			"/Users/conner/code/ore-ui",
@@ -191,8 +134,8 @@ func TestGetRepositoryFromPathBare(t *testing.T) {
 			"/Users",
 			"/",
 		},
-		entries: directoryEntries,
-		fileContents: map[string][]byte{
+		Entries: directoryEntries,
+		FileContents: map[string][]byte{
 			"/Users/conner/code/ore-ui/main/.git":    []byte(gitFile),
 			"/Users/conner/code/ore-ui/.bare/config": []byte(gitConfigFile),
 		},
@@ -210,7 +153,7 @@ func TestGetRepositoryFromPathBare(t *testing.T) {
 
 	// From how the mocks are wired we expect ore-ui to be the repository name.
 	expected := "ore-ui"
-	got := file.Repository()
+	got := file.Repository
 
 	if got != expected {
 		t.Errorf("GetRepositoryFromPath(%s) = %s; expected %s", path, got, expected)
@@ -241,25 +184,25 @@ func TestPathInBareProject(t *testing.T) {
 	// Set up the entries we expect to see for each directory.
 	directoryEntries := map[string][]fs.DirEntry{
 		"/Users/conner/code/ore-ui/main/src": {
-			fileEntryMock{Filename: "index.ts", IsDirectory: false},
-			fileEntryMock{Filename: "index.html", IsDirectory: false},
-			fileEntryMock{Filename: "components", IsDirectory: true},
+			mock.NewFileEntry("index.ts", false),
+			mock.NewFileEntry("index.html", false),
+			mock.NewFileEntry("components", true),
 		},
 		"/Users/conner/code/ore-ui/main": {
-			fileEntryMock{Filename: "src", IsDirectory: true},
-			fileEntryMock{Filename: ".git", IsDirectory: false},
+			mock.NewFileEntry("src", true),
+			mock.NewFileEntry(".git", false),
 		},
 		"/Users/conner/code/ore-ui": {
-			fileEntryMock{Filename: "main", IsDirectory: true},
-			fileEntryMock{Filename: "dev", IsDirectory: true},
-			fileEntryMock{Filename: ".bare", IsDirectory: true},
-			fileEntryMock{Filename: ".git", IsDirectory: false},
+			mock.NewFileEntry("main", true),
+			mock.NewFileEntry("dev", true),
+			mock.NewFileEntry(".bare", true),
+			mock.NewFileEntry(".git", false),
 		},
 	}
 
-	fileSystemMock := fileReaderMock{
-		directoryIndex: 0,
-		directories: []string{
+	fileSystemMock := mock.Reader{
+		DirectoryIndex: 0,
+		Directories: []string{
 			"/Users/conner/code/ore-ui/main/src",
 			"/Users/conner/code/ore-ui/main",
 			"/Users/conner/code/ore-ui",
@@ -268,8 +211,8 @@ func TestPathInBareProject(t *testing.T) {
 			"/Users",
 			"/",
 		},
-		entries: directoryEntries,
-		fileContents: map[string][]byte{
+		Entries: directoryEntries,
+		FileContents: map[string][]byte{
 			"/Users/conner/code/ore-ui/main/.git":    []byte(gitFile),
 			"/Users/conner/code/ore-ui/.bare/config": []byte(gitConfigFile),
 		},
@@ -287,7 +230,7 @@ func TestPathInBareProject(t *testing.T) {
 
 	// From how the mocks are wired we expect ore-ui to be the repository name.
 	expected := "ore-ui"
-	got := file.Repository()
+	got := file.Repository
 
 	if got != expected {
 		t.Errorf("GetRepositoryFromPath(%s) = %s; expected %s", path, got, expected)
@@ -318,24 +261,24 @@ func TestPathInProject(t *testing.T) {
 	// Set up the entries we expect to see for each directory.
 	directoryEntries := map[string][]fs.DirEntry{
 		"/Users/conner/code/dotfiles/editors/nvim": {
-			fileEntryMock{Filename: "init.lua", IsDirectory: false},
-			fileEntryMock{Filename: "keybindings.lua", IsDirectory: false},
-			fileEntryMock{Filename: "autocommands.lua", IsDirectory: false},
+			mock.NewFileEntry("init.lua", false),
+			mock.NewFileEntry("keybindings.lua", false),
+			mock.NewFileEntry("autocommands.lua", false),
 		},
 		"/Users/conner/code/dotfiles/editors": {
-			fileEntryMock{Filename: "nvim", IsDirectory: true},
+			mock.NewFileEntry("nvim", true),
 		},
 		"/Users/conner/code/dotfiles": {
-			fileEntryMock{Filename: "editors", IsDirectory: true},
-			fileEntryMock{Filename: "bootstrap.sh", IsDirectory: false},
-			fileEntryMock{Filename: "install.sh", IsDirectory: false},
-			fileEntryMock{Filename: ".git", IsDirectory: true},
+			mock.NewFileEntry("editors", true),
+			mock.NewFileEntry("bootstrap.sh", false),
+			mock.NewFileEntry("install.sh", false),
+			mock.NewFileEntry(".git", true),
 		},
 	}
 
-	fileSystemMock := fileReaderMock{
-		directoryIndex: 0,
-		directories: []string{
+	fileSystemMock := mock.Reader{
+		DirectoryIndex: 0,
+		Directories: []string{
 			"/Users/conner/code/dotfiles/editors/nvim",
 			"/Users/conner/code/dotfiles/editors",
 			"/Users/conner/code/dotfiles",
@@ -344,8 +287,8 @@ func TestPathInProject(t *testing.T) {
 			"/Users",
 			"/",
 		},
-		entries: directoryEntries,
-		fileContents: map[string][]byte{
+		Entries: directoryEntries,
+		FileContents: map[string][]byte{
 			"/Users/conner/code/dotfiles/.git/config": []byte(gitConfigFile),
 		},
 	}
@@ -362,7 +305,7 @@ func TestPathInProject(t *testing.T) {
 
 	// From how the mocks are wired we expect dotfiles to be the repository name.
 	expected := "dotfiles/editors/nvim/init.lua"
-	got := file.Path()
+	got := file.Path
 
 	if got != expected {
 		t.Errorf("GetRepositoryFromPath(%s) = %s; expected %s", path, got, expected)

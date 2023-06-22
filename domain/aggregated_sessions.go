@@ -7,43 +7,47 @@ import (
 
 type AggregatedSessions []AggregatedSession
 
-func merge(sessions AggregatedSessions, createKey func(s AggregatedSession) int64, timePeriod TimePeriod) AggregatedSessions {
+type truncateTimeFunc func(AggregatedSession) int64
+
+// merge merges aggregated coding sessions by truncating the time and thereby
+// clustering them by time period
+func merge(sessions AggregatedSessions, truncate truncateTimeFunc, timePeriod TimePeriod) AggregatedSessions {
 	sessionMap := make(map[int64]AggregatedSession)
 	for _, s := range sessions {
-		key := createKey(s)
+		key := truncate(s)
 		if session, ok := sessionMap[key]; !ok {
 			sessionMap[key] = s
 		} else {
-			sessionMap[key] = s.merge(session, createKey(s), timePeriod)
+			sessionMap[key] = s.merge(session, truncate(s), timePeriod)
 		}
 	}
 	return maps.Values(sessionMap)
 }
 
 func (sessions AggregatedSessions) MergeByDay() AggregatedSessions {
-	keyFunc := func(s AggregatedSession) int64 {
+	truncateFunc := func(s AggregatedSession) int64 {
 		return truncate.Day(s.Date)
 	}
-	return merge(sessions, keyFunc, Day)
+	return merge(sessions, truncateFunc, Day)
 }
 
 func (sessions AggregatedSessions) MergeByWeek() AggregatedSessions {
-	keyFunc := func(s AggregatedSession) int64 {
+	truncateFunc := func(s AggregatedSession) int64 {
 		return truncate.Week(s.Date)
 	}
-	return merge(sessions, keyFunc, Week)
+	return merge(sessions, truncateFunc, Week)
 }
 
 func (sessions AggregatedSessions) MergeByMonth() AggregatedSessions {
-	keyFunc := func(s AggregatedSession) int64 {
+	truncateFunc := func(s AggregatedSession) int64 {
 		return truncate.Month(s.Date)
 	}
-	return merge(sessions, keyFunc, Month)
+	return merge(sessions, truncateFunc, Month)
 }
 
 func (sessions AggregatedSessions) MergeByYear() AggregatedSessions {
-	keyFunc := func(s AggregatedSession) int64 {
+	truncateFunc := func(s AggregatedSession) int64 {
 		return truncate.Year(s.Date)
 	}
-	return merge(sessions, keyFunc, Year)
+	return merge(sessions, truncateFunc, Year)
 }

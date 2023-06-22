@@ -4,13 +4,14 @@ import (
 	"errors"
 
 	"code-harvest.conner.dev/clock"
+	"code-harvest.conner.dev/domain"
 	"code-harvest.conner.dev/filereader"
 	"code-harvest.conner.dev/storage"
 )
 
 type option func(*server) error
 
-// Clock is a simple abstraction that can be used to simplify time based assertions in tests
+// Clock is a simple abstraction that is used to simplify time based assertions in tests
 type Clock interface {
 	GetTime() int64
 }
@@ -26,7 +27,7 @@ func WithClock(clock Clock) option {
 }
 
 type FileReader interface {
-	GitFile(path string) (filereader.File, error)
+	GitFile(path string) (domain.GitFile, error)
 }
 
 func WithFileReader(reader FileReader) option {
