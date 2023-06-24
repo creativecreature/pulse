@@ -6,8 +6,8 @@ I wanted the data it displayed to be derived from my coding sessions.
 
 ![Screenshot of website][3]
 
-It serves as a playground where I can try out different technologies.
-Currently, it is composed of six separate components:
+The project as a whole serves as a playground where I can try out different
+technologies. Currently, it is composed of six separate components:
 
 - Server for handling coding sessions via RPC
 - A client designed for transmitting remote procedure calls to the server
