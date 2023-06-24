@@ -1,14 +1,13 @@
-# Code harvest
-This project was created with the purpose of incorporating a dashboard on my
+# Code Harvest
+This project was created with the purpose of including a dashboard on my
 [website][1] with data derived from my coding sessions:
 
 ![Screenshot of website][2]
 
 ![Screenshot of website][3]
 
-## Overview
-The project has grown over time, and as of now it consists of six separate
-components:
+It serves as a playground where I can try out different technologies.
+Currently, it is composed of six separate components:
 
 - Server for handling coding sessions via RPC
 - A client designed for transmitting remote procedure calls to the server
@@ -28,17 +27,22 @@ windows gaining focus, the initiation of new neovim instances, etc.
 For each instance of neovim, I establish a new coding session. This leads to
 the creation of several sessions per day. Every session is stored temporarily
 on the file system. The sessions are subsequently clustered, according to the
-day of occurrence, and merged before they are written to a permanent storage
-location. This is primarily to avoid surpassing any limits set by free database
-tiers.
+day of occurrence, and merged before they are written to a more permanent
+storage location. This is primarily to avoid surpassing any limits set by free
+database tiers.
 
-### Client
-The client uses the neovim [go-client][5] to add commands to neovim which I have
+### Client & Neovim plugin
+The client uses the [go-client][5] to add commands to neovim which I have
 mapped to autocommands in the neovim [plugin][4].
 
-### CLI for aggregation
+### CLI
 I use the CLI to aggregate raw coding sessions by day, and daily coding sessions by
 week, month, and year.
+
+### API & Website
+I previously had these open-source as well. Regrettably, a handful of
+individuals deployed their own versions where they had replaced my name with
+theirs.
 
 [1]: https://creativecreature.com
 [2]: ./screenshots/website1.png
