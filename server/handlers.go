@@ -6,9 +6,9 @@ import (
 	"code-harvest.conner.dev/domain"
 )
 
-// FocusGained gets invoked by the FocusGained autocommand. It gives us
+// FocusGained is invoked by the FocusGained autocommand. It gives us
 // information about the currently active client. The duration of a coding
-// session should not increase by the number of clients (VIM instances) we use.
+// session should not increase by the number of clients (neovim instances).
 // Only one will be tracked at a time.
 func (server *server) FocusGained(event domain.Event, reply *string) error {
 	// The heartbeat timer could fire at the exact same time.

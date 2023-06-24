@@ -16,6 +16,9 @@ var (
 	db  string
 )
 
+// aggregateByDay takes all the temporary coding sessions, merges them by day
+// of occurrence, and moves them to a database. Once that is complete it clears
+// the temporary storage of all files.
 func aggregateByDay(log *logger.Logger, tempStorage storage.TemporaryStorage, permStorage storage.PermanentStorage) {
 	log.PrintInfo("Performing aggregation by day", nil)
 	tempSessions, err := tempStorage.Read()
@@ -33,6 +36,7 @@ func aggregateByDay(log *logger.Logger, tempStorage storage.TemporaryStorage, pe
 	log.PrintInfo("Finished aggregation by day", nil)
 }
 
+// periodString turns a time period into a readable string
 func periodString(timePeriod domain.TimePeriod) string {
 	switch timePeriod {
 	case domain.Day:
@@ -47,6 +51,8 @@ func periodString(timePeriod domain.TimePeriod) string {
 	panic("Unknown time period")
 }
 
+// aggregateByTimePeriod gathers all daily coding sessions, and further
+// consolidates them by week, month, or year.
 func aggregateByTimePeriod(log *logger.Logger, timePeriod domain.TimePeriod, permStorage storage.PermanentStorage) {
 	pString := periodString(timePeriod)
 	log.PrintInfo(fmt.Sprintf("Performing aggregation by %s", pString), nil)

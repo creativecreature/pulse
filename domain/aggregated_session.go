@@ -1,7 +1,8 @@
 package domain
 
-// AggregatedSession represents several TempSessions that have been merged together
-// for a given interval.
+// AggregatedSession represents a session that has been aggregated for a given
+// time period. Raw sessions are aggregated by day. Daily sessions are
+// aggregated by week, month, and year.
 type AggregatedSession struct {
 	ID           string       `bson:"_id,omitempty"`
 	Period       TimePeriod   `bson:"period"`
@@ -11,6 +12,7 @@ type AggregatedSession struct {
 	Repositories Repositories `bson:"repositories"`
 }
 
+// merge takes two aggregated sessions, merges them, and returns the result
 func (a AggregatedSession) merge(b AggregatedSession, date int64, timePeriod TimePeriod) AggregatedSession {
 	mergedSession := AggregatedSession{
 		Period:       timePeriod,

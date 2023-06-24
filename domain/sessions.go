@@ -21,7 +21,7 @@ func groupByDay(session []Session) map[int64][]Session {
 	return buckets
 }
 
-// Aggregate takes a slice of "raw" coding sessions and aggregates them by day
+// Aggregate takes a slice of raw coding sessions and aggregates them by day
 func (sessions Sessions) Aggregate() []AggregatedSession {
 	sessionsPerDay := groupByDay(sessions)
 	aggregatedSessions := make([]AggregatedSession, 0)
@@ -37,7 +37,7 @@ func (sessions Sessions) Aggregate() []AggregatedSession {
 			Date:         date,
 			DateString:   dateString,
 			TotalTimeMs:  totalTime,
-			Repositories: sessionRepositories(tempSessions),
+			Repositories: repositories(tempSessions),
 		}
 		aggregatedSessions = append(aggregatedSessions, session)
 	}

@@ -7,6 +7,7 @@ import (
 
 var ErrUnrecognizedFileExtension = errors.New("could not extract a filetype from the filename")
 
+// Map of file extensions to filetypes
 var extensions = map[string]string{
 	"go":   "go",
 	"js":   "javascript",
@@ -27,17 +28,17 @@ var extensions = map[string]string{
 	"toml": "toml",
 }
 
+// Special files that we track time for
 var specialFiles = map[string]string{
 	"Makefile":       "Makefile",
 	"Dockerfile":     "Docker",
 	"docker-compose": "Docker",
 }
 
-// Get tries to extract the filetype from a filename.
+// Type extracts the filetype from a filename
 func Type(filename string) (string, error) {
 	// Start by checking if it is a special file
-	file, ok := specialFiles[strings.Split(filename, ".")[0]]
-	if ok {
+	if file, ok := specialFiles[strings.Split(filename, ".")[0]]; ok {
 		return file, nil
 	}
 

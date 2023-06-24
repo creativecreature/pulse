@@ -2,11 +2,10 @@ package domain
 
 type Repositories []Repository
 
-// You could work on several different repositories during one
-// coding session. This function groups the work by repository
-func sessionRepositories(sessions Sessions) []Repository {
-	filesByRepo := aggregateFilesByRepo(sessions)
-	repositories := make([]Repository, 0)
+// repositories take a slice of sessions and returns the repositories
+func repositories(sessions Sessions) []Repository {
+	filesByRepo := repositoryPathFile(sessions)
+	repos := make([]Repository, 0)
 
 	for repositoryName, filenameFileMap := range filesByRepo {
 		var durationMs int64 = 0
@@ -20,13 +19,15 @@ func sessionRepositories(sessions Sessions) []Repository {
 			Files:      files,
 			DurationMs: durationMs,
 		}
-		repositories = append(repositories, repository)
+		repos = append(repos, repository)
 	}
 
-	return repositories
+	return repos
 }
 
-func createNameRepoMap(repos Repositories) map[string]Repository {
+// repositoriesByName takes a slice of repositories and returns a map where the
+// repository name is the key and the repository the value
+func repositoriesByName(repos Repositories) map[string]Repository {
 	nameRepoMap := make(map[string]Repository)
 	for _, repo := range repos {
 		nameRepoMap[repo.Name] = repo
@@ -34,10 +35,10 @@ func createNameRepoMap(repos Repositories) map[string]Repository {
 	return nameRepoMap
 }
 
-// Merges the repositories of two aggregated sessions
+// Merge takes two slices of repositories, merges them, and returns the result
 func (a Repositories) merge(b Repositories) Repositories {
 	mergedRepositories := make([]Repository, 0)
-	aRepoMap, bRepoMap := createNameRepoMap(a), createNameRepoMap(b)
+	aRepoMap, bRepoMap := repositoriesByName(a), repositoriesByName(b)
 
 	// Add repos that are unique for a and merge collisions
 	for _, aRepo := range a {

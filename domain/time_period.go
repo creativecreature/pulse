@@ -1,6 +1,6 @@
 package domain
 
-// Represents the time period that a session was aggregated for
+// Represents the time frame for which a sessions aggregation was performed
 type TimePeriod int8
 
 const (

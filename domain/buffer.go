@@ -1,6 +1,6 @@
 package domain
 
-// Buffer represents a buffer in an active coding session
+// Buffer represents a buffer that has been opened during a coding session
 type Buffer struct {
 	OpenedAt   int64
 	ClosedAt   int64
@@ -11,7 +11,6 @@ type Buffer struct {
 	DurationMs int64
 }
 
-// NewBuffer creates a new buffer
 func NewBuffer(filename, repo, filetype, filepath string, openedAt int64) Buffer {
 	return Buffer{
 		Filename:   filename,

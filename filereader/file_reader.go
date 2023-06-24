@@ -28,11 +28,12 @@ type FileReader struct {
 	Reader Reader
 }
 
+// New creates a new FileReader
 func New() FileReader {
 	return FileReader{reader{}}
 }
 
-// Helper function to extract a subexpression from a regex.
+// extractSubExp extracts a named subgroup from a regexp match
 func extractSubExp(re *regexp.Regexp, matches []string, subexp string) string {
 	exp := matches[re.SubexpIndex(subexp)]
 	// We should never have a mismatch here.
@@ -42,7 +43,7 @@ func extractSubExp(re *regexp.Regexp, matches []string, subexp string) string {
 	return exp
 }
 
-// Extracts the path to the bare repository from the .git file.
+// extractRepositoryName extracts the name of the repository from a .git file
 func (g FileReader) extractBareRepositoryPath(filepath string) (string, error) {
 	fileContent, err := g.Reader.ReadFile(filepath)
 	if err != nil {
@@ -57,8 +58,9 @@ func (g FileReader) extractBareRepositoryPath(filepath string) (string, error) {
 	return extractSubExp(bareRepoExp, matches, "GitDir"), nil
 }
 
-// Calls itself recursively until it finds a .git file/folder or reaches the root.
-// If it finds a .git file/folder it will try to extract the name of the repository.
+// findGitFolder calls itself recursively until it finds a .git file/folder or
+// reaches the root of the filesystem. If it finds a .git file or folder it
+// will try to extract the name of the repository
 func (g FileReader) findGitFolder(dir string) (string, error) {
 	// Stop the recursion if we have reached the root.
 	if dir == "/" {
@@ -87,7 +89,8 @@ func (g FileReader) findGitFolder(dir string) (string, error) {
 	return g.findGitFolder(g.Reader.Dir(dir))
 }
 
-// Extracts the actual name of the repository by looking at the url.
+// extractRepositoryName extracts the name of the repository by looking at the
+// url. This solves the issue of having repositories cloned under different names
 func (git FileReader) extractRepositoryName(dirPath string) (string, error) {
 	fileContent, err := git.Reader.ReadFile(path.Join(dirPath, "config"))
 	if err != nil {
@@ -103,6 +106,9 @@ func (git FileReader) extractRepositoryName(dirPath string) (string, error) {
 	return extractSubExp(regularRepoExp, matches, "RepoName"), nil
 }
 
+// GitFile returns a GitFile struct from an absolute path. It will return an
+// error if the path is empty, if the path is not a file or if it can't find a
+// .git file or folder before it reaches the root of the file tree
 func (g FileReader) GitFile(absolutePath string) (domain.GitFile, error) {
 	if absolutePath == "" {
 		return domain.GitFile{}, ErrEmptyPath

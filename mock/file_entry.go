@@ -2,6 +2,7 @@ package mock
 
 import "io/fs"
 
+// FileEntry is a mock of the fs.FileEntry interface
 type FileEntry struct {
 	fs.DirEntry
 	Filename    string

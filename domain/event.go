@@ -1,6 +1,6 @@
 package domain
 
-// Event that is sent from the client to the server
+// Event represents the events we receive from the clients
 type Event struct {
 	Id     string
 	Path   string

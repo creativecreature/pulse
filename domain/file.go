@@ -1,6 +1,6 @@
 package domain
 
-// File represents a file that has been stored for a coding session
+// File represents a file that has been opened during a coding session
 type File struct {
 	Name       string `json:"name"`
 	Path       string `json:"path"`
@@ -9,6 +9,7 @@ type File struct {
 	DurationMs int64  `json:"duration_ms"`
 }
 
+// Turns a buffer from an active coding session into a file entry
 func fileFromBuffer(b Buffer) File {
 	return File{
 		Name:       b.Filename,

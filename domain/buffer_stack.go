@@ -6,8 +6,7 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-// bufferStack represents the stack of buffers that have been opened during a
-// coding session.
+// bufferStack is the stack of buffers that we have opened during an active coding session
 type bufferStack struct {
 	buffers []Buffer
 }
@@ -17,6 +16,7 @@ func (s *bufferStack) push(f Buffer) {
 	s.buffers = append(s.buffers, f)
 }
 
+// peek returns a pointer to the most recent buffer
 func (s *bufferStack) peek() *Buffer {
 	if len(s.buffers) == 0 {
 		return nil
@@ -36,7 +36,7 @@ func (s *bufferStack) pop() (Buffer, error) {
 	return res, nil
 }
 
-// slice takes the stack of buffers, merges them by filepath, and returns a slice
+// slice takes the stack of buffers, merges them by filepath, and returns the result
 func (s *bufferStack) slice() []Buffer {
 	mergedBuffers := map[string]Buffer{}
 	for buffer, err := s.pop(); err == nil; buffer, err = s.pop() {

@@ -10,9 +10,9 @@ type Server interface {
 	EndSession(event domain.Event, reply *string) error
 }
 
-// Proxy is the layer between our client and server. It forwards remote
-// procedure calls to the server without the risk of exposing unwanted methods
-// just because they satisfy the RPC interface
+// Proxy serves as the intermediary between our client and server. It directs
+// remote procedure calls to the server, mitigating the risk of unintentionally
+// revealing server methods, just because they happen to conform to the RPC interface
 type Proxy struct {
 	server Server
 }
@@ -27,18 +27,21 @@ func (p *Proxy) FocusGained(event domain.Event, reply *string) error {
 	return p.server.FocusGained(event, reply)
 }
 
-// OpenFile should be called when a file is opened
+// OpenFile should be called when a buffer is opened. The server will check if
+// the path is a valid file
 func (p *Proxy) OpenFile(event domain.Event, reply *string) error {
 	return p.server.OpenFile(event, reply)
 }
 
-// SendHeartbeat can be called on writes, cursor moves, searches, etc. It
-// informs the server that the coding session is still active
+// SendHeartbeat can be called for events such as buffer writes, cursor moves,
+// etc. Its purpose is to notify the server that the current session remains
+// active. If we don't perform any actions for 10 minutes the server is going
+// to end the session
 func (p *Proxy) SendHeartbeat(event domain.Event, reply *string) error {
 	return p.server.SendHeartbeat(event, reply)
 }
 
-// EndSession should be called when the editor closes
+// EndSession should be called when the neovim process ends
 func (p *Proxy) EndSession(event domain.Event, reply *string) error {
 	return p.server.EndSession(event, reply)
 }

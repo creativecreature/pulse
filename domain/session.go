@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 )
 
-// Session represents a "raw" coding session from an editor. They are stored in
-// a temporary location, and are later aggregated by time period and moved to a
-// permanent storage
+// Session is the raw representation of a coding session. These sessions are
+// stored temporarily on disk, and are later merged by the day they occurred,
+// and moved to a database
 type Session struct {
 	StartedAt  int64  `json:"started_at"`
 	EndedAt    int64  `json:"ended_at"`

@@ -1,7 +1,12 @@
 package domain
 
+// AggregatedFiles represents a slice of files that has been aggregated for a
+// given time period. Raw sessions are aggregated by day. Daily sessions are
+// aggregated by week, month, and year.
 type AggregatedFiles []AggregatedFile
 
+// createPathFileMap takes a slice of aggregated files and produces a map, where
+// the file path is used as the key and the file itself serves as the value
 func createPathFileMap(files AggregatedFiles) map[string]AggregatedFile {
 	pathFileMap := make(map[string]AggregatedFile)
 	for _, f := range files {
@@ -10,7 +15,7 @@ func createPathFileMap(files AggregatedFiles) map[string]AggregatedFile {
 	return pathFileMap
 }
 
-// merge merges two AggregatedFile slices
+// merge takes two slices of aggregated files, merges them, and returns the result
 func (a AggregatedFiles) merge(b AggregatedFiles) AggregatedFiles {
 	mergedFiles := make([]AggregatedFile, 0)
 	aFileMap := createPathFileMap(a)
