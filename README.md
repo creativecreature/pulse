@@ -1,5 +1,5 @@
 # Code Harvest
-This project was created with the purpose of including a dashboard on my [website.][1]
+This project was created with the purpose of including a dashboard on my [website][1]
 with data derived from my coding sessions.
 
 ![Screenshot of website][2]
