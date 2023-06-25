@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -25,6 +26,10 @@ func (server *server) CheckHeartbeat() {
 		// Lock the mutex to prevent race conditions with events from the clients.
 		server.mutex.Lock()
 		defer server.mutex.Unlock()
+		server.log.PrintDebug("Ending inactive session", map[string]string{
+			"last_heartbeat": fmt.Sprintf("%d", server.lastHeartbeat),
+			"current_time":   fmt.Sprintf("%d", server.clock.GetTime()),
+		})
 		server.saveSession()
 	}
 }

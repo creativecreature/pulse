@@ -11,9 +11,10 @@ type ActiveSession struct {
 // StartSession creates a new active coding session.
 func StartSession(startedAt int64, os, editor string) *ActiveSession {
 	return &ActiveSession{
-		StartedAt: startedAt, OS: os,
-		Editor:   editor,
-		bufStack: &bufferStack{buffers: make([]Buffer, 0)},
+		StartedAt: startedAt,
+		OS:        os,
+		Editor:    editor,
+		bufStack:  &bufferStack{buffers: make([]Buffer, 0)},
 	}
 }
 

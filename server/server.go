@@ -66,9 +66,9 @@ func (server *server) saveSession() {
 
 	// Set session duration and close the current buffer
 	endedAt := server.clock.GetTime()
-	endedSession := server.session.End(endedAt)
+	finishedSession := server.session.End(endedAt)
 
-	err := server.storage.Write(endedSession)
+	err := server.storage.Write(finishedSession)
 	if err != nil {
 		server.log.PrintError(err, nil)
 	}
