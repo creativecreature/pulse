@@ -1,6 +1,6 @@
 package domain
 
-// GitFile represents a file within a git repository
+// GitFile represents a file within a git repository.
 type GitFile struct {
 	Name       string
 	Filetype   string

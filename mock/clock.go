@@ -1,6 +1,6 @@
 package mock
 
-// Clock is a mock implementation of the clock.Clock interface
+// Clock is a mock implementation of the clock.Clock interface.
 type Clock struct {
 	time int64
 }

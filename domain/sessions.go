@@ -8,10 +8,10 @@ import (
 
 const yymmdd = "2006-01-02"
 
-// Sessions is a slice of several Session structs
+// Sessions is a slice of several Session structs.
 type Sessions []Session
 
-// groupByDay groups the sessions by day
+// groupByDay groups the sessions by day they occurred.
 func groupByDay(session []Session) map[int64][]Session {
 	buckets := make(map[int64][]Session)
 	for _, s := range session {
@@ -21,7 +21,7 @@ func groupByDay(session []Session) map[int64][]Session {
 	return buckets
 }
 
-// Aggregate takes a slice of raw coding sessions and aggregates them by day
+// Aggregate takes a slice of raw coding sessions and aggregates them by day.
 func (sessions Sessions) Aggregate() []AggregatedSession {
 	sessionsPerDay := groupByDay(sessions)
 	aggregatedSessions := make([]AggregatedSession, 0)

@@ -2,7 +2,7 @@ package domain
 
 type Repositories []Repository
 
-// repositories take a slice of sessions and returns the repositories
+// repositories take a slice of sessions and returns the repositories.
 func repositories(sessions Sessions) []Repository {
 	filesByRepo := repositoryPathFile(sessions)
 	repos := make([]Repository, 0)
@@ -25,8 +25,8 @@ func repositories(sessions Sessions) []Repository {
 	return repos
 }
 
-// repositoriesByName takes a slice of repositories and returns a map where the
-// repository name is the key and the repository the value
+// repositoriesByName takes a slice of repositories and returns a map
+// where the repository name is the key and the repository the value.
 func repositoriesByName(repos Repositories) map[string]Repository {
 	nameRepoMap := make(map[string]Repository)
 	for _, repo := range repos {
@@ -35,12 +35,12 @@ func repositoriesByName(repos Repositories) map[string]Repository {
 	return nameRepoMap
 }
 
-// Merge takes two slices of repositories, merges them, and returns the result
+// Merge takes two slices of repositories, merges them, and returns the result.
 func (a Repositories) merge(b Repositories) Repositories {
 	mergedRepositories := make([]Repository, 0)
 	aRepoMap, bRepoMap := repositoriesByName(a), repositoriesByName(b)
 
-	// Add repos that are unique for a and merge collisions
+	// Add repos that are unique for a and merge collisions.
 	for _, aRepo := range a {
 		if bRepo, ok := bRepoMap[aRepo.Name]; !ok {
 			mergedRepositories = append(mergedRepositories, aRepo)
@@ -49,8 +49,8 @@ func (a Repositories) merge(b Repositories) Repositories {
 		}
 	}
 
-	// The merging is done at this point. Here we'll add the repositories that
-	// are unique to the new session
+	// The merging is done at this point. Here we'll add the
+	// repositories that are unique to the new session.
 	for _, newRepo := range b {
 		if _, ok := aRepoMap[newRepo.Name]; !ok {
 			mergedRepositories = append(mergedRepositories, newRepo)

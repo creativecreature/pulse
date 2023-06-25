@@ -4,7 +4,7 @@ import (
 	"code-harvest.conner.dev/domain"
 )
 
-// FileReader is a mock implementation of the domain.FileReader interface
+// FileReader is a mock implementation of the domain.FileReader interface.
 type FileReader struct {
 	file domain.GitFile
 }

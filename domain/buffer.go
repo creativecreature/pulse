@@ -1,6 +1,6 @@
 package domain
 
-// Buffer represents a buffer that has been opened during a coding session
+// Buffer represents a buffer that has been opened during an active coding session
 type Buffer struct {
 	OpenedAt   int64
 	ClosedAt   int64

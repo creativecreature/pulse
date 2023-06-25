@@ -8,7 +8,7 @@ import (
 	"code-harvest.conner.dev/storage"
 )
 
-// ldflags
+// ldflags.
 var (
 	serverName string
 	port       string

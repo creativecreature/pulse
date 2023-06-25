@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// Reader is a mock implementation of the filereader.Reader interface
+// Reader is a mock implementation of the filereader.Reader interface.
 type Reader struct {
 	DirectoryIndex int
 	Directories    []string

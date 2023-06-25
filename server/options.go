@@ -11,11 +11,13 @@ import (
 
 type option func(*server) error
 
-// Clock is a simple abstraction that is used to simplify time based assertions in tests
+// Clock is a simple abstraction that is used to
+// simplify time based assertions in tests.
 type Clock interface {
 	GetTime() int64
 }
 
+// WithClock sets the clock used by the server.
 func WithClock(clock Clock) option {
 	return func(a *server) error {
 		if clock == nil {
@@ -26,10 +28,13 @@ func WithClock(clock Clock) option {
 	}
 }
 
+// FileReader is a simple abstraction that defines a function
+// for getting metadata from a file within a git repository.
 type FileReader interface {
 	GitFile(path string) (domain.GitFile, error)
 }
 
+// WithFileReader sets the file reader used by the server.
 func WithFileReader(reader FileReader) option {
 	return func(a *server) error {
 		if reader == nil {
@@ -40,6 +45,7 @@ func WithFileReader(reader FileReader) option {
 	}
 }
 
+// WithStorage sets the storage used by the server.
 func WithStorage(storage storage.TemporaryStorage) option {
 	return func(a *server) error {
 		if storage == nil {
@@ -50,6 +56,8 @@ func WithStorage(storage storage.TemporaryStorage) option {
 	}
 }
 
+// Log is an abstraction for the logger used by the server.
+// It allows us to use a different logger during tests.
 type Log interface {
 	PrintDebug(message string, properties map[string]string)
 	PrintInfo(message string, properties map[string]string)
@@ -57,6 +65,7 @@ type Log interface {
 	PrintFatal(err error, properties map[string]string)
 }
 
+// WithLog sets the logger used by the server.
 func WithLog(log Log) option {
 	return func(a *server) error {
 		if log == nil {
@@ -67,6 +76,7 @@ func WithLog(log Log) option {
 	}
 }
 
+// New creates a new server.
 func New(serverName string, opts ...option) (*server, error) {
 	a := &server{
 		serverName: serverName,

@@ -35,7 +35,7 @@ func NewStorage() Storage {
 	return Storage{dataDirPath}
 }
 
-// dir creates the directory where we'll store all coding sessions for a given day
+// dir creates the directory where we'll store all coding sessions for a given day.
 func dir(dataDirPath string) (string, error) {
 	dirPath := path.Join(dataDirPath, "tmp", time.Now().UTC().Format(YYYYMMDD))
 	// os.MkdirAll returns nil if the directory already exists
@@ -47,7 +47,7 @@ func dir(dataDirPath string) (string, error) {
 	return dirPath, nil
 }
 
-// Returns a filename that we'll use when writing the session to disk
+// Returns a filename that we'll use when writing the session to disk.
 func filename(s domain.Session) string {
 	startDuration := time.Duration(s.StartedAt) * time.Millisecond
 	startTime := time.Unix(0, startDuration.Nanoseconds())

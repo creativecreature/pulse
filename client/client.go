@@ -1,4 +1,4 @@
-// Package client is used to send remote procedure calls to the server
+// Package client is used to send remote procedure calls to the server.
 package client
 
 import (
@@ -9,14 +9,14 @@ import (
 	"code-harvest.conner.dev/domain"
 )
 
-// Client for making remote procedure calls to the server
+// Client for making remote procedure calls to the server.
 type Client struct {
 	serverName string
 	rpcClient  *rpc.Client
 }
 
-// createEvents creates a new event from the slice of arguments that
-// we receive from the neovim client
+// createEvents creates a new event from the slice of arguments
+// that we receive from the neovim client.
 func createEvent(args []string) domain.Event {
 	return domain.Event{
 		Id:     args[0],
@@ -26,7 +26,7 @@ func createEvent(args []string) domain.Event {
 	}
 }
 
-// New is used to create a new client
+// New is used to create a new client.
 func New(serverName, port, hostname string) (*Client, error) {
 	rpcClient, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%s", hostname, port))
 	if err != nil {
@@ -36,32 +36,31 @@ func New(serverName, port, hostname string) (*Client, error) {
 	return &Client{serverName: serverName, rpcClient: rpcClient}, nil
 }
 
-// FocusGained should be called when a buffer gains focus
+// FocusGained should be called when a buffer gains focus.
 func (c *Client) FocusGained(args []string) {
 	event, reply := createEvent(args), ""
 	serviceMethod := c.serverName + ".FocusGained"
 	c.rpcClient.Call(serviceMethod, event, &reply)
 }
 
-// OpenFile should be called when a buffer is opened. The server will check if
-// the path is a valid file
+// OpenFile should be called when a buffer is opened. The server
+// will check if the path is a valid file.
 func (c *Client) OpenFile(args []string) {
 	event, reply := createEvent(args), ""
 	serviceMethod := c.serverName + ".OpenFile"
 	c.rpcClient.Call(serviceMethod, event, &reply)
 }
 
-// SendHeartbeat can be called for events such as buffer writes, cursor moves,
-// etc. Its purpose is to notify the server that the current session remains
-// active. If we don't perform any actions for 10 minutes the server is going
-// to end the session
+// SendHeartbeat can be called for events such as buffer writes and cursor moves.
+// Its purpose is to notify the server that the current session remains active.
+// The server ends the session if we don't perform any actions for 10 minutes.
 func (c *Client) SendHeartbeat(args []string) {
 	event, reply := createEvent(args), ""
 	serviceMethod := c.serverName + ".SendHeartbeat"
 	c.rpcClient.Call(serviceMethod, event, &reply)
 }
 
-// EndSession should be called when the neovim process ends
+// EndSession should be called when the neovim process ends.
 func (c *Client) EndSession(args []string) {
 	event, reply := createEvent(args), ""
 	serviceMethod := c.serverName + ".EndSession"

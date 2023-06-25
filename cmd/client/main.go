@@ -5,7 +5,7 @@ import (
 	"github.com/neovim/go-client/nvim/plugin"
 )
 
-// ldflags
+// ldflags.
 var (
 	serverName string
 	port       string

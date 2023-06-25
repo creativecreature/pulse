@@ -9,7 +9,7 @@ func New() Clock {
 	return Clock{}
 }
 
-// GetTime returns the current UTC time in milliseconds
+// GetTime returns the current UTC time in milliseconds.
 func (c Clock) GetTime() int64 {
 	return time.Now().UTC().UnixMilli()
 }

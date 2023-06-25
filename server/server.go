@@ -24,15 +24,18 @@ type server struct {
 	storage        storage.TemporaryStorage
 }
 
+// startNewSession creates a new session and sets it as the current session.
 func (server *server) startNewSession(os, editor string) {
 	server.session = domain.StartSession(server.clock.GetTime(), os, editor)
 }
 
-func (server *server) updateCurrentFile(absolutePath string) {
+// setActiveBuffer updates the current buffer in the current session.
+func (server *server) setActiveBuffer(absolutePath string) {
 	openedAt := server.clock.GetTime()
 	fileData, err := server.fileReader.GitFile(absolutePath)
 	if err != nil {
 		server.log.PrintDebug("Could not extract metadata for the path", map[string]string{
+			"path":   absolutePath,
 			"reason": err.Error(),
 		})
 		return
@@ -52,6 +55,7 @@ func (server *server) updateCurrentFile(absolutePath string) {
 	})
 }
 
+// saveSession ends the current coding session and saves it to the filesystem.
 func (server *server) saveSession() {
 	if server.session == nil {
 		server.log.PrintDebug("There was no session to save.", nil)
@@ -73,11 +77,12 @@ func (server *server) saveSession() {
 	server.session = nil
 }
 
+// Start starts the server on the given port.
 func (server *server) Start(port string) error {
 	server.log.PrintInfo("Starting up...", nil)
 
-	// The proxy exposes the functions that we want to make available for remote
-	// procedure calls. Register the proxy as the RPC receiver.
+	// The proxy exposes the functions that we want to make available for
+	// remote procedure calls. We then register the proxy as the RPC receiver.
 	proxy := proxy.New(server)
 	err := rpc.RegisterName(server.serverName, proxy)
 	if err != nil {
@@ -98,6 +103,9 @@ func (server *server) Start(port string) error {
 
 	// Blocks until we receive a shutdown signal
 	server.monitorHeartbeat()
+
+	// Save the current session before shutting down
+	server.saveSession()
 
 	server.log.PrintInfo("Shutting down...", nil)
 	return nil
