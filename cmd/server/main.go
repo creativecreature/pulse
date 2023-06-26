@@ -15,7 +15,7 @@ var (
 )
 
 func main() {
-	log := logger.New(os.Stdout, logger.LevelInfo)
+	log := logger.New(os.Stdout, logger.LevelDebug)
 
 	server, err := server.New(
 		serverName,

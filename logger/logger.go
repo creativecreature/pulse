@@ -59,7 +59,7 @@ func New(out io.Writer, minLevel Level) *Logger {
 }
 
 func (l *Logger) PrintDebug(message string, properties map[string]string) {
-	l.print(LevelInfo, message, properties)
+	l.print(LevelDebug, message, properties)
 }
 
 func (l *Logger) PrintInfo(message string, properties map[string]string) {

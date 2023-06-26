@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"fmt"
 
 	"code-harvest.conner.dev/domain"
 )
@@ -127,6 +128,27 @@ func (server *server) EndSession(event domain.Event, reply *string) error {
 	}
 
 	server.saveSession()
+	server.activeClientId = ""
 	*reply = "The session was ended successfully."
 	return nil
+}
+
+// CheckHeartbeat is used to check if the session has been inactive for more than
+// ten minutes. If that is the case, the session will be terminated and saved to disk.
+func (server *server) CheckHeartbeat() {
+	server.log.PrintDebug("Checking heartbeat", nil)
+	if server.session == nil {
+		return
+	}
+
+	if server.lastHeartbeat+HeartbeatTTL.Milliseconds() < server.clock.GetTime() {
+		// Lock the mutex to prevent race conditions with events from the clients.
+		server.mutex.Lock()
+		defer server.mutex.Unlock()
+		server.log.PrintInfo("Ending inactive session", map[string]string{
+			"last_heartbeat": fmt.Sprintf("%d", server.lastHeartbeat),
+			"current_time":   fmt.Sprintf("%d", server.clock.GetTime()),
+		})
+		server.saveSession()
+	}
 }
