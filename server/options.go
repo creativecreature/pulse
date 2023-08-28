@@ -3,10 +3,10 @@ package server
 import (
 	"errors"
 
-	"code-harvest.conner.dev/clock"
-	"code-harvest.conner.dev/domain"
-	"code-harvest.conner.dev/filereader"
-	"code-harvest.conner.dev/storage"
+	"github.com/creativecreature/code-harvest"
+	"github.com/creativecreature/code-harvest/clock"
+	"github.com/creativecreature/code-harvest/filereader"
+	"github.com/creativecreature/code-harvest/storage"
 )
 
 type option func(*server) error
@@ -31,7 +31,7 @@ func WithClock(clock Clock) option {
 // FileReader is a simple abstraction that defines a function
 // for getting metadata from a file within a git repository.
 type FileReader interface {
-	GitFile(path string) (domain.GitFile, error)
+	GitFile(path string) (codeharvest.GitFile, error)
 }
 
 // WithFileReader sets the file reader used by the server.

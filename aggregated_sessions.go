@@ -1,7 +1,7 @@
-package domain
+package codeharvest
 
 import (
-	"code-harvest.conner.dev/truncate"
+	"github.com/creativecreature/code-harvest/truncate"
 	"golang.org/x/exp/maps"
 )
 

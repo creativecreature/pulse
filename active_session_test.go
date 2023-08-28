@@ -1,17 +1,17 @@
-package domain_test
+package codeharvest_test
 
 import (
 	"testing"
 
-	"code-harvest.conner.dev/domain"
+	"github.com/creativecreature/code-harvest"
 )
 
 func TestActiveSession(t *testing.T) {
 	// Start a new coding session
-	activeSession := domain.StartSession(100, "linux", "nvim")
+	activeSession := codeharvest.StartSession(100, "linux", "nvim")
 
 	// Open the first buffer
-	bufferOne := domain.NewBuffer(
+	bufferOne := codeharvest.NewBuffer(
 		"init.lua",
 		"dotfiles",
 		"lua",
@@ -21,7 +21,7 @@ func TestActiveSession(t *testing.T) {
 	activeSession.PushBuffer(bufferOne)
 
 	// Open a second buffer.
-	bufferTwo := domain.NewBuffer(
+	bufferTwo := codeharvest.NewBuffer(
 		"plugins.lua",
 		"dotfiles",
 		"lua",
@@ -32,7 +32,7 @@ func TestActiveSession(t *testing.T) {
 
 	// Open the same file as buffer one. The total duration for these
 	// buffers should be merged when we end the coding session.
-	bufferThree := domain.NewBuffer(
+	bufferThree := codeharvest.NewBuffer(
 		"init.lua",
 		"dotfiles",
 		"lua",

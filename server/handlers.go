@@ -4,14 +4,14 @@ import (
 	"errors"
 	"fmt"
 
-	"code-harvest.conner.dev/domain"
+	"github.com/creativecreature/code-harvest"
 )
 
 // FocusGained is invoked by the FocusGained autocommand. It gives
 // us information about the currently active client. The duration
 // of a coding session should not increase by the number of clients
 // (neovim instances). Only one will be tracked at a time.
-func (server *server) FocusGained(event domain.Event, reply *string) error {
+func (server *server) FocusGained(event codeharvest.Event, reply *string) error {
 	// Lock the mutex to prevent race conditions with the heartbeat check.
 	server.mutex.Lock()
 	defer server.mutex.Unlock()
@@ -48,7 +48,7 @@ func (server *server) FocusGained(event domain.Event, reply *string) error {
 }
 
 // OpenFile gets invoked by the *BufEnter* autocommand.
-func (server *server) OpenFile(event domain.Event, reply *string) error {
+func (server *server) OpenFile(event codeharvest.Event, reply *string) error {
 	server.log.PrintDebug("Received OpenFile event", map[string]string{
 		"path": event.Path,
 	})
@@ -77,7 +77,7 @@ func (server *server) OpenFile(event domain.Event, reply *string) error {
 // SendHeartbeat can be called for events such as buffer writes and cursor moves.
 // Its purpose is to notify the server that the current session remains active.
 // The server ends the session if it doesn't receive a heartbeat for 10 minutes.
-func (server *server) SendHeartbeat(event domain.Event, reply *string) error {
+func (server *server) SendHeartbeat(event codeharvest.Event, reply *string) error {
 	// Lock the mutex to prevent race conditions with the heartbeat check.
 	server.mutex.Lock()
 	defer server.mutex.Unlock()
@@ -103,7 +103,7 @@ func (server *server) SendHeartbeat(event domain.Event, reply *string) error {
 }
 
 // EndSession should be called by the *VimLeave* autocommand.
-func (server *server) EndSession(event domain.Event, reply *string) error {
+func (server *server) EndSession(event codeharvest.Event, reply *string) error {
 	// Lock the mutex to prevent race conditions with the heartbeat check.
 	server.mutex.Lock()
 	defer server.mutex.Unlock()

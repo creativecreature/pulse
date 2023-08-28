@@ -4,11 +4,11 @@ import (
 	"io"
 	"testing"
 
-	"code-harvest.conner.dev/domain"
-	"code-harvest.conner.dev/logger"
-	"code-harvest.conner.dev/mock"
-	"code-harvest.conner.dev/server"
-	"code-harvest.conner.dev/storage"
+	codeharvest "github.com/creativecreature/code-harvest"
+	"github.com/creativecreature/code-harvest/logger"
+	"github.com/creativecreature/code-harvest/mock"
+	"github.com/creativecreature/code-harvest/server"
+	"github.com/creativecreature/code-harvest/storage"
 )
 
 func TestJumpingBetweenInstances(t *testing.T) {
@@ -29,7 +29,7 @@ func TestJumpingBetweenInstances(t *testing.T) {
 
 	// Open a new VIM instance
 	reply := ""
-	a.FocusGained(domain.Event{
+	a.FocusGained(codeharvest.Event{
 		Id:     "123",
 		Path:   "",
 		Editor: "nvim",
@@ -38,14 +38,14 @@ func TestJumpingBetweenInstances(t *testing.T) {
 
 	// Open a file in the first instance
 	mockFileReader.SetFile(
-		domain.GitFile{
+		codeharvest.GitFile{
 			Name:       "install.sh",
 			Filetype:   "bash",
 			Repository: "dotfiles",
 			Path:       "dotfiles/install.sh",
 		},
 	)
-	a.OpenFile(domain.Event{
+	a.OpenFile(codeharvest.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/install.sh",
 		Editor: "nvim",
@@ -53,7 +53,7 @@ func TestJumpingBetweenInstances(t *testing.T) {
 	}, &reply)
 
 	// Open another vim instance in a new split. This should end the previous session.
-	a.FocusGained(domain.Event{
+	a.FocusGained(codeharvest.Event{
 		Id:     "345",
 		Path:   "",
 		Editor: "nvim",
@@ -62,14 +62,14 @@ func TestJumpingBetweenInstances(t *testing.T) {
 
 	// Open a file in the second vim instance
 	mockFileReader.SetFile(
-		domain.GitFile{
+		codeharvest.GitFile{
 			Name:       "bootstrap.sh",
 			Filetype:   "bash",
 			Repository: "dotfiles",
 			Path:       "dotfiles/bootstrap.sh",
 		},
 	)
-	a.OpenFile(domain.Event{
+	a.OpenFile(codeharvest.Event{
 		Id:     "345",
 		Path:   "/Users/conner/code/dotfiles/bootstrap.sh",
 		Editor: "nvim",
@@ -78,14 +78,14 @@ func TestJumpingBetweenInstances(t *testing.T) {
 
 	// Move focus back to the first VIM instance. This should end the second session.
 	mockFileReader.SetFile(
-		domain.GitFile{
+		codeharvest.GitFile{
 			Name:       "install.sh",
 			Filetype:   "bash",
 			Repository: "dotfiles",
 			Path:       "dotfiles/install.sh",
 		},
 	)
-	a.FocusGained(domain.Event{
+	a.FocusGained(codeharvest.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/install.sh",
 		Editor: "nvim",
@@ -93,7 +93,7 @@ func TestJumpingBetweenInstances(t *testing.T) {
 	}, &reply)
 
 	// End the last session. We should now have 3 finished sessiona.
-	a.EndSession(domain.Event{
+	a.EndSession(codeharvest.Event{
 		Id:     "123",
 		Path:   "",
 		Editor: "nvim",
@@ -126,7 +126,7 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 
 	// Open a new instance of VIM
 	reply := ""
-	a.FocusGained(domain.Event{
+	a.FocusGained(codeharvest.Event{
 		Id:     "123",
 		Path:   "",
 		Editor: "nvim",
@@ -135,14 +135,14 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 
 	// Open a file
 	mockFilereader.SetFile(
-		domain.GitFile{
+		codeharvest.GitFile{
 			Name:       "install.sh",
 			Filetype:   "bash",
 			Repository: "dotfiles",
 			Path:       "dotfiles/install.sh",
 		},
 	)
-	a.OpenFile(domain.Event{
+	a.OpenFile(codeharvest.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/install.sh",
 		Editor: "nvim",
@@ -151,7 +151,7 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 
 	// Lets now imagine we opened another TMUX split to run testa. We then jump
 	// back to VIM which will fire the focus gained event with the same client id.
-	a.FocusGained(domain.Event{
+	a.FocusGained(codeharvest.Event{
 		Id:     "123",
 		Path:   "",
 		Editor: "nvim",
@@ -160,21 +160,21 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 
 	// We repeat the same thing again. Jump to another split in the terminal which makes
 	// VIM lose focus and then back again - which will trigger another focus gained event.
-	a.FocusGained(domain.Event{
+	a.FocusGained(codeharvest.Event{
 		Id:     "123",
 		Path:   "",
 		Editor: "nvim",
 		OS:     "Linux",
 	}, &reply)
 	mockFilereader.SetFile(
-		domain.GitFile{
+		codeharvest.GitFile{
 			Name:       "bootstrap.sh",
 			Filetype:   "bash",
 			Repository: "dotfiles",
 			Path:       "dotfiles/bootstrap.sh",
 		},
 	)
-	a.OpenFile(domain.Event{
+	a.OpenFile(codeharvest.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/bootstrap.sh",
 		Editor: "nvim",
@@ -184,7 +184,7 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 	// Lets now end the session. This behaviour should *not* have resulted in any
 	// new sessions being created. We only create a new session and end the current
 	// one if we open VIM in a new split (to not count double time).
-	a.EndSession(domain.Event{
+	a.EndSession(codeharvest.Event{
 		Id:     "123",
 		Path:   "",
 		Editor: "nvim",
@@ -220,7 +220,7 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 	// Send the initial focus event
 	mockClock.SetTime(100)
 	reply := ""
-	a.FocusGained(domain.Event{
+	a.FocusGained(codeharvest.Event{
 		Id:     "123",
 		Path:   "",
 		Editor: "nvim",
@@ -233,14 +233,14 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 	// Send an open file event. This should update the time for the last activity to 250.
 	mockClock.SetTime(250)
 	mockFilereader.SetFile(
-		domain.GitFile{
+		codeharvest.GitFile{
 			Name:       "install.sh",
 			Filetype:   "bash",
 			Repository: "dotfiles",
 			Path:       "dotfiles/install.sh",
 		},
 	)
-	a.OpenFile(domain.Event{
+	a.OpenFile(codeharvest.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/install.sh",
 		Editor: "nvim",
@@ -259,14 +259,14 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 
 	mockClock.SetTime(server.HeartbeatTTL.Milliseconds() + 300)
 	mockFilereader.SetFile(
-		domain.GitFile{
+		codeharvest.GitFile{
 			Name:       "cleanup.sh",
 			Filetype:   "bash",
 			Repository: "dotfiles",
 			Path:       "dotfiles/cleanup.sh",
 		},
 	)
-	a.OpenFile(domain.Event{
+	a.OpenFile(codeharvest.Event{
 		Id:     "123",
 		Path:   "/Users/conner/code/dotfiles/cleanup.sh",
 		Editor: "nvim",
@@ -276,7 +276,7 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 	mockClock.SetTime(server.HeartbeatTTL.Milliseconds() + 400)
 	a.CheckHeartbeat()
 
-	a.EndSession(domain.Event{
+	a.EndSession(codeharvest.Event{
 		Id:     "123",
 		Path:   "",
 		Editor: "nvim",

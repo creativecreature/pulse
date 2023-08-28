@@ -1,19 +1,19 @@
 package mock
 
 import (
-	"code-harvest.conner.dev/domain"
+	"github.com/creativecreature/code-harvest"
 )
 
 // FileReader is a mock implementation of the domain.FileReader interface.
 type FileReader struct {
-	file domain.GitFile
+	file codeharvest.GitFile
 }
 
-func (f *FileReader) GitFile(path string) (domain.GitFile, error) {
+func (f *FileReader) GitFile(path string) (codeharvest.GitFile, error) {
 	return f.file, nil
 }
 
-func (f *FileReader) SetFile(file domain.GitFile) {
+func (f *FileReader) SetFile(file codeharvest.GitFile) {
 	f.file = file
 }
 

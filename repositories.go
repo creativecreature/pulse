@@ -1,4 +1,4 @@
-package domain
+package codeharvest
 
 type Repositories []Repository
 

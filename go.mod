@@ -1,4 +1,4 @@
-module code-harvest.conner.dev
+module github.com/creativecreature/code-harvest
 
 go 1.19
 

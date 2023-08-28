@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 
-	"code-harvest.conner.dev/domain"
-	"code-harvest.conner.dev/logger"
-	"code-harvest.conner.dev/storage"
+	"github.com/creativecreature/code-harvest"
+	"github.com/creativecreature/code-harvest/logger"
+	"github.com/creativecreature/code-harvest/storage"
 )
 
 // ldflags
@@ -37,15 +37,15 @@ func aggregateByDay(log *logger.Logger, tempStorage storage.TemporaryStorage, pe
 }
 
 // periodString turns a time period into a readable string
-func periodString(timePeriod domain.TimePeriod) string {
+func periodString(timePeriod codeharvest.TimePeriod) string {
 	switch timePeriod {
-	case domain.Day:
+	case codeharvest.Day:
 		return "day"
-	case domain.Week:
+	case codeharvest.Week:
 		return "week"
-	case domain.Month:
+	case codeharvest.Month:
 		return "month"
-	case domain.Year:
+	case codeharvest.Year:
 		return "year"
 	}
 	panic("Unknown time period")
@@ -53,7 +53,7 @@ func periodString(timePeriod domain.TimePeriod) string {
 
 // aggregateByTimePeriod gathers all daily coding sessions,
 // and further consolidates them by week, month, or year.
-func aggregateByTimePeriod(log *logger.Logger, timePeriod domain.TimePeriod, permStorage storage.PermanentStorage) {
+func aggregateByTimePeriod(log *logger.Logger, timePeriod codeharvest.TimePeriod, permStorage storage.PermanentStorage) {
 	pString := periodString(timePeriod)
 	log.PrintInfo(fmt.Sprintf("Performing aggregation by %s", pString), nil)
 	err := permStorage.Aggregate(timePeriod)
@@ -80,14 +80,14 @@ func main() {
 	}
 
 	if *week {
-		aggregateByTimePeriod(log, domain.Week, mongoStorage)
+		aggregateByTimePeriod(log, codeharvest.Week, mongoStorage)
 	}
 
 	if *month {
-		aggregateByTimePeriod(log, domain.Month, mongoStorage)
+		aggregateByTimePeriod(log, codeharvest.Month, mongoStorage)
 	}
 
 	if *year {
-		aggregateByTimePeriod(log, domain.Year, mongoStorage)
+		aggregateByTimePeriod(log, codeharvest.Year, mongoStorage)
 	}
 }

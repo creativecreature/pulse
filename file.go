@@ -1,4 +1,4 @@
-package domain
+package codeharvest
 
 // File represents a file that has been opened during a coding session.
 type File struct {

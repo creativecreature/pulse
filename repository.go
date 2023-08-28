@@ -1,4 +1,4 @@
-package domain
+package codeharvest
 
 // Repository represents a git repository. A coding session
 // might open files across any number of repos. The files of

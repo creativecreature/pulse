@@ -1,4 +1,4 @@
-package domain
+package codeharvest
 
 // AggregatedSession represents a session that has been aggregated
 // for a given time period. Raw sessions are aggregated by day.

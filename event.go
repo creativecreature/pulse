@@ -1,4 +1,4 @@
-package domain
+package codeharvest
 
 // Event represents the events we receive from the clients.
 type Event struct {

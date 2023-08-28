@@ -3,7 +3,7 @@ package truncate_test
 import (
 	"testing"
 
-	"code-harvest.conner.dev/truncate"
+	"github.com/creativecreature/code-harvest/truncate"
 )
 
 func TestTruncate(t *testing.T) {

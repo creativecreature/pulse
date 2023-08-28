@@ -1,7 +1,7 @@
 package main
 
 import (
-	"code-harvest.conner.dev/client"
+	"github.com/creativecreature/code-harvest/client"
 	"github.com/neovim/go-client/nvim/plugin"
 )
 

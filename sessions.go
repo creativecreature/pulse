@@ -1,9 +1,9 @@
-package domain
+package codeharvest
 
 import (
 	"time"
 
-	"code-harvest.conner.dev/truncate"
+	"github.com/creativecreature/code-harvest/truncate"
 )
 
 const yymmdd = "2006-01-02"

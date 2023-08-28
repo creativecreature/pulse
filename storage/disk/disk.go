@@ -14,7 +14,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"code-harvest.conner.dev/domain"
+	"github.com/creativecreature/code-harvest"
 )
 
 const (
@@ -48,7 +48,7 @@ func dir(dataDirPath string) (string, error) {
 }
 
 // Returns a filename that we'll use when writing the session to disk.
-func filename(s domain.Session) string {
+func filename(s codeharvest.Session) string {
 	startDuration := time.Duration(s.StartedAt) * time.Millisecond
 	startTime := time.Unix(0, startDuration.Nanoseconds())
 	endDuration := time.Duration(s.EndedAt) * time.Millisecond
@@ -56,7 +56,7 @@ func filename(s domain.Session) string {
 	return fmt.Sprintf("%s-%s.json", startTime.Format(HHMMSSSSS), endTime.Format(HHMMSSSSS))
 }
 
-func (s Storage) Write(session domain.Session) error {
+func (s Storage) Write(session codeharvest.Session) error {
 	sessionFilename := filename(session)
 	dirPath, err := dir(s.dataDirPath)
 	if err != nil {
@@ -78,8 +78,8 @@ func (s Storage) Write(session domain.Session) error {
 	return err
 }
 
-func (s Storage) Read() (domain.Sessions, error) {
-	temporarySessions := make(domain.Sessions, 0)
+func (s Storage) Read() (codeharvest.Sessions, error) {
+	temporarySessions := make(codeharvest.Sessions, 0)
 	tmpDir := path.Join(s.dataDirPath, "tmp")
 	err := fs.WalkDir(os.DirFS(tmpDir), ".", func(p string, _ fs.DirEntry, _ error) error {
 		if filepath.Ext(p) == ".json" {
@@ -87,7 +87,7 @@ func (s Storage) Read() (domain.Sessions, error) {
 			if err != nil {
 				return err
 			}
-			tempSession := domain.Session{}
+			tempSession := codeharvest.Session{}
 			err = json.Unmarshal(content, &tempSession)
 			if err != nil {
 				return err

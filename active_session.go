@@ -1,4 +1,4 @@
-package domain
+package codeharvest
 
 // ActiveSession represents an ongoing coding session.
 type ActiveSession struct {

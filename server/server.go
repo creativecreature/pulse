@@ -14,9 +14,9 @@ import (
 	"syscall"
 	"time"
 
-	"code-harvest.conner.dev/domain"
-	"code-harvest.conner.dev/proxy"
-	"code-harvest.conner.dev/storage"
+	"github.com/creativecreature/code-harvest"
+	"github.com/creativecreature/code-harvest/proxy"
+	"github.com/creativecreature/code-harvest/storage"
 )
 
 const (
@@ -32,14 +32,14 @@ type server struct {
 	fileReader     FileReader
 	mutex          sync.Mutex
 	serverName     string
-	session        *domain.ActiveSession
+	session        *codeharvest.ActiveSession
 	storage        storage.TemporaryStorage
 }
 
 // startNewSession creates a new session and sets it as the current session.
 func (server *server) startNewSession(os, editor string) {
 	server.log.PrintDebug("Starting a new session", nil)
-	server.session = domain.StartSession(server.clock.GetTime(), os, editor)
+	server.session = codeharvest.StartSession(server.clock.GetTime(), os, editor)
 }
 
 // setActiveBuffer updates the current buffer in the current session.
@@ -56,7 +56,7 @@ func (server *server) setActiveBuffer(absolutePath string) {
 		return
 	}
 
-	file := domain.NewBuffer(
+	file := codeharvest.NewBuffer(
 		fileData.Name,
 		fileData.Repository,
 		fileData.Filetype,

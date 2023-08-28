@@ -6,7 +6,7 @@ import (
 	"math"
 	"time"
 
-	"code-harvest.conner.dev/domain"
+	"github.com/creativecreature/code-harvest"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -83,7 +83,7 @@ func createDateSortOptions() *options.FindOptions {
 	return options.Find().SetSort(bson.D{{Key: "date", Value: 1}})
 }
 
-func dateRange(sessions []domain.AggregatedSession) (minDate, maxDate int64) {
+func dateRange(sessions []codeharvest.AggregatedSession) (minDate, maxDate int64) {
 	minDate = math.MaxInt64
 	maxDate = math.MinInt64
 	for _, s := range sessions {
@@ -92,7 +92,7 @@ func dateRange(sessions []domain.AggregatedSession) (minDate, maxDate int64) {
 	return minDate, maxDate
 }
 
-func (m *db) getByDateRange(minDate, maxDate int64) (domain.AggregatedSessions, error) {
+func (m *db) getByDateRange(minDate, maxDate int64) (codeharvest.AggregatedSessions, error) {
 	filter := createDateFilter(minDate, maxDate)
 	sortOptions := createDateSortOptions()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -102,13 +102,13 @@ func (m *db) getByDateRange(minDate, maxDate int64) (domain.AggregatedSessions, 
 		Collection(daily).
 		Find(ctx, filter, sortOptions)
 	if err != nil {
-		return domain.AggregatedSessions{}, err
+		return codeharvest.AggregatedSessions{}, err
 	}
 
-	results := make([]domain.AggregatedSession, 0)
+	results := make([]codeharvest.AggregatedSession, 0)
 	err = cursor.All(context.Background(), &results)
 	if err != nil {
-		return domain.AggregatedSessions{}, err
+		return codeharvest.AggregatedSessions{}, err
 	}
 
 	return results, nil
@@ -122,7 +122,7 @@ func (m *db) deleteByDateRange(minDate, maxDate int64) error {
 	return err
 }
 
-func (m *db) insertAll(collection string, sessions []domain.AggregatedSession) error {
+func (m *db) insertAll(collection string, sessions []codeharvest.AggregatedSession) error {
 	documents := make([]interface{}, 0)
 	for _, session := range sessions {
 		documents = append(documents, session)
@@ -134,7 +134,7 @@ func (m *db) insertAll(collection string, sessions []domain.AggregatedSession) e
 }
 
 // Write writes daily coding sessions to a mongodb collection
-func (m *db) Write(sessions []domain.AggregatedSession) error {
+func (m *db) Write(sessions []codeharvest.AggregatedSession) error {
 	// We might aggregate sessions from the temp storage several times a day.
 	// Therefore, we have to fetch any previous sessions for the same timeframe
 	// and if we have any we'll have to merge them with the new ones.
@@ -149,7 +149,7 @@ func (m *db) Write(sessions []domain.AggregatedSession) error {
 	}
 
 	// We have already aggregated sessions for this day. We'll have to merge them.
-	combinedSessions := make(domain.AggregatedSessions, 0)
+	combinedSessions := make(codeharvest.AggregatedSessions, 0)
 	combinedSessions = append(combinedSessions, previousSessionsForRange...)
 	combinedSessions = append(combinedSessions, sessions...)
 	mergedSessions := combinedSessions.MergeByDay()
@@ -164,7 +164,7 @@ func (m *db) Write(sessions []domain.AggregatedSession) error {
 	return m.insertAll(daily, mergedSessions)
 }
 
-func (m *db) readAll() (domain.AggregatedSessions, error) {
+func (m *db) readAll() (codeharvest.AggregatedSessions, error) {
 	sortOptions := createDateSortOptions()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -173,13 +173,13 @@ func (m *db) readAll() (domain.AggregatedSessions, error) {
 		Collection(daily).
 		Find(ctx, bson.M{}, sortOptions)
 	if err != nil {
-		return domain.AggregatedSessions{}, err
+		return codeharvest.AggregatedSessions{}, err
 	}
 
-	results := make([]domain.AggregatedSession, 0)
+	results := make([]codeharvest.AggregatedSession, 0)
 	err = cursor.All(context.Background(), &results)
 	if err != nil {
-		return domain.AggregatedSessions{}, err
+		return codeharvest.AggregatedSessions{}, err
 	}
 
 	return results, nil
@@ -191,8 +191,8 @@ func (m *db) deleteCollection(collection string) error {
 		Drop(context.Background())
 }
 
-func (m *db) Aggregate(timePeriod domain.TimePeriod) error {
-	if timePeriod == domain.Day {
+func (m *db) Aggregate(timePeriod codeharvest.TimePeriod) error {
+	if timePeriod == codeharvest.Day {
 		return errors.New("cannot aggregate by day")
 	}
 
@@ -201,15 +201,15 @@ func (m *db) Aggregate(timePeriod domain.TimePeriod) error {
 		return err
 	}
 
-	sessions, collection := domain.AggregatedSessions{}, ""
+	sessions, collection := codeharvest.AggregatedSessions{}, ""
 	switch tPeriod := timePeriod; tPeriod {
-	case domain.Week:
+	case codeharvest.Week:
 		sessions = dailySessions.MergeByWeek()
 		collection = weekly
-	case domain.Month:
+	case codeharvest.Month:
 		sessions = dailySessions.MergeByMonth()
 		collection = monthly
-	case domain.Year:
+	case codeharvest.Year:
 		sessions = dailySessions.MergeByYear()
 		collection = yearly
 	}

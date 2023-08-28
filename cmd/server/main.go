@@ -3,9 +3,9 @@ package main
 import (
 	"os"
 
-	"code-harvest.conner.dev/logger"
-	"code-harvest.conner.dev/server"
-	"code-harvest.conner.dev/storage"
+	"github.com/creativecreature/code-harvest/logger"
+	"github.com/creativecreature/code-harvest/server"
+	"github.com/creativecreature/code-harvest/storage"
 )
 
 // ldflags.

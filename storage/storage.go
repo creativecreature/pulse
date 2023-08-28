@@ -1,15 +1,15 @@
 package storage
 
 import (
-	"code-harvest.conner.dev/domain"
-	"code-harvest.conner.dev/storage/disk"
-	"code-harvest.conner.dev/storage/memory"
-	"code-harvest.conner.dev/storage/mongo"
+	"github.com/creativecreature/code-harvest"
+	"github.com/creativecreature/code-harvest/storage/disk"
+	"github.com/creativecreature/code-harvest/storage/memory"
+	"github.com/creativecreature/code-harvest/storage/mongo"
 )
 
 type TemporaryStorage interface {
-	Write(domain.Session) error
-	Read() (domain.Sessions, error)
+	Write(codeharvest.Session) error
+	Read() (codeharvest.Sessions, error)
 	Clean() error
 }
 
@@ -22,8 +22,8 @@ func MemoryStorage() TemporaryStorage {
 }
 
 type PermanentStorage interface {
-	Write(s []domain.AggregatedSession) error
-	Aggregate(timeperiod domain.TimePeriod) error
+	Write(s []codeharvest.AggregatedSession) error
+	Aggregate(timeperiod codeharvest.TimePeriod) error
 }
 
 func MongoStorage(uri, database string) (mongoStorage PermanentStorage, disconnect func()) {

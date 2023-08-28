@@ -1,4 +1,4 @@
-package domain
+package codeharvest
 
 // AggregatedFiles represents a slice of files that has been
 // aggregated for a given time period. Raw sessions are aggregated
