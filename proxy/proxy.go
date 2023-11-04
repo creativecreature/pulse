@@ -1,10 +1,10 @@
 package proxy
 
 import (
-	"github.com/creativecreature/code-harvest"
+	codeharvest "github.com/creativecreature/code-harvest"
 )
 
-// Server is the interface that the RPC server must satisfy
+// Server is the interface that the RPC server must satisfy.
 type Server interface {
 	FocusGained(event codeharvest.Event, reply *string) error
 	OpenFile(event codeharvest.Event, reply *string) error

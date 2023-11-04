@@ -1,6 +1,6 @@
 package codeharvest
 
-// Buffer represents a buffer that has been opened during an active coding session
+// Buffer represents a buffer that has been opened during an active coding session.
 type Buffer struct {
 	OpenedAt   int64
 	ClosedAt   int64

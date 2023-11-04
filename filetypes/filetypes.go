@@ -46,9 +46,9 @@ func Type(filename string) (string, error) {
 	// if we don't have a match.
 	parts := strings.Split(filename, ".")
 	fileExtension := parts[len(parts)-1]
-	if filetype, ok := extensions[fileExtension]; !ok {
-		return "", ErrUnrecognizedFileExtension
-	} else {
+	if filetype, ok := extensions[fileExtension]; ok {
 		return filetype, nil
 	}
+
+	return "", ErrUnrecognizedFileExtension
 }

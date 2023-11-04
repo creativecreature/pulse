@@ -28,7 +28,7 @@ func (sessions Sessions) Aggregate() []AggregatedSession {
 
 	for date, tempSessions := range sessionsPerDay {
 		dateString := time.Unix(0, date*int64(time.Millisecond)).Format(yymmdd)
-		var totalTime int64 = 0
+		var totalTime int64
 		for _, tempSession := range tempSessions {
 			totalTime += tempSession.DurationMs
 		}

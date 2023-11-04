@@ -14,7 +14,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/creativecreature/code-harvest"
+	codeharvest "github.com/creativecreature/code-harvest"
 )
 
 const (

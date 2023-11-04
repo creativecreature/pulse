@@ -10,11 +10,12 @@ import (
 	"net/rpc"
 	"os"
 	"os/signal"
+	"strconv"
 	"sync"
 	"syscall"
 	"time"
 
-	"github.com/creativecreature/code-harvest"
+	codeharvest "github.com/creativecreature/code-harvest"
 	"github.com/creativecreature/code-harvest/proxy"
 	"github.com/creativecreature/code-harvest/storage"
 )
@@ -24,8 +25,8 @@ const (
 	heartbeatInterval = time.Second * 45
 )
 
-type server struct {
-	activeClientId string
+type Server struct {
+	activeClientID string
 	clock          Clock
 	lastHeartbeat  int64
 	log            Log
@@ -37,22 +38,22 @@ type server struct {
 }
 
 // startNewSession creates a new session and sets it as the current session.
-func (server *server) startNewSession(os, editor string) {
-	server.log.PrintDebug("Starting a new session", nil)
-	server.session = codeharvest.StartSession(server.clock.GetTime(), os, editor)
+func (s *Server) startNewSession(os, editor string) {
+	s.log.PrintDebug("Starting a new session", nil)
+	s.session = codeharvest.StartSession(s.clock.GetTime(), os, editor)
 }
 
 // setActiveBuffer updates the current buffer in the current session.
-func (server *server) setActiveBuffer(absolutePath string) {
-	openedAt := server.clock.GetTime()
-	fileData, err := server.fileReader.GitFile(absolutePath)
+func (s *Server) setActiveBuffer(absolutePath string) {
+	openedAt := s.clock.GetTime()
+	fileData, err := s.fileReader.GitFile(absolutePath)
 	if err != nil {
 		exitEarlyMessage := "Could not extract metadata for the path"
 		errProperties := map[string]string{
 			"path":   absolutePath,
 			"reason": err.Error(),
 		}
-		server.log.PrintDebug(exitEarlyMessage, errProperties)
+		s.log.PrintDebug(exitEarlyMessage, errProperties)
 		return
 	}
 
@@ -64,12 +65,12 @@ func (server *server) setActiveBuffer(absolutePath string) {
 		openedAt,
 	)
 
-	server.session.PushBuffer(file)
+	s.session.PushBuffer(file)
 	updatedBufferMsg := "Successfully updated the current buffer"
 	updatedBufferProperties := map[string]string{
 		"path": absolutePath,
 	}
-	server.log.PrintDebug(updatedBufferMsg, updatedBufferProperties)
+	s.log.PrintDebug(updatedBufferMsg, updatedBufferProperties)
 }
 
 // hasOkDurations sanity checks the sessions total duration against
@@ -89,41 +90,41 @@ func hasOkDurations(sessionDuration, allFilesDuration int64) bool {
 }
 
 // saveSession ends the current coding session and saves it to the filesystem.
-func (server *server) saveSession() {
-	if server.session == nil {
-		server.log.PrintDebug("There was no session to save.", nil)
+func (s *Server) saveSession() {
+	if s.session == nil {
+		s.log.PrintDebug("There was no session to save.", nil)
 		return
 	}
 
 	// End the current session.
-	server.log.PrintDebug("Saving the session.", nil)
-	endedAt := server.clock.GetTime()
-	finishedSession := server.session.End(endedAt)
+	s.log.PrintDebug("Saving the session.", nil)
+	endedAt := s.clock.GetTime()
+	finishedSession := s.session.End(endedAt)
 
 	// Perform sanity checks on the durations.
 	totalFileDuration := finishedSession.TotalFileDuration()
 	if !hasOkDurations(finishedSession.DurationMs, totalFileDuration) {
 		finishedSession.DurationMs = totalFileDuration
-		error := errors.New("session had a large duration diff")
+		err := errors.New("session had a large duration diff")
 		properties := map[string]string{
-			"started_at":                fmt.Sprintf("%d", server.session.StartedAt),
-			"ended_at":                  fmt.Sprintf("%d", endedAt),
-			"previous_session_duration": fmt.Sprintf("%d", finishedSession.DurationMs),
-			"new_session_duration":      fmt.Sprintf("%d", totalFileDuration),
+			"started_at":                strconv.FormatInt(s.session.StartedAt, 10),
+			"ended_at":                  strconv.FormatInt(endedAt, 10),
+			"previous_session_duration": strconv.FormatInt(finishedSession.DurationMs, 10),
+			"new_session_duration":      strconv.FormatInt(totalFileDuration, 10),
 		}
-		server.log.PrintError(error, properties)
+		s.log.PrintError(err, properties)
 	}
 
-	err := server.storage.Write(finishedSession)
+	err := s.storage.Write(finishedSession)
 	if err != nil {
-		server.log.PrintError(err, nil)
+		s.log.PrintError(err, nil)
 	}
 
-	server.activeClientId = ""
-	server.session = nil
+	s.activeClientID = ""
+	s.session = nil
 }
 
-func (s *server) startServer(port string) (*http.Server, error) {
+func (s *Server) startServer(port string) (*http.Server, error) {
 	proxy := proxy.New(s)
 	err := rpc.RegisterName(s.serverName, proxy)
 	if err != nil {
@@ -135,11 +136,13 @@ func (s *server) startServer(port string) (*http.Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	httpServer := &http.Server{}
+	httpServer := &http.Server{
+		ReadHeaderTimeout: time.Second * 5,
+	}
 	go func() {
-		err := httpServer.Serve(listener)
-		if !errors.Is(err, http.ErrServerClosed) {
-			panic(err)
+		serveErr := httpServer.Serve(listener)
+		if !errors.Is(serveErr, http.ErrServerClosed) {
+			panic(serveErr)
 		}
 	}()
 
@@ -148,48 +151,48 @@ func (s *server) startServer(port string) (*http.Server, error) {
 
 // startECG runs a heartbeat ticker that ensures that
 // the current session is not idle for more than ten minutes.
-func (server *server) startECG() *time.Ticker {
-	server.log.PrintDebug("Starting the ECG", nil)
+func (s *Server) startECG() *time.Ticker {
+	s.log.PrintDebug("Starting the ECG", nil)
 	ecg := time.NewTicker(heartbeatInterval)
 	go func() {
 		for range ecg.C {
-			server.CheckHeartbeat()
+			s.CheckHeartbeat()
 		}
 	}()
 	return ecg
 }
 
 // Start starts the server on the given port.
-func (server *server) Start(port string) error {
-	server.log.PrintInfo("Starting up...", nil)
-	httpServer, err := server.startServer(port)
+func (s *Server) Start(port string) error {
+	s.log.PrintInfo("Starting up...", nil)
+	httpServer, err := s.startServer(port)
 	if err != nil {
 		return err
 	}
 
 	// Start the ECG. It will end inactive sessions.
-	ecg := server.startECG()
+	ecg := s.startECG()
 
 	// Catch shutdown signals from the OS
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 	// Blocks until a shutdown signal is received.
-	s := <-quit
-	server.log.PrintInfo("Received shutdown signal", map[string]string{
-		"signal": s.String(),
+	sig := <-quit
+	s.log.PrintInfo("Received shutdown signal", map[string]string{
+		"signal": sig.String(),
 	})
 
 	// Stop the ECG and shutdown the http server.
 	ecg.Stop()
 	err = httpServer.Shutdown(context.Background())
 	if err != nil {
-		server.log.PrintError(err, nil)
+		s.log.PrintError(err, nil)
 		return err
 	}
 
 	// Save the current session before shutting down.
-	server.saveSession()
-	server.log.PrintInfo("Shutting down...", nil)
+	s.saveSession()
+	s.log.PrintInfo("Shutting down...", nil)
 	return nil
 }

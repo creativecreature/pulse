@@ -39,7 +39,7 @@ func (f *Reader) ReadFile(filename string) ([]byte, error) {
 	return fileContent, nil
 }
 
-func (f *Reader) IsFile(filename string) bool {
+func (f *Reader) IsFile(_ string) bool {
 	return true
 }
 

@@ -1,7 +1,7 @@
 package memory
 
 import (
-	"github.com/creativecreature/code-harvest"
+	codeharvest "github.com/creativecreature/code-harvest"
 )
 
 type Storage struct {

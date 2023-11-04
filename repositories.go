@@ -8,7 +8,7 @@ func repositories(sessions Sessions) []Repository {
 	repos := make([]Repository, 0)
 
 	for repositoryName, filenameFileMap := range filesByRepo {
-		var durationMs int64 = 0
+		var durationMs int64
 		files := make([]AggregatedFile, 0)
 		for _, file := range filenameFileMap {
 			files = append(files, file)

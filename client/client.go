@@ -6,7 +6,7 @@ import (
 	"net/rpc"
 	"runtime"
 
-	"github.com/creativecreature/code-harvest"
+	codeharvest "github.com/creativecreature/code-harvest"
 )
 
 // Client for making remote procedure calls to the server.
@@ -19,7 +19,7 @@ type Client struct {
 // that we receive from the neovim client.
 func createEvent(args []string) codeharvest.Event {
 	return codeharvest.Event{
-		Id:     args[0],
+		ID:     args[0],
 		Path:   args[1],
 		Editor: "nvim",
 		OS:     runtime.GOOS,
@@ -40,6 +40,7 @@ func New(serverName, port, hostname string) (*Client, error) {
 func (c *Client) FocusGained(args []string) {
 	event, reply := createEvent(args), ""
 	serviceMethod := c.serverName + ".FocusGained"
+	//nolint:errcheck // We don't care about the error here.
 	c.rpcClient.Call(serviceMethod, event, &reply)
 }
 
@@ -48,6 +49,7 @@ func (c *Client) FocusGained(args []string) {
 func (c *Client) OpenFile(args []string) {
 	event, reply := createEvent(args), ""
 	serviceMethod := c.serverName + ".OpenFile"
+	//nolint:errcheck // We don't care about the error here.
 	c.rpcClient.Call(serviceMethod, event, &reply)
 }
 
@@ -57,6 +59,7 @@ func (c *Client) OpenFile(args []string) {
 func (c *Client) SendHeartbeat(args []string) {
 	event, reply := createEvent(args), ""
 	serviceMethod := c.serverName + ".SendHeartbeat"
+	//nolint:errcheck // We don't care about the error here.
 	c.rpcClient.Call(serviceMethod, event, &reply)
 }
 
@@ -64,5 +67,6 @@ func (c *Client) SendHeartbeat(args []string) {
 func (c *Client) EndSession(args []string) {
 	event, reply := createEvent(args), ""
 	serviceMethod := c.serverName + ".EndSession"
+	//nolint:errcheck // We don't care about the error here.
 	c.rpcClient.Call(serviceMethod, event, &reply)
 }

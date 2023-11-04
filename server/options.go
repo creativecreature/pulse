@@ -3,13 +3,13 @@ package server
 import (
 	"errors"
 
-	"github.com/creativecreature/code-harvest"
+	codeharvest "github.com/creativecreature/code-harvest"
 	"github.com/creativecreature/code-harvest/clock"
 	"github.com/creativecreature/code-harvest/filereader"
 	"github.com/creativecreature/code-harvest/storage"
 )
 
-type option func(*server) error
+type Option func(*Server) error
 
 // Clock is a simple abstraction that is used to
 // simplify time based assertions in tests.
@@ -18,8 +18,8 @@ type Clock interface {
 }
 
 // WithClock sets the clock used by the server.
-func WithClock(clock Clock) option {
-	return func(a *server) error {
+func WithClock(clock Clock) Option {
+	return func(a *Server) error {
 		if clock == nil {
 			return errors.New("clock is nil")
 		}
@@ -35,8 +35,8 @@ type FileReader interface {
 }
 
 // WithFileReader sets the file reader used by the server.
-func WithFileReader(reader FileReader) option {
-	return func(a *server) error {
+func WithFileReader(reader FileReader) Option {
+	return func(a *Server) error {
 		if reader == nil {
 			return errors.New("reader is nil")
 		}
@@ -46,8 +46,8 @@ func WithFileReader(reader FileReader) option {
 }
 
 // WithStorage sets the storage used by the server.
-func WithStorage(storage storage.TemporaryStorage) option {
-	return func(a *server) error {
+func WithStorage(storage storage.TemporaryStorage) Option {
+	return func(a *Server) error {
 		if storage == nil {
 			return errors.New("storage is nil")
 		}
@@ -66,8 +66,8 @@ type Log interface {
 }
 
 // WithLog sets the logger used by the server.
-func WithLog(log Log) option {
-	return func(a *server) error {
+func WithLog(log Log) Option {
+	return func(a *Server) error {
 		if log == nil {
 			return errors.New("log is nil")
 		}
@@ -77,8 +77,8 @@ func WithLog(log Log) option {
 }
 
 // New creates a new server.
-func New(serverName string, opts ...option) (*server, error) {
-	a := &server{
+func New(serverName string, opts ...Option) (*Server, error) {
+	a := &Server{
 		serverName: serverName,
 		clock:      clock.New(),
 		fileReader: filereader.New(),
@@ -86,7 +86,7 @@ func New(serverName string, opts ...option) (*server, error) {
 	for _, opt := range opts {
 		err := opt(a)
 		if err != nil {
-			return &server{}, err
+			return &Server{}, err
 		}
 	}
 	return a, nil

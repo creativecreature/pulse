@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"github.com/creativecreature/code-harvest"
+	codeharvest "github.com/creativecreature/code-harvest"
 	"github.com/creativecreature/code-harvest/storage/disk"
 	"github.com/creativecreature/code-harvest/storage/memory"
 	"github.com/creativecreature/code-harvest/storage/mongo"

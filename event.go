@@ -2,7 +2,7 @@ package codeharvest
 
 // Event represents the events we receive from the clients.
 type Event struct {
-	Id     string
+	ID     string
 	Path   string
 	Editor string
 	OS     string

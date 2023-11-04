@@ -24,9 +24,11 @@ const (
 	LevelOff
 )
 
-// Return a human-friendly string for the severity level
+// Return a human-friendly string for the severity level.
 func (l Level) String() string {
 	switch l {
+	case LevelOff:
+		return "OFF"
 	case LevelDebug:
 		return "DEBUG"
 	case LevelInfo:

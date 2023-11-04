@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/creativecreature/code-harvest"
+	codeharvest "github.com/creativecreature/code-harvest"
 	"github.com/creativecreature/code-harvest/logger"
 	"github.com/creativecreature/code-harvest/storage"
 )
 
-// ldflags
+// ldflags.
 var (
 	uri string
 	db  string
@@ -36,7 +36,7 @@ func aggregateByDay(log *logger.Logger, tempStorage storage.TemporaryStorage, pe
 	log.PrintInfo("Finished aggregation by day", nil)
 }
 
-// periodString turns a time period into a readable string
+// periodString turns a time period into a readable string.
 func periodString(timePeriod codeharvest.TimePeriod) string {
 	switch timePeriod {
 	case codeharvest.Day:
@@ -53,10 +53,10 @@ func periodString(timePeriod codeharvest.TimePeriod) string {
 
 // aggregateByTimePeriod gathers all daily coding sessions,
 // and further consolidates them by week, month, or year.
-func aggregateByTimePeriod(log *logger.Logger, timePeriod codeharvest.TimePeriod, permStorage storage.PermanentStorage) {
-	pString := periodString(timePeriod)
+func aggregateByTimePeriod(log *logger.Logger, tp codeharvest.TimePeriod, s storage.PermanentStorage) {
+	pString := periodString(tp)
 	log.PrintInfo(fmt.Sprintf("Performing aggregation by %s", pString), nil)
-	err := permStorage.Aggregate(timePeriod)
+	err := s.Aggregate(tp)
 	if err != nil {
 		log.PrintFatal(err, nil)
 	}

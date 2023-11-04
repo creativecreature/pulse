@@ -6,14 +6,14 @@ import (
 	"math"
 	"time"
 
-	"github.com/creativecreature/code-harvest"
+	codeharvest "github.com/creativecreature/code-harvest"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// Constants for the collection names
+// Constants for the collection names.
 const (
 	daily   = "daily"
 	weekly  = "weekly"
@@ -21,20 +21,20 @@ const (
 	yearly  = "yearly"
 )
 
-type db struct {
+type DB struct {
 	uri      string
 	database string
 	client   *mongo.Client
 }
 
-func NewDB(uri, database string) *db {
-	return &db{
+func NewDB(uri, database string) *DB {
+	return &DB{
 		uri:      uri,
 		database: database,
 	}
 }
 
-func (m *db) Connect() func() {
+func (m *DB) Connect() func() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(m.uri))
@@ -46,9 +46,9 @@ func (m *db) Connect() func() {
 
 	m.client = client
 	return func() {
-		err := client.Disconnect(ctx)
-		if err != nil {
-			panic(err)
+		errDisconnect := client.Disconnect(ctx)
+		if errDisconnect != nil {
+			panic(errDisconnect)
 		}
 	}
 }
@@ -92,7 +92,7 @@ func dateRange(sessions []codeharvest.AggregatedSession) (minDate, maxDate int64
 	return minDate, maxDate
 }
 
-func (m *db) getByDateRange(minDate, maxDate int64) (codeharvest.AggregatedSessions, error) {
+func (m *DB) getByDateRange(minDate, maxDate int64) (codeharvest.AggregatedSessions, error) {
 	filter := createDateFilter(minDate, maxDate)
 	sortOptions := createDateSortOptions()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -114,7 +114,7 @@ func (m *db) getByDateRange(minDate, maxDate int64) (codeharvest.AggregatedSessi
 	return results, nil
 }
 
-func (m *db) deleteByDateRange(minDate, maxDate int64) error {
+func (m *DB) deleteByDateRange(minDate, maxDate int64) error {
 	filter := createDateFilter(minDate, maxDate)
 	_, err := m.client.Database(m.database).
 		Collection(daily).
@@ -122,7 +122,7 @@ func (m *db) deleteByDateRange(minDate, maxDate int64) error {
 	return err
 }
 
-func (m *db) insertAll(collection string, sessions []codeharvest.AggregatedSession) error {
+func (m *DB) insertAll(collection string, sessions []codeharvest.AggregatedSession) error {
 	documents := make([]interface{}, 0)
 	for _, session := range sessions {
 		documents = append(documents, session)
@@ -133,8 +133,8 @@ func (m *db) insertAll(collection string, sessions []codeharvest.AggregatedSessi
 	return err
 }
 
-// Write writes daily coding sessions to a mongodb collection
-func (m *db) Write(sessions []codeharvest.AggregatedSession) error {
+// Write writes daily coding sessions to a mongodb collection.
+func (m *DB) Write(sessions []codeharvest.AggregatedSession) error {
 	// We might aggregate sessions from the temp storage several times a day.
 	// Therefore, we have to fetch any previous sessions for the same timeframe
 	// and if we have any we'll have to merge them with the new ones.
@@ -164,7 +164,7 @@ func (m *db) Write(sessions []codeharvest.AggregatedSession) error {
 	return m.insertAll(daily, mergedSessions)
 }
 
-func (m *db) readAll() (codeharvest.AggregatedSessions, error) {
+func (m *DB) readAll() (codeharvest.AggregatedSessions, error) {
 	sortOptions := createDateSortOptions()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -185,17 +185,13 @@ func (m *db) readAll() (codeharvest.AggregatedSessions, error) {
 	return results, nil
 }
 
-func (m *db) deleteCollection(collection string) error {
+func (m *DB) deleteCollection(collection string) error {
 	return m.client.Database(m.database).
 		Collection(collection).
 		Drop(context.Background())
 }
 
-func (m *db) Aggregate(timePeriod codeharvest.TimePeriod) error {
-	if timePeriod == codeharvest.Day {
-		return errors.New("cannot aggregate by day")
-	}
-
+func (m *DB) Aggregate(timePeriod codeharvest.TimePeriod) error {
 	dailySessions, err := m.readAll()
 	if err != nil {
 		return err
@@ -203,6 +199,8 @@ func (m *db) Aggregate(timePeriod codeharvest.TimePeriod) error {
 
 	sessions, collection := codeharvest.AggregatedSessions{}, ""
 	switch tPeriod := timePeriod; tPeriod {
+	case codeharvest.Day:
+		return errors.New("cannot aggregate by day")
 	case codeharvest.Week:
 		sessions = dailySessions.MergeByWeek()
 		collection = weekly

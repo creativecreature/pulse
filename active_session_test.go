@@ -3,7 +3,7 @@ package codeharvest_test
 import (
 	"testing"
 
-	"github.com/creativecreature/code-harvest"
+	codeharvest "github.com/creativecreature/code-harvest"
 )
 
 func TestActiveSession(t *testing.T) {

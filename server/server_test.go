@@ -29,12 +29,15 @@ func TestJumpingBetweenInstances(t *testing.T) {
 
 	// Open a new VIM instance
 	reply := ""
-	a.FocusGained(codeharvest.Event{
-		Id:     "123",
+	err = a.FocusGained(codeharvest.Event{
+		ID:     "123",
 		Path:   "",
 		Editor: "nvim",
 		OS:     "Linux",
 	}, &reply)
+	if err != nil {
+		panic(err)
+	}
 
 	// Open a file in the first instance
 	mockFileReader.SetFile(
@@ -45,20 +48,26 @@ func TestJumpingBetweenInstances(t *testing.T) {
 			Path:       "dotfiles/install.sh",
 		},
 	)
-	a.OpenFile(codeharvest.Event{
-		Id:     "123",
+	err = a.OpenFile(codeharvest.Event{
+		ID:     "123",
 		Path:   "/Users/conner/code/dotfiles/install.sh",
 		Editor: "nvim",
 		OS:     "Linux",
 	}, &reply)
+	if err != nil {
+		panic(err)
+	}
 
 	// Open another vim instance in a new split. This should end the previous session.
-	a.FocusGained(codeharvest.Event{
-		Id:     "345",
+	err = a.FocusGained(codeharvest.Event{
+		ID:     "345",
 		Path:   "",
 		Editor: "nvim",
 		OS:     "Linux",
 	}, &reply)
+	if err != nil {
+		panic(err)
+	}
 
 	// Open a file in the second vim instance
 	mockFileReader.SetFile(
@@ -69,12 +78,15 @@ func TestJumpingBetweenInstances(t *testing.T) {
 			Path:       "dotfiles/bootstrap.sh",
 		},
 	)
-	a.OpenFile(codeharvest.Event{
-		Id:     "345",
+	err = a.OpenFile(codeharvest.Event{
+		ID:     "345",
 		Path:   "/Users/conner/code/dotfiles/bootstrap.sh",
 		Editor: "nvim",
 		OS:     "Linux",
 	}, &reply)
+	if err != nil {
+		panic(err)
+	}
 
 	// Move focus back to the first VIM instance. This should end the second session.
 	mockFileReader.SetFile(
@@ -85,21 +97,26 @@ func TestJumpingBetweenInstances(t *testing.T) {
 			Path:       "dotfiles/install.sh",
 		},
 	)
-	a.FocusGained(codeharvest.Event{
-		Id:     "123",
+	err = a.FocusGained(codeharvest.Event{
+		ID:     "123",
 		Path:   "/Users/conner/code/dotfiles/install.sh",
 		Editor: "nvim",
 		OS:     "Linux",
 	}, &reply)
+	if err != nil {
+		panic(err)
+	}
 
 	// End the last session. We should now have 3 finished sessiona.
-	a.EndSession(codeharvest.Event{
-		Id:     "123",
+	err = a.EndSession(codeharvest.Event{
+		ID:     "123",
 		Path:   "",
 		Editor: "nvim",
 		OS:     "Linux",
 	}, &reply)
-
+	if err != nil {
+		panic(err)
+	}
 	expectedNumberOfSessions := 3
 	storedSessions, _ := mockStorage.Read()
 
@@ -126,12 +143,15 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 
 	// Open a new instance of VIM
 	reply := ""
-	a.FocusGained(codeharvest.Event{
-		Id:     "123",
+	err = a.FocusGained(codeharvest.Event{
+		ID:     "123",
 		Path:   "",
 		Editor: "nvim",
 		OS:     "Linux",
 	}, &reply)
+	if err != nil {
+		panic(err)
+	}
 
 	// Open a file
 	mockFilereader.SetFile(
@@ -142,30 +162,40 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 			Path:       "dotfiles/install.sh",
 		},
 	)
-	a.OpenFile(codeharvest.Event{
-		Id:     "123",
+	err = a.OpenFile(codeharvest.Event{
+		ID:     "123",
 		Path:   "/Users/conner/code/dotfiles/install.sh",
 		Editor: "nvim",
 		OS:     "Linux",
 	}, &reply)
+	if err != nil {
+		panic(err)
+	}
 
 	// Lets now imagine we opened another TMUX split to run testa. We then jump
 	// back to VIM which will fire the focus gained event with the same client id.
-	a.FocusGained(codeharvest.Event{
-		Id:     "123",
+	err = a.FocusGained(codeharvest.Event{
+		ID:     "123",
 		Path:   "",
 		Editor: "nvim",
 		OS:     "Linux",
 	}, &reply)
+	if err != nil {
+		panic(err)
+	}
 
 	// We repeat the same thing again. Jump to another split in the terminal which makes
 	// VIM lose focus and then back again - which will trigger another focus gained event.
-	a.FocusGained(codeharvest.Event{
-		Id:     "123",
+	err = a.FocusGained(codeharvest.Event{
+		ID:     "123",
 		Path:   "",
 		Editor: "nvim",
 		OS:     "Linux",
 	}, &reply)
+	if err != nil {
+		panic(err)
+	}
+
 	mockFilereader.SetFile(
 		codeharvest.GitFile{
 			Name:       "bootstrap.sh",
@@ -174,22 +204,29 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 			Path:       "dotfiles/bootstrap.sh",
 		},
 	)
-	a.OpenFile(codeharvest.Event{
-		Id:     "123",
+
+	err = a.OpenFile(codeharvest.Event{
+		ID:     "123",
 		Path:   "/Users/conner/code/dotfiles/bootstrap.sh",
 		Editor: "nvim",
 		OS:     "Linux",
 	}, &reply)
+	if err != nil {
+		panic(err)
+	}
 
 	// Lets now end the session. This behaviour should *not* have resulted in any
 	// new sessions being created. We only create a new session and end the current
 	// one if we open VIM in a new split (to not count double time).
-	a.EndSession(codeharvest.Event{
-		Id:     "123",
+	err = a.EndSession(codeharvest.Event{
+		ID:     "123",
 		Path:   "",
 		Editor: "nvim",
 		OS:     "Linux",
 	}, &reply)
+	if err != nil {
+		panic(err)
+	}
 
 	expectedNumberOfSessions := 1
 	storedSessions, _ := mockStorage.Read()
@@ -220,12 +257,15 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 	// Send the initial focus event
 	mockClock.SetTime(100)
 	reply := ""
-	a.FocusGained(codeharvest.Event{
-		Id:     "123",
+	err = a.FocusGained(codeharvest.Event{
+		ID:     "123",
 		Path:   "",
 		Editor: "nvim",
 		OS:     "Linux",
 	}, &reply)
+	if err != nil {
+		panic(err)
+	}
 
 	mockClock.SetTime(200)
 	a.CheckHeartbeat()
@@ -240,12 +280,16 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 			Path:       "dotfiles/install.sh",
 		},
 	)
-	a.OpenFile(codeharvest.Event{
-		Id:     "123",
+
+	err = a.OpenFile(codeharvest.Event{
+		ID:     "123",
 		Path:   "/Users/conner/code/dotfiles/install.sh",
 		Editor: "nvim",
 		OS:     "Linux",
 	}, &reply)
+	if err != nil {
+		panic(err)
+	}
 
 	// Perform another heartbeat check. Remember these checks does not update
 	// the time for when we last saw activity in the session.
@@ -266,22 +310,28 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 			Path:       "dotfiles/cleanup.sh",
 		},
 	)
-	a.OpenFile(codeharvest.Event{
-		Id:     "123",
+	err = a.OpenFile(codeharvest.Event{
+		ID:     "123",
 		Path:   "/Users/conner/code/dotfiles/cleanup.sh",
 		Editor: "nvim",
 		OS:     "Linux",
 	}, &reply)
+	if err != nil {
+		panic(err)
+	}
 
 	mockClock.SetTime(server.HeartbeatTTL.Milliseconds() + 400)
 	a.CheckHeartbeat()
 
-	a.EndSession(codeharvest.Event{
-		Id:     "123",
+	err = a.EndSession(codeharvest.Event{
+		ID:     "123",
 		Path:   "",
 		Editor: "nvim",
 		OS:     "Linux",
 	}, &reply)
+	if err != nil {
+		panic(err)
+	}
 
 	expectedNumberOfSessions := 2
 	storedSessions, _ := mockStorage.Read()
