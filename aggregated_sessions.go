@@ -21,6 +21,7 @@ func merge(sessions AggregatedSessions, truncate truncateTimeFunc, timePeriod Ti
 			sessionMap[key] = s.merge(session, truncate(s), timePeriod)
 		}
 	}
+
 	return maps.Values(sessionMap)
 }
 

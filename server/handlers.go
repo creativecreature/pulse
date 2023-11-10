@@ -44,6 +44,7 @@ func (s *Server) FocusGained(event codeharvest.Event, reply *string) error {
 	// We might just be jumping between two neovim instances with one buffer each.
 	s.setActiveBuffer(event.Path)
 	*reply = "Successfully updated the client being focused."
+
 	return nil
 }
 
@@ -71,6 +72,7 @@ func (s *Server) OpenFile(event codeharvest.Event, reply *string) error {
 
 	s.setActiveBuffer(event.Path)
 	*reply = "Successfully updated the current file."
+
 	return nil
 }
 
@@ -99,6 +101,7 @@ func (s *Server) SendHeartbeat(event codeharvest.Event, reply *string) error {
 	// Update the time for the last heartbeat.
 	s.lastHeartbeat = s.clock.GetTime()
 	*reply = "Successfully sent heartbeat"
+
 	return nil
 }
 
@@ -130,6 +133,7 @@ func (s *Server) EndSession(event codeharvest.Event, reply *string) error {
 	s.saveSession()
 	s.activeClientID = ""
 	*reply = "The session was ended successfully."
+
 	return nil
 }
 

@@ -75,6 +75,7 @@ func (s Storage) Write(session codeharvest.Session) error {
 	}
 
 	_, err = file.Write(serializedSession)
+
 	return err
 }
 
@@ -94,6 +95,7 @@ func (s Storage) Read() (codeharvest.Sessions, error) {
 			}
 			temporarySessions = append(temporarySessions, tempSession)
 		}
+
 		return nil
 	})
 

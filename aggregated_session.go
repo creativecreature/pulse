@@ -21,5 +21,6 @@ func (a AggregatedSession) merge(b AggregatedSession, date int64, timePeriod Tim
 		TotalTimeMs:  a.TotalTimeMs + b.TotalTimeMs,
 		Repositories: a.Repositories.merge(b.Repositories),
 	}
+
 	return mergedSession
 }

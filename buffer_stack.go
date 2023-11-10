@@ -33,6 +33,7 @@ func (s *bufferStack) pop() (Buffer, error) {
 
 	res := s.buffers[length-1]
 	s.buffers = s.buffers[:length-1]
+
 	return res, nil
 }
 
@@ -48,5 +49,6 @@ func (s *bufferStack) slice() []Buffer {
 			mergedBuffers[buffer.Filepath] = mergedBuffer
 		}
 	}
+
 	return maps.Values(mergedBuffers)
 }

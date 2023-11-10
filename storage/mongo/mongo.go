@@ -45,6 +45,7 @@ func (m *DB) Connect() func() {
 	}
 
 	m.client = client
+
 	return func() {
 		errDisconnect := client.Disconnect(ctx)
 		if errDisconnect != nil {
@@ -130,6 +131,7 @@ func (m *DB) insertAll(collection string, sessions []codeharvest.AggregatedSessi
 	_, err := m.client.Database(m.database).
 		Collection(collection).
 		InsertMany(context.Background(), documents)
+
 	return err
 }
 

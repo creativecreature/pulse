@@ -54,6 +54,7 @@ func (s *Server) setActiveBuffer(absolutePath string) {
 			"reason": err.Error(),
 		}
 		s.log.PrintDebug(exitEarlyMessage, errProperties)
+
 		return
 	}
 
@@ -86,6 +87,7 @@ func hasOkDurations(sessionDuration, allFilesDuration int64) bool {
 	larger := math.Max(float64(sessionDuration), float64(allFilesDuration))
 	threshold := larger * 0.25
 	difference := math.Abs(float64(sessionDuration) - float64(allFilesDuration))
+
 	return difference <= threshold
 }
 
@@ -159,6 +161,7 @@ func (s *Server) startECG() *time.Ticker {
 			s.CheckHeartbeat()
 		}
 	}()
+
 	return ecg
 }
 
@@ -194,5 +197,6 @@ func (s *Server) Start(port string) error {
 	// Save the current session before shutting down.
 	s.saveSession()
 	s.log.PrintInfo("Shutting down...", nil)
+
 	return nil
 }

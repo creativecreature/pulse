@@ -89,5 +89,6 @@ func New(serverName string, opts ...Option) (*Server, error) {
 			return &Server{}, err
 		}
 	}
+
 	return a, nil
 }

@@ -50,5 +50,6 @@ func repositoryPathFile(sessions []Session) map[string]map[string]AggregatedFile
 			}
 		}
 	}
+
 	return repoPathFile
 }
