@@ -6,7 +6,6 @@ import (
 	codeharvest "github.com/creativecreature/code-harvest"
 	"github.com/creativecreature/code-harvest/clock"
 	"github.com/creativecreature/code-harvest/filereader"
-	"github.com/creativecreature/code-harvest/storage"
 )
 
 type Option func(*Server) error
@@ -46,7 +45,7 @@ func WithFileReader(reader FileReader) Option {
 }
 
 // WithStorage sets the storage used by the server.
-func WithStorage(storage storage.TemporaryStorage) Option {
+func WithStorage(storage codeharvest.TemporaryStorage) Option {
 	return func(a *Server) error {
 		if storage == nil {
 			return errors.New("storage is nil")

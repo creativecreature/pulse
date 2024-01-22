@@ -17,7 +17,6 @@ import (
 
 	codeharvest "github.com/creativecreature/code-harvest"
 	"github.com/creativecreature/code-harvest/proxy"
-	"github.com/creativecreature/code-harvest/storage"
 )
 
 const (
@@ -34,7 +33,7 @@ type Server struct {
 	mutex          sync.Mutex
 	serverName     string
 	session        *codeharvest.ActiveSession
-	storage        storage.TemporaryStorage
+	storage        codeharvest.TemporaryStorage
 }
 
 // startNewSession creates a new session and sets it as the current session.

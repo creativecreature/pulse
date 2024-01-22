@@ -3,9 +3,9 @@ package main
 import (
 	"os"
 
+	"github.com/creativecreature/code-harvest/disk"
 	"github.com/creativecreature/code-harvest/logger"
 	"github.com/creativecreature/code-harvest/server"
-	"github.com/creativecreature/code-harvest/storage"
 )
 
 // ldflags.
@@ -20,7 +20,7 @@ func main() {
 	server, err := server.New(
 		serverName,
 		server.WithLog(log),
-		server.WithStorage(storage.DiskStorage()),
+		server.WithStorage(disk.NewStorage()),
 	)
 	if err != nil {
 		log.PrintFatal(err, nil)

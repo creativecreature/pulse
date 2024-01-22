@@ -27,11 +27,13 @@ type DB struct {
 	client   *mongo.Client
 }
 
-func NewDB(uri, database string) *DB {
-	return &DB{
+func New(uri, database string) (db *DB, disconnect func()) {
+	db = &DB{
 		uri:      uri,
 		database: database,
 	}
+	disconnect = db.Connect()
+	return db, disconnect
 }
 
 func (m *DB) Connect() func() {

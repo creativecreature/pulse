@@ -6,15 +6,15 @@ import (
 
 	codeharvest "github.com/creativecreature/code-harvest"
 	"github.com/creativecreature/code-harvest/logger"
+	"github.com/creativecreature/code-harvest/memory"
 	"github.com/creativecreature/code-harvest/mock"
 	"github.com/creativecreature/code-harvest/server"
-	"github.com/creativecreature/code-harvest/storage"
 )
 
 func TestJumpingBetweenInstances(t *testing.T) {
 	t.Parallel()
 
-	mockStorage := storage.MemoryStorage()
+	mockStorage := memory.NewStorage()
 	mockFileReader := mock.NewFileReader()
 
 	a, err := server.New(
@@ -128,7 +128,7 @@ func TestJumpingBetweenInstances(t *testing.T) {
 func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 	t.Parallel()
 
-	mockStorage := storage.MemoryStorage()
+	mockStorage := memory.NewStorage()
 	mockFilereader := mock.NewFileReader()
 
 	a, err := server.New(
@@ -239,7 +239,7 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 func TestNoActivityShouldEndSession(t *testing.T) {
 	t.Parallel()
 
-	mockStorage := storage.MemoryStorage()
+	mockStorage := memory.NewStorage()
 	mockClock := &mock.Clock{}
 	mockFilereader := mock.NewFileReader()
 

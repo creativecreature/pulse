@@ -6,8 +6,9 @@ import (
 	"os"
 
 	codeharvest "github.com/creativecreature/code-harvest"
+	"github.com/creativecreature/code-harvest/disk"
 	"github.com/creativecreature/code-harvest/logger"
-	"github.com/creativecreature/code-harvest/storage"
+	"github.com/creativecreature/code-harvest/mongo"
 )
 
 // ldflags.
@@ -19,13 +20,13 @@ var (
 // aggregateByDay takes all the temporary coding sessions, merges
 // them by day of occurrence, and moves them to a database. Once
 // that is complete it clears the temporary storage of all files.
-func aggregateByDay(log *logger.Logger, tempStorage storage.TemporaryStorage, permStorage storage.PermanentStorage) {
+func aggregateByDay(log *logger.Logger, tempStorage codeharvest.TemporaryStorage, s codeharvest.PermanentStorage) {
 	log.PrintInfo("Performing aggregation by day", nil)
 	tempSessions, err := tempStorage.Read()
 	if err != nil {
 		log.PrintFatal(err, nil)
 	}
-	err = permStorage.Write(tempSessions.Aggregate())
+	err = s.Write(tempSessions.Aggregate())
 	if err != nil {
 		log.PrintFatal(err, nil)
 	}
@@ -53,7 +54,7 @@ func periodString(timePeriod codeharvest.TimePeriod) string {
 
 // aggregateByTimePeriod gathers all daily coding sessions,
 // and further consolidates them by week, month, or year.
-func aggregateByTimePeriod(log *logger.Logger, tp codeharvest.TimePeriod, s storage.PermanentStorage) {
+func aggregateByTimePeriod(log *logger.Logger, tp codeharvest.TimePeriod, s codeharvest.PermanentStorage) {
 	pString := periodString(tp)
 	log.PrintInfo(fmt.Sprintf("Performing aggregation by %s", pString), nil)
 	err := s.Aggregate(tp)
@@ -65,8 +66,8 @@ func aggregateByTimePeriod(log *logger.Logger, tp codeharvest.TimePeriod, s stor
 
 func main() {
 	log := logger.New(os.Stdout, logger.LevelInfo)
-	diskStorage := storage.DiskStorage()
-	mongoStorage, disconnect := storage.MongoStorage(uri, db)
+	diskStorage := disk.NewStorage()
+	mongoStorage, disconnect := mongo.New(uri, db)
 	defer disconnect()
 
 	day := flag.Bool("day", false, "aggregate raw coding sessions by day")
