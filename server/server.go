@@ -25,21 +25,20 @@ const (
 )
 
 type Server struct {
-	activeClientID string
-	clock          Clock
-	lastHeartbeat  int64
-	log            Log
-	fileReader     FileReader
-	mutex          sync.Mutex
-	serverName     string
-	session        *codeharvest.ActiveSession
-	storage        codeharvest.TemporaryStorage
+	name          string
+	activeSession *codeharvest.ActiveSession
+	lastHeartbeat int64
+	clock         Clock
+	fileReader    FileReader
+	log           Log
+	mutex         sync.Mutex
+	storage       codeharvest.TemporaryStorage
 }
 
 // startNewSession creates a new session and sets it as the current session.
-func (s *Server) startNewSession(os, editor string) {
+func (s *Server) startNewSession(id, os, editor string) {
 	s.log.PrintDebug("Starting a new session", nil)
-	s.session = codeharvest.StartSession(s.clock.GetTime(), os, editor)
+	s.activeSession = codeharvest.StartSession(id, s.clock.GetTime(), os, editor)
 }
 
 // setActiveBuffer updates the current buffer in the current session.
@@ -65,7 +64,7 @@ func (s *Server) setActiveBuffer(absolutePath string) {
 		openedAt,
 	)
 
-	s.session.PushBuffer(file)
+	s.activeSession.PushBuffer(file)
 	updatedBufferMsg := "Successfully updated the current buffer"
 	updatedBufferProperties := map[string]string{
 		"path": absolutePath,
@@ -92,7 +91,7 @@ func hasOkDurations(sessionDuration, allFilesDuration int64) bool {
 
 // saveSession ends the current coding session and saves it to the filesystem.
 func (s *Server) saveSession() {
-	if s.session == nil {
+	if s.activeSession == nil {
 		s.log.PrintDebug("There was no session to save.", nil)
 		return
 	}
@@ -100,7 +99,7 @@ func (s *Server) saveSession() {
 	// End the current session.
 	s.log.PrintDebug("Saving the session.", nil)
 	endedAt := s.clock.GetTime()
-	finishedSession := s.session.End(endedAt)
+	finishedSession := s.activeSession.End(endedAt)
 
 	// Perform sanity checks on the durations.
 	totalFileDuration := finishedSession.TotalFileDuration()
@@ -108,7 +107,7 @@ func (s *Server) saveSession() {
 		finishedSession.DurationMs = totalFileDuration
 		err := errors.New("session had a large duration diff")
 		properties := map[string]string{
-			"started_at":                strconv.FormatInt(s.session.StartedAt, 10),
+			"started_at":                strconv.FormatInt(s.activeSession.StartedAt, 10),
 			"ended_at":                  strconv.FormatInt(endedAt, 10),
 			"previous_session_duration": strconv.FormatInt(finishedSession.DurationMs, 10),
 			"new_session_duration":      strconv.FormatInt(totalFileDuration, 10),
@@ -121,13 +120,12 @@ func (s *Server) saveSession() {
 		s.log.PrintError(err, nil)
 	}
 
-	s.activeClientID = ""
-	s.session = nil
+	s.activeSession = nil
 }
 
 func (s *Server) startServer(port string) (*http.Server, error) {
 	proxy := proxy.New(s)
-	err := rpc.RegisterName(s.serverName, proxy)
+	err := rpc.RegisterName(s.name, proxy)
 	if err != nil {
 		return nil, err
 	}

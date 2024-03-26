@@ -19,10 +19,10 @@ type Client struct {
 // that we receive from the neovim client.
 func createEvent(args []string) codeharvest.Event {
 	return codeharvest.Event{
-		ID:     args[0],
-		Path:   args[1],
-		Editor: "nvim",
-		OS:     runtime.GOOS,
+		EditorID: args[0],
+		Path:     args[1],
+		Editor:   "nvim",
+		OS:       runtime.GOOS,
 	}
 }
 

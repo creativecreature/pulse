@@ -1,8 +1,7 @@
 package codeharvest
 
 // AggregatedFile represents a file that has been aggregated
-// for a given time period. Raw sessions are aggregated by day.
-// Daily sessions are aggregated by week, month, and year.
+// for a given time period (day, week, month, year).
 type AggregatedFile struct {
 	Name       string `bson:"name"`
 	Path       string `bson:"path"`
@@ -12,10 +11,6 @@ type AggregatedFile struct {
 
 // merge takes two AggregatedFile, merges them, and returns the result.
 func (a AggregatedFile) merge(b AggregatedFile) AggregatedFile {
-	return AggregatedFile{
-		Name:       a.Name,
-		Path:       a.Path,
-		Filetype:   a.Filetype,
-		DurationMs: a.DurationMs + b.DurationMs,
-	}
+	a.DurationMs += b.DurationMs
+	return a
 }

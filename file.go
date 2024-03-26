@@ -16,6 +16,6 @@ func fileFromBuffer(b Buffer) File {
 		Path:       b.Filepath,
 		Repository: b.Repository,
 		Filetype:   b.Filetype,
-		DurationMs: b.DurationMs,
+		DurationMs: b.ClosedAt - b.OpenedAt,
 	}
 }

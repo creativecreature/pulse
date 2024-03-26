@@ -78,7 +78,7 @@ func WithLog(log Log) Option {
 // New creates a new server.
 func New(serverName string, opts ...Option) (*Server, error) {
 	a := &Server{
-		serverName: serverName,
+		name:       serverName,
 		clock:      clock.New(),
 		fileReader: filereader.New(),
 	}

@@ -1,14 +1,17 @@
 package codeharvest
 
 import (
-	"errors"
-
 	"golang.org/x/exp/maps"
 )
 
 // bufferStack is the stack of buffers that we have opened during an active coding session.
 type bufferStack struct {
 	buffers []Buffer
+}
+
+func newBufferStack() *bufferStack {
+	buffers := make([]Buffer, 0)
+	return &bufferStack{buffers}
 }
 
 // push pushes a buffer onto the stack.
@@ -25,30 +28,28 @@ func (s *bufferStack) peek() *Buffer {
 }
 
 // pop pops a buffer off the stack.
-func (s *bufferStack) pop() (Buffer, error) {
-	length := len(s.buffers)
-	if length == 0 {
-		return Buffer{}, errors.New("stack is empty")
+func (s *bufferStack) pop() (Buffer, bool) {
+	if len(s.buffers) == 0 {
+		return Buffer{}, false
 	}
 
-	res := s.buffers[length-1]
-	s.buffers = s.buffers[:length-1]
+	res := s.buffers[len(s.buffers)-1]
+	s.buffers = s.buffers[:len(s.buffers)-1]
 
-	return res, nil
+	return res, true
 }
 
 // slice takes the stack of buffers, merges them by filepath, and returns the result.
-func (s *bufferStack) slice() []Buffer {
-	mergedBuffers := map[string]Buffer{}
-	for buffer, err := s.pop(); err == nil; buffer, err = s.pop() {
-		if mergedBuffer, exists := mergedBuffers[buffer.Filepath]; !exists {
-			buffer.DurationMs = buffer.ClosedAt - buffer.OpenedAt
-			mergedBuffers[buffer.Filepath] = buffer
+func (s *bufferStack) files() []File {
+	pathFile := make(map[string]File)
+	for buffer, ok := s.pop(); ok; buffer, ok = s.pop() {
+		if file, exists := pathFile[buffer.Filepath]; !exists {
+			pathFile[buffer.Filepath] = fileFromBuffer(buffer)
 		} else {
-			mergedBuffer.DurationMs += buffer.ClosedAt - buffer.OpenedAt
-			mergedBuffers[buffer.Filepath] = mergedBuffer
+			file.DurationMs += buffer.ClosedAt - buffer.OpenedAt
+			pathFile[buffer.Filepath] = file
 		}
 	}
 
-	return maps.Values(mergedBuffers)
+	return maps.Values(pathFile)
 }

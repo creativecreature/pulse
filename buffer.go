@@ -8,7 +8,6 @@ type Buffer struct {
 	Repository string
 	Filepath   string
 	Filetype   string
-	DurationMs int64
 }
 
 func NewBuffer(filename, repo, filetype, filepath string, openedAt int64) Buffer {

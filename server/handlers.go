@@ -24,7 +24,7 @@ func (s *Server) FocusGained(event codeharvest.Event, reply *string) error {
 	// instance. If the FocusGained event is firing because I'm jumping back and
 	// forth between a tmux split with test output I don't want it to result in
 	// the creation of several new coding sessions.
-	if s.activeClientID == event.ID {
+	if s.activeSession != nil && s.activeSession.EditorID == event.EditorID {
 		s.log.PrintDebug("Jumped back to the same neovim instance", nil)
 		return nil
 	}
@@ -32,12 +32,11 @@ func (s *Server) FocusGained(event codeharvest.Event, reply *string) error {
 	// Check to see if we have another instance of neovim that is
 	// running in another tmux pane. If so, we'll stop recording
 	// time for that session before creating a new one.
-	if s.session != nil {
+	if s.activeSession != nil {
 		s.saveSession()
 	}
 
-	s.activeClientID = event.ID
-	s.startNewSession(event.OS, event.Editor)
+	s.startNewSession(event.EditorID, event.OS, event.Editor)
 
 	// It could be an already existing neovim instance where a file buffer is already
 	// open. If that is the case we can't count on getting the *OpenFile* event.
@@ -65,9 +64,8 @@ func (s *Server) OpenFile(event codeharvest.Event, reply *string) error {
 	// inactivity. If that is the case, the server would have ended our
 	// coding session. A session that has ended is written to the file
 	// system and can't be resumed. We'll have to create a new one.
-	if s.session == nil {
-		s.activeClientID = event.ID
-		s.startNewSession(event.OS, event.Editor)
+	if s.activeSession == nil {
+		s.startNewSession(event.EditorID, event.OS, event.Editor)
 	}
 
 	s.setActiveBuffer(event.Path)
@@ -87,14 +85,13 @@ func (s *Server) SendHeartbeat(event codeharvest.Event, reply *string) error {
 	// This is to handle the case where the server would have ended the clients
 	// session due to inactivity. When a session ends it is written to disk and
 	// can't be resumed. Therefore, we'll have to create a new coding session.
-	if s.session == nil {
+	if s.activeSession == nil {
 		message := "The session was ended by a previous heartbeat check. Creating a new one."
 		s.log.PrintDebug(message, map[string]string{
-			"clientId": event.ID,
+			"clientId": event.EditorID,
 			"path":     event.Path,
 		})
-		s.activeClientID = event.ID
-		s.startNewSession(event.OS, event.Editor)
+		s.startNewSession(event.EditorID, event.OS, event.Editor)
 		s.setActiveBuffer(event.Path)
 	}
 
@@ -114,24 +111,23 @@ func (s *Server) EndSession(event codeharvest.Event, reply *string) error {
 	// If we call end session, and there is another active client. It
 	// means that the events have been sent in an unexpected order. As
 	// a consequence, the server has reached an undesired state.
-	if len(s.activeClientID) > 1 && s.activeClientID != event.ID {
+	if s.activeSession != nil && s.activeSession.EditorID != event.EditorID {
 		s.log.PrintFatal(errors.New("was called by a client that isn't considered active"), map[string]string{
-			"actualClientId":   s.activeClientID,
-			"expectedClientId": event.ID,
+			"actualClientId":   s.activeSession.EditorID,
+			"expectedClientId": event.EditorID,
 		})
 	}
 
 	// Theoretically, this could be the first event we receive after
 	// more than ten minutes of inactivity. If that is the case the
 	// server will have ended the session already.
-	if s.activeClientID == "" && s.session == nil {
+	if s.activeSession == nil {
 		message := "The session was already ended, or possibly never started"
 		s.log.PrintDebug(message, nil)
 		return nil
 	}
 
 	s.saveSession()
-	s.activeClientID = ""
 	*reply = "The session was ended successfully."
 
 	return nil
@@ -141,7 +137,7 @@ func (s *Server) EndSession(event codeharvest.Event, reply *string) error {
 // ten minutes. If that is the case, the session will be terminated and saved to disk.
 func (s *Server) CheckHeartbeat() {
 	s.log.PrintDebug("Checking heartbeat", nil)
-	if s.session == nil {
+	if s.activeSession == nil {
 		return
 	}
 

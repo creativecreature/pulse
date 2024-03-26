@@ -30,10 +30,10 @@ func TestJumpingBetweenInstances(t *testing.T) {
 	// Open a new VIM instance
 	reply := ""
 	err = a.FocusGained(codeharvest.Event{
-		ID:     "123",
-		Path:   "",
-		Editor: "nvim",
-		OS:     "Linux",
+		EditorID: "123",
+		Path:     "",
+		Editor:   "nvim",
+		OS:       "Linux",
 	}, &reply)
 	if err != nil {
 		panic(err)
@@ -49,10 +49,10 @@ func TestJumpingBetweenInstances(t *testing.T) {
 		},
 	)
 	err = a.OpenFile(codeharvest.Event{
-		ID:     "123",
-		Path:   "/Users/conner/code/dotfiles/install.sh",
-		Editor: "nvim",
-		OS:     "Linux",
+		EditorID: "123",
+		Path:     "/Users/conner/code/dotfiles/install.sh",
+		Editor:   "nvim",
+		OS:       "Linux",
 	}, &reply)
 	if err != nil {
 		panic(err)
@@ -60,10 +60,10 @@ func TestJumpingBetweenInstances(t *testing.T) {
 
 	// Open another vim instance in a new split. This should end the previous session.
 	err = a.FocusGained(codeharvest.Event{
-		ID:     "345",
-		Path:   "",
-		Editor: "nvim",
-		OS:     "Linux",
+		EditorID: "345",
+		Path:     "",
+		Editor:   "nvim",
+		OS:       "Linux",
 	}, &reply)
 	if err != nil {
 		panic(err)
@@ -79,10 +79,10 @@ func TestJumpingBetweenInstances(t *testing.T) {
 		},
 	)
 	err = a.OpenFile(codeharvest.Event{
-		ID:     "345",
-		Path:   "/Users/conner/code/dotfiles/bootstrap.sh",
-		Editor: "nvim",
-		OS:     "Linux",
+		EditorID: "345",
+		Path:     "/Users/conner/code/dotfiles/bootstrap.sh",
+		Editor:   "nvim",
+		OS:       "Linux",
 	}, &reply)
 	if err != nil {
 		panic(err)
@@ -98,10 +98,10 @@ func TestJumpingBetweenInstances(t *testing.T) {
 		},
 	)
 	err = a.FocusGained(codeharvest.Event{
-		ID:     "123",
-		Path:   "/Users/conner/code/dotfiles/install.sh",
-		Editor: "nvim",
-		OS:     "Linux",
+		EditorID: "123",
+		Path:     "/Users/conner/code/dotfiles/install.sh",
+		Editor:   "nvim",
+		OS:       "Linux",
 	}, &reply)
 	if err != nil {
 		panic(err)
@@ -109,10 +109,10 @@ func TestJumpingBetweenInstances(t *testing.T) {
 
 	// End the last session. We should now have 3 finished sessiona.
 	err = a.EndSession(codeharvest.Event{
-		ID:     "123",
-		Path:   "",
-		Editor: "nvim",
-		OS:     "Linux",
+		EditorID: "123",
+		Path:     "",
+		Editor:   "nvim",
+		OS:       "Linux",
 	}, &reply)
 	if err != nil {
 		panic(err)
@@ -144,10 +144,10 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 	// Open a new instance of VIM
 	reply := ""
 	err = a.FocusGained(codeharvest.Event{
-		ID:     "123",
-		Path:   "",
-		Editor: "nvim",
-		OS:     "Linux",
+		EditorID: "123",
+		Path:     "",
+		Editor:   "nvim",
+		OS:       "Linux",
 	}, &reply)
 	if err != nil {
 		panic(err)
@@ -163,10 +163,10 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 		},
 	)
 	err = a.OpenFile(codeharvest.Event{
-		ID:     "123",
-		Path:   "/Users/conner/code/dotfiles/install.sh",
-		Editor: "nvim",
-		OS:     "Linux",
+		EditorID: "123",
+		Path:     "/Users/conner/code/dotfiles/install.sh",
+		Editor:   "nvim",
+		OS:       "Linux",
 	}, &reply)
 	if err != nil {
 		panic(err)
@@ -175,10 +175,10 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 	// Lets now imagine we opened another TMUX split to run testa. We then jump
 	// back to VIM which will fire the focus gained event with the same client id.
 	err = a.FocusGained(codeharvest.Event{
-		ID:     "123",
-		Path:   "",
-		Editor: "nvim",
-		OS:     "Linux",
+		EditorID: "123",
+		Path:     "",
+		Editor:   "nvim",
+		OS:       "Linux",
 	}, &reply)
 	if err != nil {
 		panic(err)
@@ -187,10 +187,10 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 	// We repeat the same thing again. Jump to another split in the terminal which makes
 	// VIM lose focus and then back again - which will trigger another focus gained event.
 	err = a.FocusGained(codeharvest.Event{
-		ID:     "123",
-		Path:   "",
-		Editor: "nvim",
-		OS:     "Linux",
+		EditorID: "123",
+		Path:     "",
+		Editor:   "nvim",
+		OS:       "Linux",
 	}, &reply)
 	if err != nil {
 		panic(err)
@@ -206,10 +206,10 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 	)
 
 	err = a.OpenFile(codeharvest.Event{
-		ID:     "123",
-		Path:   "/Users/conner/code/dotfiles/bootstrap.sh",
-		Editor: "nvim",
-		OS:     "Linux",
+		EditorID: "123",
+		Path:     "/Users/conner/code/dotfiles/bootstrap.sh",
+		Editor:   "nvim",
+		OS:       "Linux",
 	}, &reply)
 	if err != nil {
 		panic(err)
@@ -219,10 +219,10 @@ func TestJumpBackAndForthToTheSameInstance(t *testing.T) {
 	// new sessions being created. We only create a new session and end the current
 	// one if we open VIM in a new split (to not count double time).
 	err = a.EndSession(codeharvest.Event{
-		ID:     "123",
-		Path:   "",
-		Editor: "nvim",
-		OS:     "Linux",
+		EditorID: "123",
+		Path:     "",
+		Editor:   "nvim",
+		OS:       "Linux",
 	}, &reply)
 	if err != nil {
 		panic(err)
@@ -258,10 +258,10 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 	mockClock.SetTime(100)
 	reply := ""
 	err = a.FocusGained(codeharvest.Event{
-		ID:     "123",
-		Path:   "",
-		Editor: "nvim",
-		OS:     "Linux",
+		EditorID: "123",
+		Path:     "",
+		Editor:   "nvim",
+		OS:       "Linux",
 	}, &reply)
 	if err != nil {
 		panic(err)
@@ -282,10 +282,10 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 	)
 
 	err = a.OpenFile(codeharvest.Event{
-		ID:     "123",
-		Path:   "/Users/conner/code/dotfiles/install.sh",
-		Editor: "nvim",
-		OS:     "Linux",
+		EditorID: "123",
+		Path:     "/Users/conner/code/dotfiles/install.sh",
+		Editor:   "nvim",
+		OS:       "Linux",
 	}, &reply)
 	if err != nil {
 		panic(err)
@@ -311,10 +311,10 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 		},
 	)
 	err = a.OpenFile(codeharvest.Event{
-		ID:     "123",
-		Path:   "/Users/conner/code/dotfiles/cleanup.sh",
-		Editor: "nvim",
-		OS:     "Linux",
+		EditorID: "123",
+		Path:     "/Users/conner/code/dotfiles/cleanup.sh",
+		Editor:   "nvim",
+		OS:       "Linux",
 	}, &reply)
 	if err != nil {
 		panic(err)
@@ -324,10 +324,10 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 	a.CheckHeartbeat()
 
 	err = a.EndSession(codeharvest.Event{
-		ID:     "123",
-		Path:   "",
-		Editor: "nvim",
-		OS:     "Linux",
+		EditorID: "123",
+		Path:     "",
+		Editor:   "nvim",
+		OS:       "Linux",
 	}, &reply)
 	if err != nil {
 		panic(err)

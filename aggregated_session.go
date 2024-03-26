@@ -1,8 +1,7 @@
 package codeharvest
 
 // AggregatedSession represents a session that has been aggregated
-// for a given time period. Raw sessions are aggregated by day.
-// Daily sessions are aggregated by week, month, and year.
+// for a given time period (day, week, month, year).
 type AggregatedSession struct {
 	ID           string       `bson:"_id,omitempty"`
 	Period       TimePeriod   `bson:"period"`

@@ -3,18 +3,20 @@ package codeharvest
 // ActiveSession represents an ongoing coding session.
 type ActiveSession struct {
 	bufStack  *bufferStack
+	EditorID  string
 	StartedAt int64
 	OS        string
 	Editor    string
 }
 
 // StartSession creates a new active coding session.
-func StartSession(startedAt int64, os, editor string) *ActiveSession {
+func StartSession(editorID string, startedAt int64, os, editor string) *ActiveSession {
 	return &ActiveSession{
+		bufStack:  newBufferStack(),
+		EditorID:  editorID,
 		StartedAt: startedAt,
 		OS:        os,
 		Editor:    editor,
-		bufStack:  &bufferStack{buffers: make([]Buffer, 0)},
 	}
 }
 
@@ -25,15 +27,6 @@ func (session *ActiveSession) PushBuffer(buffer Buffer) {
 		currentBuffer.ClosedAt = buffer.OpenedAt
 	}
 	session.bufStack.push(buffer)
-}
-
-// files turns a slice of buffers into a slice of files.
-func files(buffers []Buffer) []File {
-	files := make([]File, 0)
-	for _, b := range buffers {
-		files = append(files, fileFromBuffer(b))
-	}
-	return files
 }
 
 // End ends the active coding sessions. It sets the total duration in
@@ -50,6 +43,6 @@ func (session *ActiveSession) End(endedAt int64) Session {
 		DurationMs: endedAt - session.StartedAt,
 		OS:         session.OS,
 		Editor:     session.Editor,
-		Files:      files(session.bufStack.slice()),
+		Files:      session.bufStack.files(),
 	}
 }
