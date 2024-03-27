@@ -19,3 +19,5 @@ func fileFromBuffer(b Buffer) File {
 		DurationMs: b.ClosedAt - b.OpenedAt,
 	}
 }
+
+type Files []File

@@ -40,7 +40,7 @@ func (s *bufferStack) pop() (Buffer, bool) {
 }
 
 // slice takes the stack of buffers, merges them by filepath, and returns the result.
-func (s *bufferStack) files() []File {
+func (s *bufferStack) files() Files {
 	pathFile := make(map[string]File)
 	for buffer, ok := s.pop(); ok; buffer, ok = s.pop() {
 		if file, exists := pathFile[buffer.Filepath]; !exists {

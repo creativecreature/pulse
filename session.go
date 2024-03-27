@@ -13,7 +13,7 @@ type Session struct {
 	DurationMs int64  `json:"duration_ms"`
 	OS         string `json:"os"`
 	Editor     string `json:"editor"`
-	Files      []File `json:"files"`
+	Files      Files  `json:"files"`
 }
 
 func (session Session) TotalFileDuration() int64 {

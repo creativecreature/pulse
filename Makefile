@@ -30,6 +30,15 @@ run:
 # QUALITY CONTROL
 # ==================================================================================== #
 
+## test: run all tests
+.PHONY: test
+test: test
+	@echo 'Removing test cache...'
+	go clean -testcache
+	@echo 'Running tests...'
+	go test -race -vet=off -timeout 30s ./...
+
+
 ## audit: tidy and vendor dependencies and format, vet and test all code
 audit: vendor
 	@echo 'Formatting code...'
