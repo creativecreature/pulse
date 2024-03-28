@@ -11,6 +11,18 @@ const yymmdd = "2006-01-02"
 // Sessions is a slice of several Session structs.
 type Sessions []Session
 
+func (s Sessions) Len() int {
+	return len(s)
+}
+
+func (s Sessions) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
+func (s Sessions) Less(i, j int) bool {
+	return s[i].StartedAt < s[j].StartedAt
+}
+
 // groupByDay groups the sessions by day they occurred.
 func groupByDay(session []Session) map[int64][]Session {
 	buckets := make(map[int64][]Session)

@@ -1,14 +1,11 @@
 package codeharvest
 
-import (
-	"golang.org/x/exp/maps"
-)
-
-// bufferStack is the stack of buffers that we have opened during an active coding session.
+// bufferStack represents the buffers that have been opened during a coding session.
 type bufferStack struct {
 	buffers []Buffer
 }
 
+// newBufferStack creates a new buffer stack.
 func newBufferStack() *bufferStack {
 	buffers := make([]Buffer, 0)
 	return &bufferStack{buffers}
@@ -27,29 +24,28 @@ func (s *bufferStack) peek() *Buffer {
 	return &s.buffers[len(s.buffers)-1]
 }
 
-// pop pops a buffer off the stack.
-func (s *bufferStack) pop() (Buffer, bool) {
-	if len(s.buffers) == 0 {
-		return Buffer{}, false
-	}
-
-	res := s.buffers[len(s.buffers)-1]
-	s.buffers = s.buffers[:len(s.buffers)-1]
-
-	return res, true
-}
-
-// slice takes the stack of buffers, merges them by filepath, and returns the result.
+// files takes the stack of buffers, merges them by filepath,
+// and returns the result in the order they were opened in.
 func (s *bufferStack) files() Files {
+	sortOrder := make([]string, 0)
 	pathFile := make(map[string]File)
-	for buffer, ok := s.pop(); ok; buffer, ok = s.pop() {
+
+	// Merge the buffers by filepath.
+	for _, buffer := range s.buffers {
 		if file, exists := pathFile[buffer.Filepath]; !exists {
+			sortOrder = append(sortOrder, buffer.Filepath)
 			pathFile[buffer.Filepath] = fileFromBuffer(buffer)
 		} else {
-			file.DurationMs += buffer.ClosedAt - buffer.OpenedAt
+			file.DurationMs += buffer.Duration()
 			pathFile[buffer.Filepath] = file
 		}
 	}
 
-	return maps.Values(pathFile)
+	// Return the buffers in the original order.
+	files := make(Files, 0, len(pathFile))
+	for _, path := range sortOrder {
+		files = append(files, pathFile[path])
+	}
+
+	return files
 }

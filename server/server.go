@@ -25,49 +25,38 @@ const (
 )
 
 type Server struct {
-	name          string
-	activeSession *codeharvest.ActiveSession
-	lastHeartbeat int64
-	clock         Clock
-	fileReader    FileReader
-	log           Log
-	mutex         sync.Mutex
-	storage       codeharvest.TemporaryStorage
+	name           string
+	activeEditor   string
+	activeSessions map[string]*codeharvest.ActiveSession
+	lastHeartbeat  int64
+	clock          Clock
+	fileReader     FileReader
+	log            Log
+	mutex          sync.Mutex
+	storage        codeharvest.TemporaryStorage
 }
 
 // startNewSession creates a new session and sets it as the current session.
 func (s *Server) startNewSession(id, os, editor string) {
 	s.log.PrintDebug("Starting a new session", nil)
-	s.activeSession = codeharvest.StartSession(id, s.clock.GetTime(), os, editor)
+	s.activeSessions[id] = codeharvest.StartSession(id, s.clock.GetTime(), os, editor)
 }
 
 // setActiveBuffer updates the current buffer in the current session.
-func (s *Server) setActiveBuffer(absolutePath string) {
+func (s *Server) setActiveBuffer(gitFile codeharvest.GitFile) {
 	openedAt := s.clock.GetTime()
-	fileData, err := s.fileReader.GitFile(absolutePath)
-	if err != nil {
-		exitEarlyMessage := "Could not extract metadata for the path"
-		errProperties := map[string]string{
-			"path":   absolutePath,
-			"reason": err.Error(),
-		}
-		s.log.PrintDebug(exitEarlyMessage, errProperties)
-
-		return
-	}
-
-	file := codeharvest.NewBuffer(
-		fileData.Name,
-		fileData.Repository,
-		fileData.Filetype,
-		fileData.Path,
+	buf := codeharvest.NewBuffer(
+		gitFile.Name,
+		gitFile.Repository,
+		gitFile.Filetype,
+		gitFile.Path,
 		openedAt,
 	)
-
-	s.activeSession.PushBuffer(file)
+	s.activeSessions[s.activeEditor].PushBuffer(buf)
 	updatedBufferMsg := "Successfully updated the current buffer"
 	updatedBufferProperties := map[string]string{
-		"path": absolutePath,
+		"name": gitFile.Name,
+		"path": gitFile.Path,
 	}
 	s.log.PrintDebug(updatedBufferMsg, updatedBufferProperties)
 }
@@ -89,17 +78,48 @@ func hasOkDurations(sessionDuration, allFilesDuration int64) bool {
 	return difference <= threshold
 }
 
+func (s *Server) saveAllSessions() {
+	now := s.clock.GetTime()
+	s.log.PrintDebug("Saving all sessions.", nil)
+
+	for _, session := range s.activeSessions {
+		if !session.HasBuffers() {
+			s.log.PrintDebug("The session has not opened any buffers.", nil)
+			return
+		}
+
+		finishedSession := session.End(now)
+		totalFileDuration := finishedSession.TotalFileDuration()
+		if !hasOkDurations(finishedSession.DurationMs, totalFileDuration) {
+			finishedSession.DurationMs = totalFileDuration
+			err := errors.New("session had a large duration diff")
+			properties := map[string]string{
+				"started_at":                strconv.FormatInt(finishedSession.StartedAt, 10),
+				"ended_at":                  strconv.FormatInt(now, 10),
+				"previous_session_duration": strconv.FormatInt(finishedSession.DurationMs, 10),
+				"new_session_duration":      strconv.FormatInt(totalFileDuration, 10),
+			}
+			s.log.PrintError(err, properties)
+		}
+
+		err := s.storage.Write(finishedSession)
+		if err != nil {
+			s.log.PrintError(err, nil)
+		}
+		delete(s.activeSessions, session.EditorID)
+	}
+}
+
 // saveSession ends the current coding session and saves it to the filesystem.
-func (s *Server) saveSession() {
-	if s.activeSession == nil {
-		s.log.PrintDebug("There was no session to save.", nil)
+func (s *Server) saveActiveSession() {
+	if !s.activeSessions[s.activeEditor].HasBuffers() {
+		s.log.PrintDebug("The session wasn't saved because it had no open buffers.", nil)
 		return
 	}
 
-	// End the current session.
+	now := s.clock.GetTime()
 	s.log.PrintDebug("Saving the session.", nil)
-	endedAt := s.clock.GetTime()
-	finishedSession := s.activeSession.End(endedAt)
+	finishedSession := s.activeSessions[s.activeEditor].End(now)
 
 	// Perform sanity checks on the durations.
 	totalFileDuration := finishedSession.TotalFileDuration()
@@ -107,8 +127,8 @@ func (s *Server) saveSession() {
 		finishedSession.DurationMs = totalFileDuration
 		err := errors.New("session had a large duration diff")
 		properties := map[string]string{
-			"started_at":                strconv.FormatInt(s.activeSession.StartedAt, 10),
-			"ended_at":                  strconv.FormatInt(endedAt, 10),
+			"started_at":                strconv.FormatInt(finishedSession.StartedAt, 10),
+			"ended_at":                  strconv.FormatInt(now, 10),
 			"previous_session_duration": strconv.FormatInt(finishedSession.DurationMs, 10),
 			"new_session_duration":      strconv.FormatInt(totalFileDuration, 10),
 		}
@@ -120,7 +140,27 @@ func (s *Server) saveSession() {
 		s.log.PrintError(err, nil)
 	}
 
-	s.activeSession = nil
+	delete(s.activeSessions, s.activeEditor)
+	s.activeEditor = ""
+
+	// Check if we should resume another session.
+	if len(s.activeSessions) < 1 {
+		return
+	}
+
+	var editorToResume string
+	var mostRecentPause int64
+	for _, session := range s.activeSessions {
+		if session.PauseTime() > mostRecentPause {
+			editorToResume = session.EditorID
+			mostRecentPause = session.PauseTime()
+		}
+	}
+
+	if editorToResume != "" {
+		s.activeEditor = editorToResume
+		s.activeSessions[s.activeEditor].Resume(s.clock.GetTime())
+	}
 }
 
 func (s *Server) startServer(port string) (*http.Server, error) {
@@ -191,8 +231,8 @@ func (s *Server) Start(port string) error {
 		return err
 	}
 
-	// Save the current session before shutting down.
-	s.saveSession()
+	// Save the all sessions before shutting down.
+	s.saveAllSessions()
 	s.log.PrintInfo("Shutting down...", nil)
 
 	return nil
