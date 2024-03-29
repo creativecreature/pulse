@@ -4,8 +4,6 @@ import (
 	"errors"
 
 	codeharvest "github.com/creativecreature/code-harvest"
-	"github.com/creativecreature/code-harvest/clock"
-	"github.com/creativecreature/code-harvest/filereader"
 )
 
 type Option func(*Server) error
@@ -73,22 +71,4 @@ func WithLog(log Log) Option {
 		a.log = log
 		return nil
 	}
-}
-
-// New creates a new server.
-func New(serverName string, opts ...Option) (*Server, error) {
-	a := &Server{
-		name:           serverName,
-		activeSessions: make(map[string]*codeharvest.ActiveSession),
-		clock:          clock.New(),
-		fileReader:     filereader.New(),
-	}
-	for _, opt := range opts {
-		err := opt(a)
-		if err != nil {
-			return &Server{}, err
-		}
-	}
-
-	return a, nil
 }

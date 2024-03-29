@@ -16,6 +16,8 @@ import (
 	"time"
 
 	codeharvest "github.com/creativecreature/code-harvest"
+	"github.com/creativecreature/code-harvest/clock"
+	"github.com/creativecreature/code-harvest/filereader"
 	"github.com/creativecreature/code-harvest/proxy"
 )
 
@@ -34,6 +36,24 @@ type Server struct {
 	log            Log
 	mutex          sync.Mutex
 	storage        codeharvest.TemporaryStorage
+}
+
+// New creates a new server.
+func New(serverName string, opts ...Option) (*Server, error) {
+	a := &Server{
+		name:           serverName,
+		activeSessions: make(map[string]*codeharvest.ActiveSession),
+		clock:          clock.New(),
+		fileReader:     filereader.New(),
+	}
+	for _, opt := range opts {
+		err := opt(a)
+		if err != nil {
+			return &Server{}, err
+		}
+	}
+
+	return a, nil
 }
 
 // startNewSession creates a new session and sets it as the current session.
