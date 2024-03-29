@@ -16,14 +16,14 @@ type Session struct {
 	Files      Files  `json:"files"`
 }
 
-func (session Session) TotalFileDuration() int64 {
+func (s Session) TotalFileDuration() int64 {
 	totalDuration := int64(0)
-	for _, file := range session.Files {
+	for _, file := range s.Files {
 		totalDuration += file.DurationMs
 	}
 	return totalDuration
 }
 
-func (session Session) Serialize() ([]byte, error) {
-	return json.MarshalIndent(session, "", "  ")
+func (s Session) Serialize() ([]byte, error) {
+	return json.MarshalIndent(s, "", "  ")
 }

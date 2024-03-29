@@ -34,8 +34,8 @@ func groupByDay(session []Session) map[int64][]Session {
 }
 
 // Aggregate takes a slice of raw coding sessions and aggregates them by day.
-func (sessions Sessions) Aggregate() []AggregatedSession {
-	sessionsPerDay := groupByDay(sessions)
+func (s Sessions) Aggregate() []AggregatedSession {
+	sessionsPerDay := groupByDay(s)
 	aggregatedSessions := make([]AggregatedSession, 0)
 
 	for date, tempSessions := range sessionsPerDay {

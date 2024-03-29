@@ -10,11 +10,11 @@ type Repository struct {
 }
 
 // merge takes two repositories, merges them, and returns the result.
-func (a Repository) merge(b Repository) Repository {
+func (r Repository) merge(b Repository) Repository {
 	return Repository{
-		Name:       a.Name,
-		Files:      a.Files.merge(b.Files),
-		DurationMs: a.DurationMs + b.DurationMs,
+		Name:       r.Name,
+		Files:      r.Files.merge(b.Files),
+		DurationMs: r.DurationMs + b.DurationMs,
 	}
 }
 

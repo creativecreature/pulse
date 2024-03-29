@@ -36,12 +36,12 @@ func repositoriesByName(repos Repositories) map[string]Repository {
 }
 
 // Merge takes two slices of repositories, merges them, and returns the result.
-func (a Repositories) merge(b Repositories) Repositories {
+func (r Repositories) merge(b Repositories) Repositories {
 	mergedRepositories := make([]Repository, 0)
-	aRepoMap, bRepoMap := repositoriesByName(a), repositoriesByName(b)
+	aRepoMap, bRepoMap := repositoriesByName(r), repositoriesByName(b)
 
 	// Add repos that are unique for a and merge collisions.
-	for _, aRepo := range a {
+	for _, aRepo := range r {
 		if bRepo, ok := bRepoMap[aRepo.Name]; !ok {
 			mergedRepositories = append(mergedRepositories, aRepo)
 		} else {

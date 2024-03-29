@@ -12,26 +12,26 @@ func newBufferStack() *bufferStack {
 }
 
 // push pushes a buffer onto the stack.
-func (s *bufferStack) push(f Buffer) {
-	s.buffers = append(s.buffers, f)
+func (b *bufferStack) push(f Buffer) {
+	b.buffers = append(b.buffers, f)
 }
 
 // peek returns a pointer to the most recent buffer.
-func (s *bufferStack) peek() *Buffer {
-	if len(s.buffers) == 0 {
+func (b *bufferStack) peek() *Buffer {
+	if len(b.buffers) == 0 {
 		return nil
 	}
-	return &s.buffers[len(s.buffers)-1]
+	return &b.buffers[len(b.buffers)-1]
 }
 
 // files takes the stack of buffers, merges them by filepath,
 // and returns the result in the order they were opened in.
-func (s *bufferStack) files() Files {
+func (b *bufferStack) files() Files {
 	sortOrder := make([]string, 0)
 	pathFile := make(map[string]File)
 
 	// Merge the buffers by filepath.
-	for _, buffer := range s.buffers {
+	for _, buffer := range b.buffers {
 		if file, exists := pathFile[buffer.Filepath]; !exists {
 			sortOrder = append(sortOrder, buffer.Filepath)
 			pathFile[buffer.Filepath] = fileFromBuffer(buffer)

@@ -26,33 +26,33 @@ func merge(sessions AggregatedSessions, truncate truncateTimeFunc, timePeriod Ti
 }
 
 // MergeByDay merges sessions that occurred the same day.
-func (sessions AggregatedSessions) MergeByDay() AggregatedSessions {
+func (s AggregatedSessions) MergeByDay() AggregatedSessions {
 	truncateFunc := func(s AggregatedSession) int64 {
 		return truncate.Day(s.Date)
 	}
-	return merge(sessions, truncateFunc, Day)
+	return merge(s, truncateFunc, Day)
 }
 
 // MergeByWeek merges sessions that occurred the same week.
-func (sessions AggregatedSessions) MergeByWeek() AggregatedSessions {
+func (s AggregatedSessions) MergeByWeek() AggregatedSessions {
 	truncateFunc := func(s AggregatedSession) int64 {
 		return truncate.Week(s.Date)
 	}
-	return merge(sessions, truncateFunc, Week)
+	return merge(s, truncateFunc, Week)
 }
 
 // MergeByWeek merges sessions that occurred the same month.
-func (sessions AggregatedSessions) MergeByMonth() AggregatedSessions {
+func (s AggregatedSessions) MergeByMonth() AggregatedSessions {
 	truncateFunc := func(s AggregatedSession) int64 {
 		return truncate.Month(s.Date)
 	}
-	return merge(sessions, truncateFunc, Month)
+	return merge(s, truncateFunc, Month)
 }
 
 // MergeByYear merges sessions that occurred the same year.
-func (sessions AggregatedSessions) MergeByYear() AggregatedSessions {
+func (s AggregatedSessions) MergeByYear() AggregatedSessions {
 	truncateFunc := func(s AggregatedSession) int64 {
 		return truncate.Year(s.Date)
 	}
-	return merge(sessions, truncateFunc, Year)
+	return merge(s, truncateFunc, Year)
 }
