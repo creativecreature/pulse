@@ -2,6 +2,7 @@ package server_test
 
 import (
 	"io"
+	"os"
 	"path/filepath"
 	"runtime"
 	"sort"
@@ -32,7 +33,7 @@ func TestServerMergesFiles(t *testing.T) {
 
 	reply := ""
 	s, err := server.New("TestApp",
-		server.WithLog(logger.New(io.Discard, logger.LevelOff)),
+		server.WithLog(logger.New(os.Stdout, logger.LevelDebug)),
 		server.WithStorage(mockStorage),
 		server.WithClock(mockClock),
 	)
@@ -54,7 +55,6 @@ func TestServerMergesFiles(t *testing.T) {
 	// buffer to be opened for us to start counting time.
 	mockClock.AddTime(10)
 
-	t.Log(absolutePath(t, "/testdata/sturdyc/cmd/main.go"))
 	s.OpenFile(pulse.Event{
 		EditorID: "123",
 		Path:     absolutePath(t, "/testdata/sturdyc/cmd/main.go"),
@@ -147,7 +147,6 @@ func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
 		OS:       "Linux",
 	}, &reply)
 
-	t.Log(absolutePath(t, "/testdata/sturdyc/cmd/main.go"))
 	s.OpenFile(pulse.Event{
 		EditorID: "123",
 		Path:     absolutePath(t, "/testdata/sturdyc/cmd/main.go"),
