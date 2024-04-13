@@ -6,6 +6,9 @@
 *.dylib
 bin
 
+# Allow for testdata .git directories
+!testdata/**/*.git
+
 # environment variables
 .envrc
 
