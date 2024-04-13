@@ -146,6 +146,7 @@ func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
 		OS:       "Linux",
 	}, &reply)
 
+	t.Log(absolutePath(t, "/testdata/pulse/cmd/main.go"))
 	s.OpenFile(pulse.Event{
 		EditorID: "123",
 		Path:     absolutePath(t, "/testdata/pulse/cmd/main.go"),
