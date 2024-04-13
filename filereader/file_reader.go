@@ -3,6 +3,7 @@ package filereader
 import (
 	"errors"
 	"fmt"
+	"log"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -100,6 +101,8 @@ func (f FileReader) extractRepositoryName(dirPath string) (string, error) {
 
 	matches := regularRepoExp.FindStringSubmatch(string(fileContent))
 
+	log.Println("CONTENT")
+	log.Println(string(fileContent))
 	if len(matches) == 0 {
 		return "", ErrParseRepoPath
 	}
