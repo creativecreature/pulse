@@ -85,6 +85,9 @@ func (s *Server) OpenFile(event pulse.Event, reply *string) {
 	s.lastHeartbeat = s.clock.GetTime()
 	gitFile, gitFileErr := s.fileReader.GitFile(event.Path)
 	if gitFileErr != nil {
+		s.log.PrintDebug("Failed to get git file", map[string]string{
+			"err": gitFileErr.Error(),
+		})
 		return
 	}
 	s.setActiveBuffer(gitFile)
