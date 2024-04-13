@@ -9,7 +9,7 @@ type File struct {
 	DurationMs int64  `json:"duration_ms"`
 }
 
-// Turns a buffer from an active coding session into a file entry.
+// fileFromBuffer turns a code buffer into a file.
 func fileFromBuffer(b Buffer) File {
 	return File{
 		Name:       b.Filename,
@@ -20,4 +20,5 @@ func fileFromBuffer(b Buffer) File {
 	}
 }
 
+// Files represents a list of files.
 type Files []File

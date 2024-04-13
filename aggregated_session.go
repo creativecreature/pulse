@@ -4,7 +4,7 @@ package pulse
 // for a given time period (day, week, month, year).
 type AggregatedSession struct {
 	ID           string       `bson:"_id,omitempty"`
-	Period       TimePeriod   `bson:"period"`
+	Period       Period       `bson:"period"`
 	Date         int64        `bson:"date"`
 	DateString   string       `bson:"date_string"`
 	TotalTimeMs  int64        `bson:"total_time_ms"`
@@ -12,7 +12,7 @@ type AggregatedSession struct {
 }
 
 // merge takes two aggregated sessions, merges them, and returns the result.
-func (a AggregatedSession) merge(b AggregatedSession, date int64, timePeriod TimePeriod) AggregatedSession {
+func (a AggregatedSession) merge(b AggregatedSession, date int64, timePeriod Period) AggregatedSession {
 	mergedSession := AggregatedSession{
 		Period:       timePeriod,
 		Date:         date,

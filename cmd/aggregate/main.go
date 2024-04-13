@@ -38,7 +38,7 @@ func aggregateByDay(log *logger.Logger, tempStorage pulse.TemporaryStorage, s pu
 }
 
 // periodString turns a time period into a readable string.
-func periodString(timePeriod pulse.TimePeriod) string {
+func periodString(timePeriod pulse.Period) string {
 	switch timePeriod {
 	case pulse.Day:
 		return "day"
@@ -54,7 +54,7 @@ func periodString(timePeriod pulse.TimePeriod) string {
 
 // aggregateByTimePeriod gathers all daily coding sessions,
 // and further consolidates them by week, month, or year.
-func aggregateByTimePeriod(log *logger.Logger, tp pulse.TimePeriod, s pulse.PermanentStorage) {
+func aggregateByTimePeriod(log *logger.Logger, tp pulse.Period, s pulse.PermanentStorage) {
 	pString := periodString(tp)
 	log.PrintInfo(fmt.Sprintf("Performing aggregation by %s", pString), nil)
 	err := s.Aggregate(tp)

@@ -11,7 +11,7 @@ type truncateTimeFunc func(AggregatedSession) int64
 
 // merge takes a slice of aggregated sessions as well as a truncate function,
 // which is used to cluster and merge the sessions by time period.
-func merge(sessions AggregatedSessions, truncate truncateTimeFunc, timePeriod TimePeriod) AggregatedSessions {
+func merge(sessions AggregatedSessions, truncate truncateTimeFunc, timePeriod Period) AggregatedSessions {
 	sessionMap := make(map[int64]AggregatedSession)
 	for _, s := range sessions {
 		key := truncate(s)

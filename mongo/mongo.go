@@ -195,7 +195,7 @@ func (m *DB) deleteCollection(collection string) error {
 		Drop(context.Background())
 }
 
-func (m *DB) Aggregate(timePeriod pulse.TimePeriod) error {
+func (m *DB) Aggregate(timePeriod pulse.Period) error {
 	dailySessions, err := m.readAll()
 	if err != nil {
 		return err

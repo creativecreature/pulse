@@ -1,11 +1,12 @@
 package pulse
 
+// Repositories represents a list of git repositories.
 type Repositories []Repository
 
 // repositories take a slice of sessions and returns the repositories.
-func repositories(sessions Sessions) []Repository {
+func repositories(sessions Sessions) Repositories {
 	filesByRepo := repositoryPathFile(sessions)
-	repos := make([]Repository, 0)
+	repos := make(Repositories, 0)
 
 	for repositoryName, filenameFileMap := range filesByRepo {
 		var durationMs int64
@@ -35,7 +36,7 @@ func repositoriesByName(repos Repositories) map[string]Repository {
 	return nameRepoMap
 }
 
-// Merge takes two slices of repositories, merges them, and returns the result.
+// merge takes two lists of repositories, merges them, and returns the result.
 func (r Repositories) merge(b Repositories) Repositories {
 	mergedRepositories := make([]Repository, 0)
 	aRepoMap, bRepoMap := repositoriesByName(r), repositoriesByName(b)

@@ -23,7 +23,7 @@ func (s Sessions) Less(i, j int) bool {
 	return s[i].StartedAt < s[j].StartedAt
 }
 
-// groupByDay groups the sessions by day they occurred.
+// groupByDay groups a slice of sessions by day.
 func groupByDay(session []Session) map[int64][]Session {
 	buckets := make(map[int64][]Session)
 	for _, s := range session {
@@ -33,7 +33,7 @@ func groupByDay(session []Session) map[int64][]Session {
 	return buckets
 }
 
-// Aggregate takes a slice of raw coding sessions and aggregates them by day.
+// Aggregate takes a list of locally stored sessions and aggregates them by day.
 func (s Sessions) Aggregate() []AggregatedSession {
 	sessionsPerDay := groupByDay(s)
 	aggregatedSessions := make([]AggregatedSession, 0)

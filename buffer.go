@@ -9,6 +9,7 @@ type Buffer struct {
 	Filetype     string
 }
 
+// NewBuffer creates a new buffer.
 func NewBuffer(filename, repo, filetype, filepath string, openedAt int64) Buffer {
 	return Buffer{
 		OpenedClosed: []int64{openedAt},
@@ -19,22 +20,27 @@ func NewBuffer(filename, repo, filetype, filepath string, openedAt int64) Buffer
 	}
 }
 
+// Open should be called when a buffer is opened.
 func (b *Buffer) Open(time int64) {
 	b.OpenedClosed = append(b.OpenedClosed, time)
 }
 
+// IsOpen returns true if the given buffer is currently open.
 func (b *Buffer) IsOpen() bool {
 	return len(b.OpenedClosed)%2 == 1
 }
 
+// LastOpened returns the last time the buffer was opened.
 func (b *Buffer) LastOpened() int64 {
 	return b.OpenedClosed[len(b.OpenedClosed)-1]
 }
 
+// Close should be called when a buffer is closed.
 func (b *Buffer) Close(time int64) {
 	b.OpenedClosed = append(b.OpenedClosed, time)
 }
 
+// Duration returns the total duration that the buffer has been open.
 func (b *Buffer) Duration() int64 {
 	var duration int64
 	for i := 0; i < len(b.OpenedClosed); i += 2 {

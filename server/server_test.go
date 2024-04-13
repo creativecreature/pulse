@@ -26,12 +26,12 @@ func absolutePath(t *testing.T, relativePath string) string {
 
 func TestServerMergesFiles(t *testing.T) {
 	// You can't commit a .git directory. Therefore, we have to rename it to .git in the test runner.
-	err := os.Rename(absolutePath(t, "./testdata/sturdyc/_git"), absolutePath(t, "./testdata/sturdyc/.git"))
+	err := os.Rename(absolutePath(t, "./testdata/sturdyc/git"), absolutePath(t, "./testdata/sturdyc/.git"))
 	if err != nil {
 		t.Fatal("Failed to set up .git directory for testing:", err)
 	}
 	defer func() {
-		restoreErr := os.Rename(absolutePath(t, "./testdata/sturdyc/.git"), absolutePath(t, "./testdata/sturdyc/_git"))
+		restoreErr := os.Rename(absolutePath(t, "./testdata/sturdyc/.git"), absolutePath(t, "./testdata/sturdyc/git"))
 		if restoreErr != nil {
 			t.Fatal("Failed to store the .git directory:", restoreErr)
 		}
@@ -134,12 +134,12 @@ func TestServerMergesFiles(t *testing.T) {
 
 func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
 	// You can't commit a .git directory. Therefore, we have to rename it to .git in the test runner.
-	err := os.Rename(absolutePath(t, "./testdata/sturdyc/_git"), absolutePath(t, "./testdata/sturdyc/.git"))
+	err := os.Rename(absolutePath(t, "./testdata/sturdyc/git"), absolutePath(t, "./testdata/sturdyc/.git"))
 	if err != nil {
 		t.Fatal("Failed to set up .git directory for testing:", err)
 	}
 	defer func() {
-		restoreErr := os.Rename(absolutePath(t, "./testdata/sturdyc/.git"), absolutePath(t, "./testdata/sturdyc/_git"))
+		restoreErr := os.Rename(absolutePath(t, "./testdata/sturdyc/.git"), absolutePath(t, "./testdata/sturdyc/git"))
 		if restoreErr != nil {
 			t.Fatal("Failed to store the .git directory:", restoreErr)
 		}
