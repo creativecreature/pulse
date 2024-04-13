@@ -54,10 +54,10 @@ func TestServerMergesFiles(t *testing.T) {
 	// buffer to be opened for us to start counting time.
 	mockClock.AddTime(10)
 
-	t.Log(absolutePath(t, "/testdata/pulse/cmd/main.go"))
+	t.Log(absolutePath(t, "/testdata/sturdyc/cmd/main.go"))
 	s.OpenFile(pulse.Event{
 		EditorID: "123",
-		Path:     absolutePath(t, "/testdata/pulse/cmd/main.go"),
+		Path:     absolutePath(t, "/testdata/sturdyc/cmd/main.go"),
 		Editor:   "nvim",
 		OS:       "Linux",
 	}, &reply)
@@ -67,7 +67,7 @@ func TestServerMergesFiles(t *testing.T) {
 	// Open a second file.
 	s.OpenFile(pulse.Event{
 		EditorID: "123",
-		Path:     absolutePath(t, "/testdata/pulse/pkg/foo/foo.go"),
+		Path:     absolutePath(t, "/testdata/sturdyc/pkg/foo/foo.go"),
 		Editor:   "nvim",
 		OS:       "Linux",
 	}, &reply)
@@ -77,7 +77,7 @@ func TestServerMergesFiles(t *testing.T) {
 	// Open the first file again.
 	s.OpenFile(pulse.Event{
 		EditorID: "123",
-		Path:     absolutePath(t, "/testdata/pulse/cmd/main.go"),
+		Path:     absolutePath(t, "/testdata/sturdyc/cmd/main.go"),
 		Editor:   "nvim",
 		OS:       "Linux",
 	}, &reply)
@@ -86,7 +86,7 @@ func TestServerMergesFiles(t *testing.T) {
 
 	s.EndSession(pulse.Event{
 		EditorID: "123",
-		Path:     absolutePath(t, "/testdata/pulse/cmd/main.go"),
+		Path:     absolutePath(t, "/testdata/sturdyc/cmd/main.go"),
 		Editor:   "nvim",
 		OS:       "Linux",
 	}, &reply)
@@ -108,17 +108,17 @@ func TestServerMergesFiles(t *testing.T) {
 	if storedSessions[0].Files[1].DurationMs != 50 {
 		t.Errorf("expected file duration 50; got %d", storedSessions[0].Files[1].DurationMs)
 	}
-	if storedSessions[0].Files[0].Path != "pulse/cmd/main.go" {
-		t.Errorf("expected file path pulse/cmd/main.go; got %s", storedSessions[0].Files[0].Path)
+	if storedSessions[0].Files[0].Path != "sturdyc/cmd/main.go" {
+		t.Errorf("expected file path sturdyc/cmd/main.go; got %s", storedSessions[0].Files[0].Path)
 	}
-	if storedSessions[0].Files[1].Path != "pulse/pkg/foo/foo.go" {
-		t.Errorf("expected file path pulse/pkg/foo/foo.go; got %s", storedSessions[0].Files[1].Path)
+	if storedSessions[0].Files[1].Path != "sturdyc/pkg/foo/foo.go" {
+		t.Errorf("expected file path sturdyc/pkg/foo/foo.go; got %s", storedSessions[0].Files[1].Path)
 	}
-	if storedSessions[0].Files[0].Repository != "pulse" {
-		t.Errorf("expected file repository pulse; got %s", storedSessions[0].Files[0].Repository)
+	if storedSessions[0].Files[0].Repository != "sturdyc" {
+		t.Errorf("expected file repository sturdyc; got %s", storedSessions[0].Files[0].Repository)
 	}
-	if storedSessions[0].Files[1].Repository != "pulse" {
-		t.Errorf("expected file repository pulse; got %s", storedSessions[0].Files[1].Repository)
+	if storedSessions[0].Files[1].Repository != "sturdyc" {
+		t.Errorf("expected file repository sturdyc; got %s", storedSessions[0].Files[1].Repository)
 	}
 }
 
@@ -147,10 +147,10 @@ func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
 		OS:       "Linux",
 	}, &reply)
 
-	t.Log(absolutePath(t, "/testdata/pulse/cmd/main.go"))
+	t.Log(absolutePath(t, "/testdata/sturdyc/cmd/main.go"))
 	s.OpenFile(pulse.Event{
 		EditorID: "123",
-		Path:     absolutePath(t, "/testdata/pulse/cmd/main.go"),
+		Path:     absolutePath(t, "/testdata/sturdyc/cmd/main.go"),
 		Editor:   "nvim",
 		OS:       "Linux",
 	}, &reply)
@@ -160,7 +160,7 @@ func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
 	// Open the same file in a new editor instance.
 	s.OpenFile(pulse.Event{
 		EditorID: "345",
-		Path:     absolutePath(t, "/testdata/pulse/cmd/main.go"),
+		Path:     absolutePath(t, "/testdata/sturdyc/cmd/main.go"),
 		Editor:   "nvim",
 		OS:       "Linux",
 	}, &reply)
@@ -177,7 +177,7 @@ func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
 	s.OpenFile(pulse.Event{
 		EditorID: "678",
 		// This is a temporary buffer without a file.
-		Path:   absolutePath(t, "/testdata/pulse/cmd/NvimTree_1"),
+		Path:   absolutePath(t, "/testdata/sturdyc/cmd/NvimTree_1"),
 		Editor: "nvim",
 		OS:     "Linux",
 	}, &reply)
@@ -187,14 +187,14 @@ func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
 	// Open the first editor again, and close it.
 	s.OpenFile(pulse.Event{
 		EditorID: "123",
-		Path:     absolutePath(t, "/testdata/pulse/cmd/main.go"),
+		Path:     absolutePath(t, "/testdata/sturdyc/cmd/main.go"),
 		Editor:   "nvim",
 		OS:       "Linux",
 	}, &reply)
 	mockClock.AddTime(10)
 	s.EndSession(pulse.Event{
 		EditorID: "123",
-		Path:     absolutePath(t, "/testdata/pulse/cmd/main.go"),
+		Path:     absolutePath(t, "/testdata/sturdyc/cmd/main.go"),
 		Editor:   "nvim",
 		OS:       "Linux",
 	}, &reply)
@@ -205,13 +205,13 @@ func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
 	// Open the editor with ID 345 again, and close it.
 	s.OpenFile(pulse.Event{
 		EditorID: "345",
-		Path:     absolutePath(t, "/testdata/pulse/cmd/main.go"),
+		Path:     absolutePath(t, "/testdata/sturdyc/cmd/main.go"),
 		Editor:   "nvim",
 		OS:       "Linux",
 	}, &reply)
 	s.EndSession(pulse.Event{
 		EditorID: "345",
-		Path:     absolutePath(t, "/testdata/pulse/cmd/main.go"),
+		Path:     absolutePath(t, "/testdata/sturdyc/cmd/main.go"),
 		Editor:   "nvim",
 		OS:       "Linux",
 	}, &reply)
@@ -227,7 +227,7 @@ func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
 	mockClock.AddTime(500)
 	s.EndSession(pulse.Event{
 		EditorID: "678",
-		Path:     absolutePath(t, "/testdata/pulse/cmd/main.go"),
+		Path:     absolutePath(t, "/testdata/sturdyc/cmd/main.go"),
 		Editor:   "nvim",
 		OS:       "Linux",
 	}, &reply)
