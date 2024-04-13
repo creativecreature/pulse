@@ -3,6 +3,7 @@ package filereader
 import (
 	"errors"
 	"fmt"
+	"log"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -127,6 +128,8 @@ func (f FileReader) GitFile(absolutePath string) (pulse.GitFile, error) {
 	}
 
 	repositoryName, err := f.extractRepositoryName(gitFolderPath)
+	log.Println("REPOSITORY NAME")
+	log.Println(repositoryName)
 	if err != nil {
 		return pulse.GitFile{}, err
 	}
