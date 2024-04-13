@@ -20,7 +20,7 @@ func absolutePath(t *testing.T, relativePath string) string {
 	if !ok {
 		t.Fatal("Could not get current file path")
 	}
-	return filepath.Dir(filename) + relativePath
+	return filepath.Join(filepath.Dir(filename), relativePath)
 }
 
 func TestServerMergesFiles(t *testing.T) {
