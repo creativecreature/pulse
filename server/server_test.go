@@ -54,6 +54,7 @@ func TestServerMergesFiles(t *testing.T) {
 	// buffer to be opened for us to start counting time.
 	mockClock.AddTime(10)
 
+	t.Log(absolutePath(t, "/testdata/pulse/cmd/main.go"))
 	s.OpenFile(pulse.Event{
 		EditorID: "123",
 		Path:     absolutePath(t, "/testdata/pulse/cmd/main.go"),
