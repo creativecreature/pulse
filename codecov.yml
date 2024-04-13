@@ -1,3 +1,5 @@
 ignore:
   - "mock"
+  - "clock"
   - "client"
+  - "proxy"
