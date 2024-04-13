@@ -15,10 +15,10 @@ import (
 	"syscall"
 	"time"
 
-	codeharvest "github.com/creativecreature/code-harvest"
-	"github.com/creativecreature/code-harvest/clock"
-	"github.com/creativecreature/code-harvest/filereader"
-	"github.com/creativecreature/code-harvest/proxy"
+	"github.com/creativecreature/pulse"
+	"github.com/creativecreature/pulse/clock"
+	"github.com/creativecreature/pulse/filereader"
+	"github.com/creativecreature/pulse/proxy"
 )
 
 const (
@@ -29,20 +29,20 @@ const (
 type Server struct {
 	name           string
 	activeEditor   string
-	activeSessions map[string]*codeharvest.ActiveSession
+	activeSessions map[string]*pulse.ActiveSession
 	lastHeartbeat  int64
 	clock          Clock
 	fileReader     FileReader
 	log            Log
 	mutex          sync.Mutex
-	storage        codeharvest.TemporaryStorage
+	storage        pulse.TemporaryStorage
 }
 
 // New creates a new server.
 func New(serverName string, opts ...Option) (*Server, error) {
 	a := &Server{
 		name:           serverName,
-		activeSessions: make(map[string]*codeharvest.ActiveSession),
+		activeSessions: make(map[string]*pulse.ActiveSession),
 		clock:          clock.New(),
 		fileReader:     filereader.New(),
 	}
@@ -59,13 +59,13 @@ func New(serverName string, opts ...Option) (*Server, error) {
 // startNewSession creates a new session and sets it as the current session.
 func (s *Server) startNewSession(id, os, editor string) {
 	s.log.PrintDebug("Starting a new session", nil)
-	s.activeSessions[id] = codeharvest.StartSession(id, s.clock.GetTime(), os, editor)
+	s.activeSessions[id] = pulse.StartSession(id, s.clock.GetTime(), os, editor)
 }
 
 // setActiveBuffer updates the current buffer in the current session.
-func (s *Server) setActiveBuffer(gitFile codeharvest.GitFile) {
+func (s *Server) setActiveBuffer(gitFile pulse.GitFile) {
 	openedAt := s.clock.GetTime()
-	buf := codeharvest.NewBuffer(
+	buf := pulse.NewBuffer(
 		gitFile.Name,
 		gitFile.Repository,
 		gitFile.Filetype,

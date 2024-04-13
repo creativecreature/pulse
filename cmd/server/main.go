@@ -3,9 +3,9 @@ package main
 import (
 	"os"
 
-	"github.com/creativecreature/code-harvest/disk"
-	"github.com/creativecreature/code-harvest/logger"
-	"github.com/creativecreature/code-harvest/server"
+	"github.com/creativecreature/pulse/disk"
+	"github.com/creativecreature/pulse/logger"
+	"github.com/creativecreature/pulse/server"
 )
 
 // ldflags.

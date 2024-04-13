@@ -1,4 +1,4 @@
-package codeharvest
+package pulse
 
 // bufferStack represents the buffers that have been opened during a coding session.
 type bufferStack struct {

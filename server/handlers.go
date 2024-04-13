@@ -4,14 +4,14 @@ import (
 	"errors"
 	"strconv"
 
-	codeharvest "github.com/creativecreature/code-harvest"
+	"github.com/creativecreature/pulse"
 )
 
 // FocusGained is invoked by the FocusGained autocommand. It gives
 // us information about the currently active client. The duration
 // of a coding session should not increase by the number of clients
 // (neovim instances). Only one will be tracked at a time.
-func (s *Server) FocusGained(event codeharvest.Event, reply *string) {
+func (s *Server) FocusGained(event pulse.Event, reply *string) {
 	// Lock the mutex to prevent race conditions with the heartbeat check.
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
@@ -64,7 +64,7 @@ func (s *Server) FocusGained(event codeharvest.Event, reply *string) {
 }
 
 // OpenFile gets invoked by the *BufEnter* autocommand.
-func (s *Server) OpenFile(event codeharvest.Event, reply *string) {
+func (s *Server) OpenFile(event pulse.Event, reply *string) {
 	// The FocusGained autocommand wont fire in some terminals,
 	// or if focus-events aren't enabled in TMUX.
 	s.FocusGained(event, reply)
@@ -94,7 +94,7 @@ func (s *Server) OpenFile(event codeharvest.Event, reply *string) {
 // SendHeartbeat can be called for events such as buffer writes and cursor moves.
 // Its purpose is to notify the server that the current session remains active.
 // The server ends the session if it doesn't receive a heartbeat for 10 minutes.
-func (s *Server) SendHeartbeat(event codeharvest.Event, reply *string) {
+func (s *Server) SendHeartbeat(event pulse.Event, reply *string) {
 	// Lock the mutex to prevent race conditions with the heartbeat check.
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
@@ -123,7 +123,7 @@ func (s *Server) SendHeartbeat(event codeharvest.Event, reply *string) {
 }
 
 // EndSession should be called by the *VimLeave* autocommand.
-func (s *Server) EndSession(event codeharvest.Event, reply *string) {
+func (s *Server) EndSession(event pulse.Event, reply *string) {
 	s.log.PrintDebug("Received EndSession event", map[string]string{
 		"editor": event.EditorID,
 	})

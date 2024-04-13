@@ -6,7 +6,7 @@ import (
 	"net/rpc"
 	"runtime"
 
-	codeharvest "github.com/creativecreature/code-harvest"
+	"github.com/creativecreature/pulse"
 )
 
 // Client for making remote procedure calls to the server.
@@ -17,8 +17,8 @@ type Client struct {
 
 // createEvents creates a new event from the slice of arguments
 // that we receive from the neovim client.
-func createEvent(args []string) codeharvest.Event {
-	return codeharvest.Event{
+func createEvent(args []string) pulse.Event {
+	return pulse.Event{
 		EditorID: args[0],
 		Path:     args[1],
 		Editor:   "nvim",

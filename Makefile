@@ -68,20 +68,20 @@ vendor:
 ## build/server: build cmd/server
 build/server:
 	@echo 'Compiling server...'
-	go build -ldflags="-X main.serverName=${SERVER_NAME} -X main.port=${PORT}" -o=./bin/code-harvest-server ./cmd/server
+	go build -ldflags="-X main.serverName=${SERVER_NAME} -X main.port=${PORT}" -o=./bin/pulse-server ./cmd/server
 .PHONY:build/server
 
 ## build/client: build cmd/client
 build/client:
 	@echo 'Compiling client...'
-	go build -ldflags="-X main.serverName=${SERVER_NAME} -X main.port=${PORT} -X main.hostname=${HOSTNAME}" -o=./bin/code-harvest-client ./cmd/client
+	go build -ldflags="-X main.serverName=${SERVER_NAME} -X main.port=${PORT} -X main.hostname=${HOSTNAME}" -o=./bin/pulse-client ./cmd/client
 .PHONY:build/client
 
 ## build/aggregate: build cmd/aggregate
 build/aggregate:
 	@echo 'Compiling aggregate...'
-	go build -ldflags="-X main.uri=${URI} -X main.db=${DB}" -o=./bin/code-harvest-aggregate ./cmd/aggregate
-.PHONY:build/client
+	go build -ldflags="-X main.uri=${URI} -X main.db=${DB}" -o=./bin/pulse-aggregate ./cmd/aggregate
+.PHONY:build/aggregate
 
 ## build: builds the server and client applications
 build: audit build/server build/client build/aggregate

@@ -1,4 +1,4 @@
-package codeharvest
+package pulse
 
 // Event represents the events we receive from the editor.
 type Event struct {

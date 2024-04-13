@@ -7,11 +7,11 @@ import (
 	"sort"
 	"testing"
 
-	codeharvest "github.com/creativecreature/code-harvest"
-	"github.com/creativecreature/code-harvest/logger"
-	"github.com/creativecreature/code-harvest/memory"
-	"github.com/creativecreature/code-harvest/mock"
-	"github.com/creativecreature/code-harvest/server"
+	"github.com/creativecreature/pulse"
+	"github.com/creativecreature/pulse/logger"
+	"github.com/creativecreature/pulse/memory"
+	"github.com/creativecreature/pulse/mock"
+	"github.com/creativecreature/pulse/server"
 )
 
 func absolutePath(t *testing.T, relativePath string) string {
@@ -41,7 +41,7 @@ func TestServerMergesFiles(t *testing.T) {
 	}
 
 	// Open an initial VIM window.
-	s.OpenFile(codeharvest.Event{
+	s.OpenFile(pulse.Event{
 		EditorID: "123",
 		Path:     "",
 		Editor:   "nvim",
@@ -54,7 +54,7 @@ func TestServerMergesFiles(t *testing.T) {
 	// buffer to be opened for us to start counting time.
 	mockClock.AddTime(10)
 
-	s.OpenFile(codeharvest.Event{
+	s.OpenFile(pulse.Event{
 		EditorID: "123",
 		Path:     absolutePath(t, "/testdata/pulse/cmd/main.go"),
 		Editor:   "nvim",
@@ -64,7 +64,7 @@ func TestServerMergesFiles(t *testing.T) {
 	mockClock.AddTime(100)
 
 	// Open a second file.
-	s.OpenFile(codeharvest.Event{
+	s.OpenFile(pulse.Event{
 		EditorID: "123",
 		Path:     absolutePath(t, "/testdata/pulse/pkg/foo/foo.go"),
 		Editor:   "nvim",
@@ -74,7 +74,7 @@ func TestServerMergesFiles(t *testing.T) {
 	mockClock.AddTime(50)
 
 	// Open the first file again.
-	s.OpenFile(codeharvest.Event{
+	s.OpenFile(pulse.Event{
 		EditorID: "123",
 		Path:     absolutePath(t, "/testdata/pulse/cmd/main.go"),
 		Editor:   "nvim",
@@ -83,7 +83,7 @@ func TestServerMergesFiles(t *testing.T) {
 	// Push the clock forward to simulate that the file was opened for 30 ms.
 	mockClock.AddTime(30)
 
-	s.EndSession(codeharvest.Event{
+	s.EndSession(pulse.Event{
 		EditorID: "123",
 		Path:     absolutePath(t, "/testdata/pulse/cmd/main.go"),
 		Editor:   "nvim",
@@ -139,14 +139,14 @@ func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
 	}
 
 	// Open an initial VIM window.
-	s.OpenFile(codeharvest.Event{
+	s.OpenFile(pulse.Event{
 		EditorID: "123",
 		Path:     "",
 		Editor:   "nvim",
 		OS:       "Linux",
 	}, &reply)
 
-	s.OpenFile(codeharvest.Event{
+	s.OpenFile(pulse.Event{
 		EditorID: "123",
 		Path:     absolutePath(t, "/testdata/pulse/cmd/main.go"),
 		Editor:   "nvim",
@@ -156,7 +156,7 @@ func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
 	mockClock.AddTime(100)
 
 	// Open the same file in a new editor instance.
-	s.OpenFile(codeharvest.Event{
+	s.OpenFile(pulse.Event{
 		EditorID: "345",
 		Path:     absolutePath(t, "/testdata/pulse/cmd/main.go"),
 		Editor:   "nvim",
@@ -166,13 +166,13 @@ func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
 	mockClock.AddTime(50)
 
 	// Open a third editor. This time, we'll never open a valid file.
-	s.OpenFile(codeharvest.Event{
+	s.OpenFile(pulse.Event{
 		EditorID: "678",
 		Path:     "",
 		Editor:   "nvim",
 		OS:       "Linux",
 	}, &reply)
-	s.OpenFile(codeharvest.Event{
+	s.OpenFile(pulse.Event{
 		EditorID: "678",
 		// This is a temporary buffer without a file.
 		Path:   absolutePath(t, "/testdata/pulse/cmd/NvimTree_1"),
@@ -183,14 +183,14 @@ func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
 	mockClock.AddTime(50)
 
 	// Open the first editor again, and close it.
-	s.OpenFile(codeharvest.Event{
+	s.OpenFile(pulse.Event{
 		EditorID: "123",
 		Path:     absolutePath(t, "/testdata/pulse/cmd/main.go"),
 		Editor:   "nvim",
 		OS:       "Linux",
 	}, &reply)
 	mockClock.AddTime(10)
-	s.EndSession(codeharvest.Event{
+	s.EndSession(pulse.Event{
 		EditorID: "123",
 		Path:     absolutePath(t, "/testdata/pulse/cmd/main.go"),
 		Editor:   "nvim",
@@ -201,13 +201,13 @@ func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
 	mockClock.AddTime(30)
 
 	// Open the editor with ID 345 again, and close it.
-	s.OpenFile(codeharvest.Event{
+	s.OpenFile(pulse.Event{
 		EditorID: "345",
 		Path:     absolutePath(t, "/testdata/pulse/cmd/main.go"),
 		Editor:   "nvim",
 		OS:       "Linux",
 	}, &reply)
-	s.EndSession(codeharvest.Event{
+	s.EndSession(pulse.Event{
 		EditorID: "345",
 		Path:     absolutePath(t, "/testdata/pulse/cmd/main.go"),
 		Editor:   "nvim",
@@ -216,14 +216,14 @@ func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
 
 	// Open editor 678 again. Remember, this editor has not opened any
 	// valid files. Adding time, and then closing it should be a no-op.
-	s.OpenFile(codeharvest.Event{
+	s.OpenFile(pulse.Event{
 		EditorID: "678",
 		Path:     "",
 		Editor:   "nvim",
 		OS:       "Linux",
 	}, &reply)
 	mockClock.AddTime(500)
-	s.EndSession(codeharvest.Event{
+	s.EndSession(pulse.Event{
 		EditorID: "678",
 		Path:     absolutePath(t, "/testdata/pulse/cmd/main.go"),
 		Editor:   "nvim",
@@ -264,7 +264,7 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 	// Send the initial focus event
 	mockClock.SetTime(100)
 	reply := ""
-	s.FocusGained(codeharvest.Event{
+	s.FocusGained(pulse.Event{
 		EditorID: "123",
 		Path:     "",
 		Editor:   "nvim",
@@ -280,7 +280,7 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 	// Send an open file event. This should update the time for the last activity to 250.
 	mockClock.SetTime(250)
 	mockFilereader.SetFile(
-		codeharvest.GitFile{
+		pulse.GitFile{
 			Name:       "install.sh",
 			Filetype:   "bash",
 			Repository: "dotfiles",
@@ -288,7 +288,7 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 		},
 	)
 
-	s.OpenFile(codeharvest.Event{
+	s.OpenFile(pulse.Event{
 		EditorID: "123",
 		Path:     "/Users/conner/code/dotfiles/install.sh",
 		Editor:   "nvim",
@@ -305,14 +305,14 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 
 	mockClock.SetTime(server.HeartbeatTTL.Milliseconds() + 300)
 	mockFilereader.SetFile(
-		codeharvest.GitFile{
+		pulse.GitFile{
 			Name:       "cleanup.sh",
 			Filetype:   "bash",
 			Repository: "dotfiles",
 			Path:       "dotfiles/cleanup.sh",
 		},
 	)
-	s.OpenFile(codeharvest.Event{
+	s.OpenFile(pulse.Event{
 		EditorID: "123",
 		Path:     "/Users/conner/code/dotfiles/cleanup.sh",
 		Editor:   "nvim",
@@ -321,7 +321,7 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 	mockClock.SetTime(server.HeartbeatTTL.Milliseconds() + 400)
 	s.CheckHeartbeat()
 
-	s.EndSession(codeharvest.Event{
+	s.EndSession(pulse.Event{
 		EditorID: "123",
 		Path:     "",
 		Editor:   "nvim",

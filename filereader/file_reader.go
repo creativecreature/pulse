@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"regexp"
 
-	codeharvest "github.com/creativecreature/code-harvest"
-	"github.com/creativecreature/code-harvest/filetypes"
+	"github.com/creativecreature/pulse"
+	"github.com/creativecreature/pulse/filetypes"
 )
 
 var (
@@ -110,25 +110,25 @@ func (f FileReader) extractRepositoryName(dirPath string) (string, error) {
 // GitFile returns a GitFile struct from an absolute path. It will return an
 // error if the path is empty, if the path is not a file or if it can't find
 // a parent .git file or folder before it reaches the root of the file tree.
-func (f FileReader) GitFile(absolutePath string) (codeharvest.GitFile, error) {
+func (f FileReader) GitFile(absolutePath string) (pulse.GitFile, error) {
 	if absolutePath == "" {
-		return codeharvest.GitFile{}, ErrEmptyPath
+		return pulse.GitFile{}, ErrEmptyPath
 	}
 
 	// It could be a temporary buffer or directory.
 	if !f.Reader.IsFile(absolutePath) {
-		return codeharvest.GitFile{}, ErrPathNotAFile
+		return pulse.GitFile{}, ErrPathNotAFile
 	}
 
 	// Check if the file is under source control.
 	gitFolderPath, err := f.findGitFolder(f.Reader.Dir(absolutePath))
 	if err != nil {
-		return codeharvest.GitFile{}, err
+		return pulse.GitFile{}, err
 	}
 
 	repositoryName, err := f.extractRepositoryName(gitFolderPath)
 	if err != nil {
-		return codeharvest.GitFile{}, err
+		return pulse.GitFile{}, err
 	}
 
 	pathFromGitFolder := absolutePath[len(gitFolderPath)-len(".git"):]
@@ -138,10 +138,10 @@ func (f FileReader) GitFile(absolutePath string) (codeharvest.GitFile, error) {
 	filename := filepath.Base(absolutePath)
 	ft, err := filetypes.Type(filename)
 	if err != nil {
-		return codeharvest.GitFile{}, err
+		return pulse.GitFile{}, err
 	}
 
-	gitFile := codeharvest.GitFile{
+	gitFile := pulse.GitFile{
 		Name:       filename,
 		Filetype:   ft,
 		Repository: repositoryName,

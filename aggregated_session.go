@@ -1,4 +1,4 @@
-package codeharvest
+package pulse
 
 // AggregatedSession represents a session that has been aggregated
 // for a given time period (day, week, month, year).

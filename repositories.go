@@ -1,4 +1,4 @@
-package codeharvest
+package pulse
 
 type Repositories []Repository
 

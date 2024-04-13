@@ -1,4 +1,4 @@
-# Code Harvest
+# `pulse`: like a fitness tracker for code
 I use this project to derive metadata from my coding sessions. Some of it can
 be viewed on my [website][1]:
 
@@ -33,4 +33,4 @@ be found [here][4].
 [1]: https://conner.dev
 [2]: ./screenshots/website1.png
 [3]: ./screenshots/website2.png
-[4]: https://github.com/creativecreature/vim-code-harvest
+[4]: https://github.com/creativecreature/vim-pulse

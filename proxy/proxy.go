@@ -1,15 +1,15 @@
 package proxy
 
 import (
-	codeharvest "github.com/creativecreature/code-harvest"
+	"github.com/creativecreature/pulse"
 )
 
 // Server is the interface that the RPC server must satisfy.
 type Server interface {
-	FocusGained(event codeharvest.Event, reply *string)
-	OpenFile(event codeharvest.Event, reply *string)
-	SendHeartbeat(event codeharvest.Event, reply *string)
-	EndSession(event codeharvest.Event, reply *string)
+	FocusGained(event pulse.Event, reply *string)
+	OpenFile(event pulse.Event, reply *string)
+	SendHeartbeat(event pulse.Event, reply *string)
+	EndSession(event pulse.Event, reply *string)
 }
 
 // Proxy serves as the intermediary between our client and server. It directs
@@ -25,14 +25,14 @@ func New(server Server) *Proxy {
 }
 
 // FocusGained should be called when a buffer gains focus.
-func (p *Proxy) FocusGained(event codeharvest.Event, reply *string) error {
+func (p *Proxy) FocusGained(event pulse.Event, reply *string) error {
 	p.server.FocusGained(event, reply)
 	return nil
 }
 
 // OpenFile should be called when a buffer is opened.
 // The server will check if the path is a valid file.
-func (p *Proxy) OpenFile(event codeharvest.Event, reply *string) error {
+func (p *Proxy) OpenFile(event pulse.Event, reply *string) error {
 	p.server.OpenFile(event, reply)
 	return nil
 }
@@ -41,13 +41,13 @@ func (p *Proxy) OpenFile(event codeharvest.Event, reply *string) error {
 // and cursor moves. Its purpose is to notify the server that
 // the current session remains active. If we don't perform any
 // actions for 10 minutes the server is going to end the session.
-func (p *Proxy) SendHeartbeat(event codeharvest.Event, reply *string) error {
+func (p *Proxy) SendHeartbeat(event pulse.Event, reply *string) error {
 	p.server.SendHeartbeat(event, reply)
 	return nil
 }
 
 // EndSession should be called when the neovim process ends.
-func (p *Proxy) EndSession(event codeharvest.Event, reply *string) error {
+func (p *Proxy) EndSession(event pulse.Event, reply *string) error {
 	p.server.EndSession(event, reply)
 	return nil
 }

@@ -1,4 +1,4 @@
-package codeharvest
+package pulse
 
 // Represents the time frame for which a sessions aggregation was performed.
 type TimePeriod int8

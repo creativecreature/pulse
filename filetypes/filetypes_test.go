@@ -3,7 +3,7 @@ package filetypes_test
 import (
 	"testing"
 
-	"github.com/creativecreature/code-harvest/filetypes"
+	"github.com/creativecreature/pulse/filetypes"
 )
 
 func TestGet(t *testing.T) {

@@ -1,4 +1,4 @@
-package codeharvest
+package pulse
 
 // GitFile represents a file within a git repository.
 type GitFile struct {

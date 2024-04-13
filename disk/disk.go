@@ -1,5 +1,5 @@
 // Package disk implements functions for temporarily storing our coding
-// sessions to disk. The coding sessions are stored in the ~/.code-harvest/tmp
+// sessions to disk. The coding sessions are stored in the ~/.pulse/tmp
 // directory. Each file in that directory is then being read by a cron job that
 // transforms the data into a more suitable format. That data is then being
 // saved in a database and served by our API.
@@ -14,7 +14,7 @@ import (
 	"path/filepath"
 	"time"
 
-	codeharvest "github.com/creativecreature/code-harvest"
+	"github.com/creativecreature/pulse"
 )
 
 const (
@@ -31,7 +31,7 @@ func NewStorage() Storage {
 	if err != nil {
 		panic(err)
 	}
-	dataDirPath := path.Join(homeDir, ".code-harvest")
+	dataDirPath := path.Join(homeDir, ".pulse")
 	return Storage{dataDirPath}
 }
 
@@ -48,7 +48,7 @@ func dir(dataDirPath string) (string, error) {
 }
 
 // Returns a filename that we'll use when writing the session to disk.
-func filename(s codeharvest.Session) string {
+func filename(s pulse.Session) string {
 	startDuration := time.Duration(s.StartedAt) * time.Millisecond
 	startTime := time.Unix(0, startDuration.Nanoseconds())
 	endDuration := time.Duration(s.EndedAt) * time.Millisecond
@@ -56,7 +56,7 @@ func filename(s codeharvest.Session) string {
 	return fmt.Sprintf("%s-%s.json", startTime.Format(HHMMSSSSS), endTime.Format(HHMMSSSSS))
 }
 
-func (s Storage) Write(session codeharvest.Session) error {
+func (s Storage) Write(session pulse.Session) error {
 	sessionFilename := filename(session)
 	dirPath, err := dir(s.dataDirPath)
 	if err != nil {
@@ -79,8 +79,8 @@ func (s Storage) Write(session codeharvest.Session) error {
 	return err
 }
 
-func (s Storage) Read() (codeharvest.Sessions, error) {
-	temporarySessions := make(codeharvest.Sessions, 0)
+func (s Storage) Read() (pulse.Sessions, error) {
+	temporarySessions := make(pulse.Sessions, 0)
 	tmpDir := path.Join(s.dataDirPath, "tmp")
 	err := fs.WalkDir(os.DirFS(tmpDir), ".", func(p string, _ fs.DirEntry, _ error) error {
 		if filepath.Ext(p) == ".json" {
@@ -88,7 +88,7 @@ func (s Storage) Read() (codeharvest.Sessions, error) {
 			if err != nil {
 				return err
 			}
-			tempSession := codeharvest.Session{}
+			tempSession := pulse.Session{}
 			err = json.Unmarshal(content, &tempSession)
 			if err != nil {
 				return err

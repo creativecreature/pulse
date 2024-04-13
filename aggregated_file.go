@@ -1,4 +1,4 @@
-package codeharvest
+package pulse
 
 // AggregatedFile represents a file that has been aggregated
 // for a given time period (day, week, month, year).

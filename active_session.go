@@ -1,4 +1,4 @@
-package codeharvest
+package pulse
 
 // ActiveSession represents an ongoing coding session.
 type ActiveSession struct {

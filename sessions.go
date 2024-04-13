@@ -1,9 +1,9 @@
-package codeharvest
+package pulse
 
 import (
 	"time"
 
-	"github.com/creativecreature/code-harvest/truncate"
+	"github.com/creativecreature/pulse/truncate"
 )
 
 const yymmdd = "2006-01-02"

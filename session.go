@@ -1,4 +1,4 @@
-package codeharvest
+package pulse
 
 import (
 	"encoding/json"

@@ -1,4 +1,4 @@
-package codeharvest
+package pulse
 
 // Buffer represents a buffer that has been opened during an active coding session.
 type Buffer struct {

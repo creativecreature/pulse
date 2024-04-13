@@ -4,8 +4,8 @@ import (
 	"io/fs"
 	"testing"
 
-	"github.com/creativecreature/code-harvest/filereader"
-	"github.com/creativecreature/code-harvest/mock"
+	"github.com/creativecreature/pulse/filereader"
+	"github.com/creativecreature/pulse/mock"
 )
 
 func TestGetRepositoryFromPath(t *testing.T) {

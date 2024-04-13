@@ -3,7 +3,7 @@ package truncate_test
 import (
 	"testing"
 
-	"github.com/creativecreature/code-harvest/truncate"
+	"github.com/creativecreature/pulse/truncate"
 )
 
 func TestTruncate(t *testing.T) {

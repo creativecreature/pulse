@@ -1,7 +1,7 @@
-package codeharvest
+package pulse
 
 import (
-	"github.com/creativecreature/code-harvest/truncate"
+	"github.com/creativecreature/pulse/truncate"
 	"golang.org/x/exp/maps"
 )
 

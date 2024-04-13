@@ -1,17 +1,17 @@
-package codeharvest_test
+package pulse_test
 
 import (
 	"testing"
 
-	codeharvest "github.com/creativecreature/code-harvest"
+	"github.com/creativecreature/pulse"
 )
 
 func TestActiveSession(t *testing.T) {
 	// Start a new coding session
-	activeSession := codeharvest.StartSession("1337", 100, "linux", "nvim")
+	activeSession := pulse.StartSession("1337", 100, "linux", "nvim")
 
 	// Open the first buffer
-	bufferOne := codeharvest.NewBuffer(
+	bufferOne := pulse.NewBuffer(
 		"init.lua",
 		"dotfiles",
 		"lua",
@@ -21,7 +21,7 @@ func TestActiveSession(t *testing.T) {
 	activeSession.PushBuffer(bufferOne)
 
 	// Open a second buffer.
-	bufferTwo := codeharvest.NewBuffer(
+	bufferTwo := pulse.NewBuffer(
 		"plugins.lua",
 		"dotfiles",
 		"lua",
@@ -32,7 +32,7 @@ func TestActiveSession(t *testing.T) {
 
 	// Open the same file as buffer one. The total duration for these
 	// buffers should be merged when we end the coding session.
-	bufferThree := codeharvest.NewBuffer(
+	bufferThree := pulse.NewBuffer(
 		"init.lua",
 		"dotfiles",
 		"lua",

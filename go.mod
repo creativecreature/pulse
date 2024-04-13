@@ -1,4 +1,4 @@
-module github.com/creativecreature/code-harvest
+module github.com/creativecreature/pulse
 
 go 1.21.3
 

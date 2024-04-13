@@ -3,7 +3,7 @@ package server
 import (
 	"errors"
 
-	codeharvest "github.com/creativecreature/code-harvest"
+	"github.com/creativecreature/pulse"
 )
 
 type Option func(*Server) error
@@ -28,7 +28,7 @@ func WithClock(clock Clock) Option {
 // FileReader is a simple abstraction that defines a function
 // for getting metadata from a file within a git repository.
 type FileReader interface {
-	GitFile(path string) (codeharvest.GitFile, error)
+	GitFile(path string) (pulse.GitFile, error)
 }
 
 // WithFileReader sets the file reader used by the server.
@@ -43,7 +43,7 @@ func WithFileReader(reader FileReader) Option {
 }
 
 // WithStorage sets the storage used by the server.
-func WithStorage(storage codeharvest.TemporaryStorage) Option {
+func WithStorage(storage pulse.TemporaryStorage) Option {
 	return func(a *Server) error {
 		if storage == nil {
 			return errors.New("storage is nil")
