@@ -2,7 +2,6 @@ package server_test
 
 import (
 	"io"
-	"os"
 	"path/filepath"
 	"runtime"
 	"sort"
@@ -25,15 +24,13 @@ func absolutePath(t *testing.T, relativePath string) string {
 }
 
 func TestServerMergesFiles(t *testing.T) {
-	t.Parallel()
-
 	mockStorage := memory.NewStorage()
 	mockClock := &mock.Clock{}
 	mockClock.SetTime(0)
 
 	reply := ""
 	s, err := server.New("TestApp",
-		server.WithLog(logger.New(os.Stdout, logger.LevelDebug)),
+		server.WithLog(logger.New(io.Discard, logger.LevelOff)),
 		server.WithStorage(mockStorage),
 		server.WithClock(mockClock),
 	)
@@ -123,8 +120,6 @@ func TestServerMergesFiles(t *testing.T) {
 }
 
 func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
-	t.Parallel()
-
 	mockStorage := memory.NewStorage()
 	mockClock := &mock.Clock{}
 	mockClock.SetTime(0)
@@ -245,8 +240,6 @@ func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
 }
 
 func TestNoActivityShouldEndSession(t *testing.T) {
-	t.Parallel()
-
 	mockStorage := memory.NewStorage()
 	mockClock := &mock.Clock{}
 	mockFilereader := mock.NewFileReader()
