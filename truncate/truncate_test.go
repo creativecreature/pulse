@@ -2,12 +2,19 @@ package truncate_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/creativecreature/pulse/truncate"
 )
 
 func TestTruncate(t *testing.T) {
 	t.Parallel()
+
+	loc, err := time.LoadLocation("Europe/Stockholm")
+	if err != nil {
+		t.Fatal("Failed to load Stockholm timezone:", err)
+	}
+	time.Local = loc
 
 	// 09:32 Friday June 16 2023
 	originalTime := int64(1686907956000)
