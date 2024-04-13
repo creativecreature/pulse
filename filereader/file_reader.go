@@ -127,9 +127,9 @@ func (f FileReader) GitFile(absolutePath string) (pulse.GitFile, error) {
 		return pulse.GitFile{}, err
 	}
 
+	log.Println("GIT FOLDER PATH")
+	log.Println(gitFolderPath)
 	repositoryName, err := f.extractRepositoryName(gitFolderPath)
-	log.Println("REPOSITORY NAME")
-	log.Println(repositoryName)
 	if err != nil {
 		return pulse.GitFile{}, err
 	}
