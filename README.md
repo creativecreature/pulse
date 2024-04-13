@@ -32,7 +32,7 @@ https://github.com/creativecreature/code-harvest/assets/12787673/7a94c640-c230-4
 
 
 The neovim plugin that I've created for sending the remote procedure calls can
-be found [here][4].
+be found [here][4]
 
 [1]: https://conner.dev
 [2]: ./screenshots/website1.png
