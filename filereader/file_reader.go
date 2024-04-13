@@ -38,7 +38,7 @@ func extractSubExp(re *regexp.Regexp, matches []string, subexp string) string {
 	exp := matches[re.SubexpIndex(subexp)]
 	// We should never have a mismatch here.
 	if exp == "" {
-		panic(fmt.Sprintf("subexpression %s not found. Did you modify the regexp?", subexp))
+		panic(fmt.Sprintf("subexpression %s not found in %v. Did you modify the regexp?", subexp, matches))
 	}
 	return exp
 }
