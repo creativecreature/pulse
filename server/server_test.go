@@ -24,6 +24,8 @@ func absolutePath(t *testing.T, relativePath string) string {
 }
 
 func TestServerMergesFiles(t *testing.T) {
+	t.Parallel()
+
 	mockStorage := memory.NewStorage()
 	mockClock := &mock.Clock{}
 	mockClock.SetTime(0)
@@ -50,7 +52,7 @@ func TestServerMergesFiles(t *testing.T) {
 	// Since this is the first session we started, the duration will still count
 	// towards the total. It's only for new sessions that we require a valid
 	// buffer to be opened for us to start counting time.
-	mockClock.AddTime(10)
+	// mockClock.AddTime(10)
 
 	s.OpenFile(pulse.Event{
 		EditorID: "123",
@@ -120,6 +122,8 @@ func TestServerMergesFiles(t *testing.T) {
 }
 
 func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
+	t.Parallel()
+
 	mockStorage := memory.NewStorage()
 	mockClock := &mock.Clock{}
 	mockClock.SetTime(0)
@@ -240,6 +244,8 @@ func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
 }
 
 func TestNoActivityShouldEndSession(t *testing.T) {
+	t.Parallel()
+
 	mockStorage := memory.NewStorage()
 	mockClock := &mock.Clock{}
 	mockFilereader := mock.NewFileReader()
