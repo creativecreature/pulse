@@ -14,7 +14,7 @@ import (
 
 var (
 	bareRepoExp    = regexp.MustCompile("gitdir: (?P<GitDir>.*)/worktrees")
-	regularRepoExp = regexp.MustCompile("url = .*/(?P<RepoName>.*?).git")
+	regularRepoExp = regexp.MustCompile(`url = .*(?:/|:)(?P<RepoName>[^/]*?)\.git`)
 )
 
 var (
