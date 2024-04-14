@@ -2,7 +2,7 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/creativecreature/pulse.svg)](https://pkg.go.dev/github.com/creativecreature/pulse)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/creativecreature/pulse/blob/master/LICENSE)
 [![Go Report Card](https://goreportcard.com/badge/github.com/creativecreature/pulse)](https://goreportcard.com/report/github.com/creativecreature/pulse)
-![Test](https://github.com/creativecreature/pulse/workflows/Test/badge.svg?branch=main)
+![Test](https://github.com/creativecreature/pulse/workflows/main.yml/badge.svg?branch=main)
 [![codecov](https://codecov.io/gh/creativecreature/pulse/graph/badge.svg?token=CYSKW3Z7E6)](https://codecov.io/gh/creativecreature/pulse)
 
 I use this project to derive metadata from my coding sessions. Some of it can
