@@ -1,5 +1,7 @@
 package pulse
 
+import "log"
+
 // ActiveSession represents an ongoing coding session.
 type ActiveSession struct {
 	// startStops is a slice of timestamps that represent the start and stop
@@ -61,10 +63,15 @@ func (s *ActiveSession) HasBuffers() bool {
 
 func (s *ActiveSession) Duration() int64 {
 	var duration int64
+	log.Println(s.startStops)
 	for i := 0; i < len(s.startStops); i += 2 {
 		duration += s.startStops[i+1] - s.startStops[i]
 	}
 	return duration
+}
+
+func (s *ActiveSession) IsCurrentlyActive() bool {
+	return len(s.startStops)%2 == 1
 }
 
 // End ends the active coding sessions. It sets the total duration in
@@ -73,7 +80,10 @@ func (s *ActiveSession) End(endedAt int64) Session {
 	if currentBuffer := s.bufStack.peek(); currentBuffer != nil && currentBuffer.IsOpen() {
 		currentBuffer.Close(endedAt)
 	}
-	s.startStops = append(s.startStops, endedAt)
+
+	if s.IsCurrentlyActive() {
+		s.startStops = append(s.startStops, endedAt)
+	}
 
 	return Session{
 		StartedAt:  s.StartedAt,

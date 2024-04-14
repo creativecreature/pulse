@@ -16,7 +16,6 @@ import (
 	"time"
 
 	"github.com/creativecreature/pulse"
-	"github.com/creativecreature/pulse/clock"
 	"github.com/creativecreature/pulse/filereader"
 	"github.com/creativecreature/pulse/proxy"
 )
@@ -31,7 +30,7 @@ type Server struct {
 	activeEditor   string
 	activeSessions map[string]*pulse.ActiveSession
 	lastHeartbeat  int64
-	clock          Clock
+	clock          pulse.Clock
 	fileReader     FileReader
 	log            Log
 	mutex          sync.Mutex
@@ -43,7 +42,7 @@ func New(serverName string, opts ...Option) (*Server, error) {
 	a := &Server{
 		name:           serverName,
 		activeSessions: make(map[string]*pulse.ActiveSession),
-		clock:          clock.New(),
+		clock:          pulse.NewClock(),
 		fileReader:     filereader.New(),
 	}
 	for _, opt := range opts {
@@ -208,18 +207,19 @@ func (s *Server) startServer(port string) (*http.Server, error) {
 	return httpServer, nil
 }
 
-// startECG runs a heartbeat ticker that ensures that
+// HeartbeatCheck runs a heartbeat ticker that ensures that
 // the current session is not idle for more than ten minutes.
-func (s *Server) startECG() *time.Ticker {
+func (s *Server) HeartbeatCheck() func() {
 	s.log.PrintDebug("Starting the ECG", nil)
-	ecg := time.NewTicker(heartbeatInterval)
+	ticker, stop := s.clock.NewTicker(heartbeatInterval)
 	go func() {
-		for range ecg.C {
+		for range ticker {
+			s.log.PrintDebug("Checking the heartbeat", nil)
 			s.CheckHeartbeat()
 		}
 	}()
 
-	return ecg
+	return stop
 }
 
 // Start starts the server on the given port.
@@ -231,7 +231,7 @@ func (s *Server) Start(port string) error {
 	}
 
 	// Start the ECG. It will end inactive sessions.
-	ecg := s.startECG()
+	stopHeartbeat := s.HeartbeatCheck()
 
 	// Catch shutdown signals from the OS
 	quit := make(chan os.Signal, 1)
@@ -243,8 +243,8 @@ func (s *Server) Start(port string) error {
 		"signal": sig.String(),
 	})
 
-	// Stop the ECG and shutdown the http server.
-	ecg.Stop()
+	// Stop the heartbeat checks and shutdown the http server.
+	stopHeartbeat()
 	err = httpServer.Shutdown(context.Background())
 	if err != nil {
 		s.log.PrintError(err, nil)

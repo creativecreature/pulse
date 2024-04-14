@@ -313,3 +313,6 @@ issues:
         - noctx
         - wrapcheck
         - exhaustruct
+    - path: "client"
+      linters:
+        - errcheck

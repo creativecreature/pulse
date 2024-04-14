@@ -7,11 +7,11 @@ import (
 	"runtime"
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/creativecreature/pulse"
 	"github.com/creativecreature/pulse/logger"
 	"github.com/creativecreature/pulse/memory"
-	"github.com/creativecreature/pulse/mock"
 	"github.com/creativecreature/pulse/server"
 )
 
@@ -38,12 +38,11 @@ func TestServerMergesFiles(t *testing.T) {
 	}()
 
 	mockStorage := memory.NewStorage()
-	mockClock := &mock.Clock{}
-	mockClock.SetTime(0)
+	mockClock := pulse.NewTestClock(time.Now())
 
 	reply := ""
 	s, err := server.New("TestApp",
-		server.WithLog(logger.New(os.Stdout, logger.LevelDebug)),
+		server.WithLog(logger.New(io.Discard, logger.LevelOff)),
 		server.WithStorage(mockStorage),
 		server.WithClock(mockClock),
 	)
@@ -63,7 +62,7 @@ func TestServerMergesFiles(t *testing.T) {
 	// Since this is the first session we started, the duration will still count
 	// towards the total. It's only for new sessions that we require a valid
 	// buffer to be opened for us to start counting time.
-	mockClock.AddTime(10)
+	mockClock.Add(10 * time.Millisecond)
 
 	s.OpenFile(pulse.Event{
 		EditorID: "123",
@@ -72,7 +71,7 @@ func TestServerMergesFiles(t *testing.T) {
 		OS:       "Linux",
 	}, &reply)
 	// Push the clock forward to simulate that the file was opened for 100 ms.
-	mockClock.AddTime(100)
+	mockClock.Add(100 * time.Millisecond)
 
 	// Open a second file.
 	s.OpenFile(pulse.Event{
@@ -82,7 +81,7 @@ func TestServerMergesFiles(t *testing.T) {
 		OS:       "Linux",
 	}, &reply)
 	// Push the clock forward to simulate that the file was opened for 50 ms.
-	mockClock.AddTime(50)
+	mockClock.Add(50 * time.Millisecond)
 
 	// Open the first file again.
 	s.OpenFile(pulse.Event{
@@ -92,7 +91,7 @@ func TestServerMergesFiles(t *testing.T) {
 		OS:       "Linux",
 	}, &reply)
 	// Push the clock forward to simulate that the file was opened for 30 ms.
-	mockClock.AddTime(30)
+	mockClock.Add(30 * time.Millisecond)
 
 	s.EndSession(pulse.Event{
 		EditorID: "123",
@@ -146,8 +145,7 @@ func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
 	}()
 
 	mockStorage := memory.NewStorage()
-	mockClock := &mock.Clock{}
-	mockClock.SetTime(0)
+	mockClock := pulse.NewTestClock(time.Now())
 
 	reply := ""
 	s, err := server.New("TestApp",
@@ -174,7 +172,7 @@ func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
 		OS:       "Linux",
 	}, &reply)
 	// Push the clock forward to simulate that the file was opened for 100 ms.
-	mockClock.AddTime(100)
+	mockClock.Add(100 * time.Millisecond)
 
 	// Open the same file in a new editor instance.
 	s.OpenFile(pulse.Event{
@@ -184,7 +182,7 @@ func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
 		OS:       "Linux",
 	}, &reply)
 	// Push the clock forward to simulate that the file was opened for 50 ms.
-	mockClock.AddTime(50)
+	mockClock.Add(50 * time.Millisecond)
 
 	// Open a third editor. This time, we'll never open a valid file.
 	s.OpenFile(pulse.Event{
@@ -201,7 +199,7 @@ func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
 		OS:     "Linux",
 	}, &reply)
 	// Given that we haven't opened a valid file yet, the time should count to the previous session.
-	mockClock.AddTime(50)
+	mockClock.Add(50 * time.Millisecond)
 
 	// Open the first editor again, and close it.
 	s.OpenFile(pulse.Event{
@@ -210,7 +208,7 @@ func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
 		Editor:   "nvim",
 		OS:       "Linux",
 	}, &reply)
-	mockClock.AddTime(10)
+	mockClock.Add(10 * time.Millisecond)
 	s.EndSession(pulse.Event{
 		EditorID: "123",
 		Path:     absolutePath(t, "/testdata/sturdyc/cmd/main.go"),
@@ -219,7 +217,7 @@ func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
 	}, &reply)
 
 	// This time should also be added towards the last active session.
-	mockClock.AddTime(30)
+	mockClock.Add(30 * time.Millisecond)
 
 	// Open the editor with ID 345 again, and close it.
 	s.OpenFile(pulse.Event{
@@ -243,7 +241,7 @@ func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
 		Editor:   "nvim",
 		OS:       "Linux",
 	}, &reply)
-	mockClock.AddTime(500)
+	mockClock.Add(500 * time.Millisecond)
 	s.EndSession(pulse.Event{
 		EditorID: "678",
 		Path:     absolutePath(t, "/testdata/sturdyc/cmd/main.go"),
@@ -265,94 +263,79 @@ func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
 }
 
 func TestNoActivityShouldEndSession(t *testing.T) {
-	t.Parallel()
+	// You can't commit a .git directory. Therefore, we have to rename it to .git in the test runner.
+	err := os.Rename(absolutePath(t, "./testdata/sturdyc/git"), absolutePath(t, "./testdata/sturdyc/.git"))
+	if err != nil {
+		t.Fatal("Failed to set up .git directory for testing:", err)
+	}
+	defer func() {
+		restoreErr := os.Rename(absolutePath(t, "./testdata/sturdyc/.git"), absolutePath(t, "./testdata/sturdyc/git"))
+		if restoreErr != nil {
+			t.Fatal("Failed to store the .git directory:", restoreErr)
+		}
+	}()
 
 	mockStorage := memory.NewStorage()
-	mockClock := &mock.Clock{}
-	mockFilereader := mock.NewFileReader()
+	mockClock := pulse.NewTestClock(time.Now())
 
-	s, err := server.New(
-		"testApp",
+	reply := ""
+	s, err := server.New("TestApp",
 		server.WithLog(logger.New(io.Discard, logger.LevelOff)),
-		server.WithClock(mockClock),
-		server.WithFileReader(mockFilereader),
 		server.WithStorage(mockStorage),
+		server.WithClock(mockClock),
 	)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// Send the initial focus event
-	mockClock.SetTime(100)
-	reply := ""
-	s.FocusGained(pulse.Event{
+	s.HeartbeatCheck()
+
+	// Open an initial VIM window.
+	s.OpenFile(pulse.Event{
 		EditorID: "123",
 		Path:     "",
 		Editor:   "nvim",
 		OS:       "Linux",
 	}, &reply)
-	if err != nil {
-		panic(err)
-	}
-
-	mockClock.SetTime(200)
-	s.CheckHeartbeat()
-
-	// Send an open file event. This should update the time for the last activity to 250.
-	mockClock.SetTime(250)
-	mockFilereader.SetFile(
-		pulse.GitFile{
-			Name:       "install.sh",
-			Filetype:   "bash",
-			Repository: "dotfiles",
-			Path:       "dotfiles/install.sh",
-		},
-	)
 
 	s.OpenFile(pulse.Event{
 		EditorID: "123",
-		Path:     "/Users/conner/code/dotfiles/install.sh",
+		Path:     absolutePath(t, "/testdata/sturdyc/cmd/main.go"),
 		Editor:   "nvim",
 		OS:       "Linux",
 	}, &reply)
+	// Push the clock forward to simulate that the file was opened for 100 ms.
+	mockClock.Add(100 * time.Millisecond)
 
-	// Perform another heartbeat check.
-	mockClock.SetTime(300)
-	s.CheckHeartbeat()
-
-	//  Move the clock again passed the heartbeat TTL.
-	mockClock.SetTime(server.HeartbeatTTL.Milliseconds() + 250 + 1)
-	s.CheckHeartbeat()
-
-	mockClock.SetTime(server.HeartbeatTTL.Milliseconds() + 300)
-	mockFilereader.SetFile(
-		pulse.GitFile{
-			Name:       "cleanup.sh",
-			Filetype:   "bash",
-			Repository: "dotfiles",
-			Path:       "dotfiles/cleanup.sh",
-		},
-	)
+	// Open the same file in a new editor instance.
 	s.OpenFile(pulse.Event{
-		EditorID: "123",
-		Path:     "/Users/conner/code/dotfiles/cleanup.sh",
+		EditorID: "345",
+		Path:     absolutePath(t, "/testdata/sturdyc/cmd/main.go"),
 		Editor:   "nvim",
 		OS:       "Linux",
 	}, &reply)
-	mockClock.SetTime(server.HeartbeatTTL.Milliseconds() + 400)
-	s.CheckHeartbeat()
 
-	s.EndSession(pulse.Event{
-		EditorID: "123",
-		Path:     "",
-		Editor:   "nvim",
-		OS:       "Linux",
-	}, &reply)
+	// Next, we'll wait for 10 minutes which should result in
+	// both sessions being ended by a heartbeat check.
+	mockClock.Add(10 * time.Minute)
+	// Move the clock again to trigger the heartbeat ticker.
+	mockClock.Add(time.Minute)
+	time.Sleep(10 * time.Millisecond)
 
 	storedSessions, _ := mockStorage.Read()
+	sort.Sort(storedSessions)
+	if len(storedSessions) != 2 {
+		t.Errorf("expected sessions %d; got %d", 2, len(storedSessions))
+	}
 
-	expectedNumberOfSessions := 2
-	if len(storedSessions) != expectedNumberOfSessions {
-		t.Errorf("expected len %d; got %d", expectedNumberOfSessions, len(storedSessions))
+	if storedSessions[0].DurationMs != 100 {
+		t.Errorf("expected the sessions duration to be 100; got %d", storedSessions[0].DurationMs)
+	}
+
+	// The second session should last for 11 minutes. 10 for the
+	// heartbeat to expire, and 1 for the heartbeat to trigger.
+	dur := int64(11 * time.Minute / time.Millisecond)
+	if storedSessions[1].DurationMs != dur {
+		t.Errorf("expected the sessions duration to be %d; got %d", dur, storedSessions[1].DurationMs)
 	}
 }

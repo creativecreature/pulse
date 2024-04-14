@@ -8,14 +8,8 @@ import (
 
 type Option func(*Server) error
 
-// Clock is a simple abstraction that is used to
-// simplify time based assertions in tests.
-type Clock interface {
-	GetTime() int64
-}
-
 // WithClock sets the clock used by the server.
-func WithClock(clock Clock) Option {
+func WithClock(clock pulse.Clock) Option {
 	return func(a *Server) error {
 		if clock == nil {
 			return errors.New("clock is nil")
