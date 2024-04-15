@@ -1,8 +1,3 @@
-// Package disk implements functions for temporarily storing our coding
-// sessions to disk. The coding sessions are stored in the ~/.pulse/tmp
-// directory. Each file in that directory is then being read by a cron job that
-// transforms the data into a more suitable format. That data is then being
-// saved in a database and served by our API.
 package disk
 
 import (
@@ -22,22 +17,33 @@ const (
 	HHMMSSSSS = "15:04:05.000"
 )
 
+// Storage implements the pulse.TemporaryStorage interface, and is used to store coding sessions on disk.
 type Storage struct {
-	dataDirPath string
+	root string
 }
 
-func NewStorage() Storage {
-	homeDir, err := os.UserHomeDir()
+// NewStorage is used to create a new disk storage. It returns an error if it fails to create a
+// "$HOME/.pulse" directory. Coding sessions will be written to within "$HOME/.pulse/tmp".
+func NewStorage() (*Storage, error) {
+	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	dataDirPath := path.Join(homeDir, ".pulse")
-	return Storage{dataDirPath}
+
+	// Create a .pulse directory in the home directory if it doesn't exist.
+	root := path.Join(userHomeDir, ".pulse")
+	if _, statErr := os.Stat(root); os.IsNotExist(statErr) {
+		if mkdirErr := os.MkdirAll(root, os.ModePerm); mkdirErr != nil {
+			return nil, mkdirErr
+		}
+	}
+
+	return &Storage{root}, nil
 }
 
-// dir creates the directory where we'll store all coding sessions for a given day.
-func dir(dataDirPath string) (string, error) {
-	dirPath := path.Join(dataDirPath, "tmp", time.Now().UTC().Format(YYYYMMDD))
+// dayDir creates the directory where we'll store all coding sessions for a given day.
+func (s *Storage) dayDir() (string, error) {
+	dirPath := path.Join(s.root, "tmp", time.Now().UTC().Format(YYYYMMDD))
 	// os.MkdirAll returns nil if the directory already exists
 	err := os.MkdirAll(dirPath, os.ModePerm)
 	if err != nil {
@@ -47,52 +53,58 @@ func dir(dataDirPath string) (string, error) {
 	return dirPath, nil
 }
 
-// Returns a filename that we'll use when writing the session to disk.
-func filename(s pulse.Session) string {
-	startDuration := time.Duration(s.StartedAt) * time.Millisecond
-	startTime := time.Unix(0, startDuration.Nanoseconds())
-	endDuration := time.Duration(s.EndedAt) * time.Millisecond
-	endTime := time.Unix(0, endDuration.Nanoseconds())
-	return fmt.Sprintf("%s-%s.json", startTime.Format(HHMMSSSSS), endTime.Format(HHMMSSSSS))
+// filename returns the name we'll use when writing the session to disk.
+func (s *Storage) filename(session pulse.Session) string {
+	startTime := time.UnixMilli(session.StartedAt).Format("15:04:05.000")
+	endTime := time.UnixMilli(session.EndedAt).Format("15:04:05.000")
+	return fmt.Sprintf("%s-%s.json", startTime, endTime)
 }
 
-func (s Storage) Write(session pulse.Session) error {
-	sessionFilename := filename(session)
-	dirPath, err := dir(s.dataDirPath)
+// Root returns the root directory for the storage.
+func (s *Storage) Root() string {
+	return s.root
+}
+
+// Write is used to write a coding session to disk.
+func (s *Storage) Write(session pulse.Session) error {
+	fName := s.filename(session)
+	dDir, err := s.dayDir()
 	if err != nil {
 		return err
 	}
 
-	file, err := os.Create(path.Join(dirPath, sessionFilename))
+	file, err := os.Create(path.Join(dDir, fName))
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	serializedSession, err := session.Serialize()
+	bytes, err := session.Serialize()
 	if err != nil {
 		return err
 	}
-
-	_, err = file.Write(serializedSession)
+	_, err = file.Write(bytes)
 
 	return err
 }
 
-func (s Storage) Read() (pulse.Sessions, error) {
+// Read is used to read all coding sessions from disk.
+func (s *Storage) Read() (pulse.Sessions, error) {
 	temporarySessions := make(pulse.Sessions, 0)
-	tmpDir := path.Join(s.dataDirPath, "tmp")
+	tmpDir := path.Join(s.root, "tmp")
 	err := fs.WalkDir(os.DirFS(tmpDir), ".", func(p string, _ fs.DirEntry, _ error) error {
 		if filepath.Ext(p) == ".json" {
 			content, err := os.ReadFile(path.Join(tmpDir, p))
 			if err != nil {
 				return err
 			}
+
 			tempSession := pulse.Session{}
 			err = json.Unmarshal(content, &tempSession)
 			if err != nil {
 				return err
 			}
+
 			temporarySessions = append(temporarySessions, tempSession)
 		}
 
@@ -102,7 +114,7 @@ func (s Storage) Read() (pulse.Sessions, error) {
 	return temporarySessions, err
 }
 
-func (s Storage) Clean() error {
-	tmpDir := path.Join(s.dataDirPath, "tmp")
+func (s *Storage) Clean() error {
+	tmpDir := path.Join(s.root, "tmp")
 	return os.RemoveAll(tmpDir)
 }

@@ -1,6 +1,6 @@
 package pulse
 
-// Period represents the time period for which the data has been aggregated.
+// Period represents the time period for which the coding sessions have been aggregated.
 type Period int8
 
 const (

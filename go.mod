@@ -3,6 +3,7 @@ module github.com/creativecreature/pulse
 go 1.21.3
 
 require (
+	github.com/google/go-cmp v0.6.0
 	github.com/neovim/go-client v1.2.1
 	go.mongodb.org/mongo-driver v1.11.7
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d

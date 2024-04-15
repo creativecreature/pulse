@@ -18,11 +18,11 @@ func (r Repository) merge(b Repository) Repository {
 	}
 }
 
-// repositoryPathFile takes a slice of coding sessions and generates
-// a map. In this map, the key is the repository name, and the value
-// is another map wherein the key is the relative file path within the
-// repository, and the value is the file itself. The files are merged
-// if any of the sessions has worked on the same file.
+// repositoryPathFile processes a slice of coding sessions by creating a nested
+// map that organizes and merges file data. The outer map's keys are repository
+// names. Each associated value is another map, where the keys are relative file
+// paths within the repository, and the values are the corresponding file data.
+// Files are merged automatically if they have been modified in multiple sessions.
 func repositoryPathFile(sessions []Session) map[string]map[string]AggregatedFile {
 	repoPathFile := make(map[string]map[string]AggregatedFile)
 	for _, session := range sessions {

@@ -6,8 +6,6 @@ import (
 	"github.com/creativecreature/pulse/truncate"
 )
 
-const yymmdd = "2006-01-02"
-
 // Sessions is a slice of several Session structs.
 type Sessions []Session
 
@@ -39,7 +37,7 @@ func (s Sessions) Aggregate() []AggregatedSession {
 	aggregatedSessions := make([]AggregatedSession, 0)
 
 	for date, tempSessions := range sessionsPerDay {
-		dateString := time.Unix(0, date*int64(time.Millisecond)).Format(yymmdd)
+		dateString := time.Unix(0, date*int64(time.Millisecond)).Format("2006-01-02")
 		var totalTime int64
 		for _, tempSession := range tempSessions {
 			totalTime += tempSession.DurationMs

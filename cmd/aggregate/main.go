@@ -66,7 +66,11 @@ func aggregateByTimePeriod(log *logger.Logger, tp pulse.Period, s pulse.Permanen
 
 func main() {
 	log := logger.New(os.Stdout, logger.LevelInfo)
-	diskStorage := disk.NewStorage()
+	diskStorage, err := disk.NewStorage()
+	if err != nil {
+		log.PrintFatal(err, nil)
+	}
+
 	mongoStorage, disconnect := mongo.New(uri, db)
 	defer disconnect()
 

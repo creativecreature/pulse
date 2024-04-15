@@ -28,7 +28,7 @@ const (
 type Server struct {
 	name           string
 	activeEditor   string
-	activeSessions map[string]*pulse.ActiveSession
+	activeSessions map[string]*pulse.CodingSession
 	lastHeartbeat  int64
 	clock          pulse.Clock
 	fileReader     FileReader
@@ -41,7 +41,7 @@ type Server struct {
 func New(serverName string, opts ...Option) (*Server, error) {
 	a := &Server{
 		name:           serverName,
-		activeSessions: make(map[string]*pulse.ActiveSession),
+		activeSessions: make(map[string]*pulse.CodingSession),
 		clock:          pulse.NewClock(),
 		fileReader:     filereader.New(),
 	}

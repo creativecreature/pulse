@@ -15,12 +15,8 @@ func repositories(sessions Sessions) Repositories {
 			files = append(files, file)
 			durationMs += file.DurationMs
 		}
-		repository := Repository{
-			Name:       repositoryName,
-			Files:      files,
-			DurationMs: durationMs,
-		}
-		repos = append(repos, repository)
+		repo := Repository{Name: repositoryName, Files: files, DurationMs: durationMs}
+		repos = append(repos, repo)
 	}
 
 	return repos

@@ -2,11 +2,11 @@ package pulse
 
 import "log"
 
-// ActiveSession represents an ongoing coding session.
-type ActiveSession struct {
-	// startStops is a slice of timestamps that represent the start and stop
-	// times of an active session. If we example switch between editors two
-	// editors we only want to count time for one of them.
+// CodingSession represents an ongoing coding session.
+type CodingSession struct {
+	// startStops is a slice of timestamps representing the start and stop times of
+	// an ongoing coding session. This ensures accurate time tracking when switching
+	// between multiple editor processes. We only count time for one at a time.
 	startStops []int64
 	bufStack   *bufferStack
 	EditorID   string
@@ -15,9 +15,9 @@ type ActiveSession struct {
 	Editor     string
 }
 
-// StartSession creates a new active coding session.
-func StartSession(editorID string, startedAt int64, os, editor string) *ActiveSession {
-	return &ActiveSession{
+// StartSession creates a new coding session.
+func StartSession(editorID string, startedAt int64, os, editor string) *CodingSession {
+	return &CodingSession{
 		startStops: []int64{startedAt},
 		bufStack:   newBufferStack(),
 		EditorID:   editorID,
@@ -27,21 +27,24 @@ func StartSession(editorID string, startedAt int64, os, editor string) *ActiveSe
 	}
 }
 
-func (s *ActiveSession) Pause(time int64) {
+// Pause should be called when another editor process gains focus.
+func (s *CodingSession) Pause(time int64) {
 	if currentBuffer := s.bufStack.peek(); currentBuffer != nil {
 		currentBuffer.Close(time)
 	}
 	s.startStops = append(s.startStops, time)
 }
 
-func (s *ActiveSession) PauseTime() int64 {
+// PauseTime is used to determine which coding session to resume.
+func (s *CodingSession) PauseTime() int64 {
 	if len(s.startStops) == 0 {
 		return 0
 	}
 	return s.startStops[len(s.startStops)-1]
 }
 
-func (s *ActiveSession) Resume(time int64) {
+// Resume should be called when the editor regains focus.
+func (s *CodingSession) Resume(time int64) {
 	if currentBuffer := s.bufStack.peek(); currentBuffer != nil {
 		currentBuffer.Open(time)
 	}
@@ -49,7 +52,7 @@ func (s *ActiveSession) Resume(time int64) {
 }
 
 // PushBuffer pushes a new buffer to the current sessions buffer stack.
-func (s *ActiveSession) PushBuffer(buffer Buffer) {
+func (s *CodingSession) PushBuffer(buffer Buffer) {
 	// Stop recording time for the previous buffer.
 	if currentBuffer := s.bufStack.peek(); currentBuffer != nil {
 		currentBuffer.Close(buffer.LastOpened())
@@ -57,11 +60,13 @@ func (s *ActiveSession) PushBuffer(buffer Buffer) {
 	s.bufStack.push(buffer)
 }
 
-func (s *ActiveSession) HasBuffers() bool {
+// HasBuffers returns true if the coding session has opened any file backed buffers.
+func (s *CodingSession) HasBuffers() bool {
 	return len(s.bufStack.buffers) > 0
 }
 
-func (s *ActiveSession) Duration() int64 {
+// Duration returns the total duration of the coding session.
+func (s *CodingSession) Duration() int64 {
 	var duration int64
 	log.Println(s.startStops)
 	for i := 0; i < len(s.startStops); i += 2 {
@@ -70,18 +75,19 @@ func (s *ActiveSession) Duration() int64 {
 	return duration
 }
 
-func (s *ActiveSession) IsCurrentlyActive() bool {
+// Active returns true if the coding session is considered active.
+func (s *CodingSession) Active() bool {
 	return len(s.startStops)%2 == 1
 }
 
 // End ends the active coding sessions. It sets the total duration in
 // milliseconds, and turns the stack of buffers into a slice of files.
-func (s *ActiveSession) End(endedAt int64) Session {
+func (s *CodingSession) End(endedAt int64) Session {
 	if currentBuffer := s.bufStack.peek(); currentBuffer != nil && currentBuffer.IsOpen() {
 		currentBuffer.Close(endedAt)
 	}
 
-	if s.IsCurrentlyActive() {
+	if s.Active() {
 		s.startStops = append(s.startStops, endedAt)
 	}
 

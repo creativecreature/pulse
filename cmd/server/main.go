@@ -16,11 +16,15 @@ var (
 
 func main() {
 	log := logger.New(os.Stdout, logger.LevelDebug)
+	diskStorage, err := disk.NewStorage()
+	if err != nil {
+		log.PrintFatal(err, nil)
+	}
 
 	server, err := server.New(
 		serverName,
 		server.WithLog(log),
-		server.WithStorage(disk.NewStorage()),
+		server.WithStorage(diskStorage),
 	)
 	if err != nil {
 		log.PrintFatal(err, nil)
