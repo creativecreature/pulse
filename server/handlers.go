@@ -1,7 +1,6 @@
 package server
 
 import (
-	"errors"
 	"strconv"
 
 	"github.com/creativecreature/pulse"
@@ -129,11 +128,11 @@ func (s *Server) EndSession(event pulse.Event, reply *string) {
 	defer s.mutex.Unlock()
 
 	if s.activeEditor != "" && s.activeEditor != event.EditorID {
-		s.log.Fatal(
-			errors.New("was called by a client that isn't considered active"),
+		s.log.Debug("EndSession was called by a client that isn't considered active",
 			"actual_client_id", s.activeEditor,
 			"expected_client_id", event.EditorID,
 		)
+		return
 	}
 
 	// This could be the first event after more than ten minutes of inactivity.
