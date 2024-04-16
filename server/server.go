@@ -4,17 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math"
 	"net"
 	"net/http"
 	"net/rpc"
 	"os"
 	"os/signal"
-	"strconv"
 	"sync"
 	"syscall"
 	"time"
 
+	"github.com/charmbracelet/log"
 	"github.com/creativecreature/pulse"
 	"github.com/creativecreature/pulse/filereader"
 	"github.com/creativecreature/pulse/proxy"
@@ -32,7 +31,7 @@ type Server struct {
 	lastHeartbeat  int64
 	clock          pulse.Clock
 	fileReader     FileReader
-	log            Log
+	log            *log.Logger
 	mutex          sync.Mutex
 	storage        pulse.TemporaryStorage
 }
@@ -57,7 +56,7 @@ func New(serverName string, opts ...Option) (*Server, error) {
 
 // startNewSession creates a new session and sets it as the current session.
 func (s *Server) startNewSession(id, os, editor string) {
-	s.log.PrintDebug("Starting a new session", nil)
+	s.log.Debug("Starting a new session")
 	s.activeSessions[id] = pulse.StartSession(id, s.clock.GetTime(), os, editor)
 }
 
@@ -73,57 +72,23 @@ func (s *Server) setActiveBuffer(gitFile pulse.GitFile) {
 	)
 	s.activeSessions[s.activeEditor].PushBuffer(buf)
 	updatedBufferMsg := "Successfully updated the current buffer"
-	updatedBufferProperties := map[string]string{
-		"name": gitFile.Name,
-		"path": gitFile.Path,
-	}
-	s.log.PrintDebug(updatedBufferMsg, updatedBufferProperties)
-}
-
-// hasOkDurations sanity checks the sessions total duration against
-// the combined duration of all files that were opened.
-func hasOkDurations(sessionDuration, allFilesDuration int64) bool {
-	// Exclude sessions that are less than 10 minutes.
-	tenMinutesMS := int64(10 * 60 * 1000)
-	if sessionDuration < tenMinutesMS {
-		return true
-	}
-	// If the session lasts for more than 10 minutes, and the time
-	// differs by more than 25%, we'll want to check the session.
-	larger := math.Max(float64(sessionDuration), float64(allFilesDuration))
-	threshold := larger * 0.25
-	difference := math.Abs(float64(sessionDuration) - float64(allFilesDuration))
-
-	return difference <= threshold
+	s.log.Debug(updatedBufferMsg, "name", gitFile.Name, "path", gitFile.Path)
 }
 
 func (s *Server) saveAllSessions() {
 	now := s.clock.GetTime()
-	s.log.PrintDebug("Saving all sessions.", nil)
+	s.log.Debug("Saving all sessions.")
 
 	for _, session := range s.activeSessions {
 		if !session.HasBuffers() {
-			s.log.PrintDebug("The session has not opened any buffers.", nil)
+			s.log.Debug("The session has not opened any buffers.")
 			return
 		}
 
 		finishedSession := session.End(now)
-		totalFileDuration := finishedSession.TotalFileDuration()
-		if !hasOkDurations(finishedSession.DurationMs, totalFileDuration) {
-			finishedSession.DurationMs = totalFileDuration
-			err := errors.New("session had a large duration diff")
-			properties := map[string]string{
-				"started_at":                strconv.FormatInt(finishedSession.StartedAt, 10),
-				"ended_at":                  strconv.FormatInt(now, 10),
-				"previous_session_duration": strconv.FormatInt(finishedSession.DurationMs, 10),
-				"new_session_duration":      strconv.FormatInt(totalFileDuration, 10),
-			}
-			s.log.PrintError(err, properties)
-		}
-
 		err := s.storage.Write(finishedSession)
 		if err != nil {
-			s.log.PrintError(err, nil)
+			s.log.Error(err)
 		}
 		delete(s.activeSessions, session.EditorID)
 	}
@@ -132,31 +97,16 @@ func (s *Server) saveAllSessions() {
 // saveSession ends the current coding session and saves it to the filesystem.
 func (s *Server) saveActiveSession() {
 	if !s.activeSessions[s.activeEditor].HasBuffers() {
-		s.log.PrintDebug("The session wasn't saved because it had no open buffers.", nil)
+		s.log.Debug("The session wasn't saved because it had no open buffers.")
 		return
 	}
 
+	s.log.Debug("Saving the session.")
 	now := s.clock.GetTime()
-	s.log.PrintDebug("Saving the session.", nil)
 	finishedSession := s.activeSessions[s.activeEditor].End(now)
-
-	// Perform sanity checks on the durations.
-	totalFileDuration := finishedSession.TotalFileDuration()
-	if !hasOkDurations(finishedSession.DurationMs, totalFileDuration) {
-		finishedSession.DurationMs = totalFileDuration
-		err := errors.New("session had a large duration diff")
-		properties := map[string]string{
-			"started_at":                strconv.FormatInt(finishedSession.StartedAt, 10),
-			"ended_at":                  strconv.FormatInt(now, 10),
-			"previous_session_duration": strconv.FormatInt(finishedSession.DurationMs, 10),
-			"new_session_duration":      strconv.FormatInt(totalFileDuration, 10),
-		}
-		s.log.PrintError(err, properties)
-	}
-
 	err := s.storage.Write(finishedSession)
 	if err != nil {
-		s.log.PrintError(err, nil)
+		s.log.Error(err)
 	}
 
 	delete(s.activeSessions, s.activeEditor)
@@ -210,11 +160,11 @@ func (s *Server) startServer(port string) (*http.Server, error) {
 // HeartbeatCheck runs a heartbeat ticker that ensures that
 // the current session is not idle for more than ten minutes.
 func (s *Server) HeartbeatCheck() func() {
-	s.log.PrintDebug("Starting the ECG", nil)
+	s.log.Info("Starting the ECG")
 	ticker, stop := s.clock.NewTicker(heartbeatInterval)
 	go func() {
 		for range ticker {
-			s.log.PrintDebug("Checking the heartbeat", nil)
+			s.log.Debug("Checking the heartbeat")
 			s.CheckHeartbeat()
 		}
 	}()
@@ -224,7 +174,7 @@ func (s *Server) HeartbeatCheck() func() {
 
 // Start starts the server on the given port.
 func (s *Server) Start(port string) error {
-	s.log.PrintInfo("Starting up...", nil)
+	s.log.Info("Starting up...")
 	httpServer, err := s.startServer(port)
 	if err != nil {
 		return err
@@ -239,21 +189,19 @@ func (s *Server) Start(port string) error {
 
 	// Blocks until a shutdown signal is received.
 	sig := <-quit
-	s.log.PrintInfo("Received shutdown signal", map[string]string{
-		"signal": sig.String(),
-	})
+	s.log.Info("Received shutdown signal", "signal", sig.String())
 
 	// Stop the heartbeat checks and shutdown the http server.
 	stopHeartbeat()
 	err = httpServer.Shutdown(context.Background())
 	if err != nil {
-		s.log.PrintError(err, nil)
+		s.log.Error(err)
 		return err
 	}
 
 	// Save the all sessions before shutting down.
 	s.saveAllSessions()
-	s.log.PrintInfo("Shutting down...", nil)
+	s.log.Info("Shutting down...")
 
 	return nil
 }

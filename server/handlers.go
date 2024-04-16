@@ -25,7 +25,7 @@ func (s *Server) FocusGained(event pulse.Event, reply *string) {
 	// forth between a tmux split with test output I don't want it to result in
 	// the creation of several new coding sessions.
 	if s.activeEditor == event.EditorID {
-		s.log.PrintDebug("Jumped back to the same neovim instance", nil)
+		s.log.Debug("Jumped back to the same neovim instance")
 		return
 	}
 
@@ -47,7 +47,7 @@ func (s *Server) FocusGained(event pulse.Event, reply *string) {
 
 	// Check if we've paused this session. In that case, we'll resume it.
 	if session, ok := s.activeSessions[event.EditorID]; ok {
-		s.log.PrintDebug("Resuming session.", nil)
+		s.log.Debug("Resuming session.")
 		session.Resume(s.clock.GetTime())
 		return
 	}
@@ -68,11 +68,7 @@ func (s *Server) OpenFile(event pulse.Event, reply *string) {
 	// The FocusGained autocommand wont fire in some terminals,
 	// or if focus-events aren't enabled in TMUX.
 	s.FocusGained(event, reply)
-	s.log.PrintDebug("Received OpenFile event", map[string]string{
-		"path":   event.Path,
-		"editor": event.EditorID,
-	})
-
+	s.log.Debug("Received OpenFile event", "path", event.Path, "editor_id", event.EditorID)
 	if event.Path == "" {
 		return
 	}
@@ -85,9 +81,7 @@ func (s *Server) OpenFile(event pulse.Event, reply *string) {
 	s.lastHeartbeat = s.clock.GetTime()
 	gitFile, gitFileErr := s.fileReader.GitFile(event.Path)
 	if gitFileErr != nil {
-		s.log.PrintDebug("Failed to get git file", map[string]string{
-			"err": gitFileErr.Error(),
-		})
+		s.log.Debug("Failed to get git file", "err", gitFileErr.Error())
 		return
 	}
 	s.setActiveBuffer(gitFile)
@@ -111,10 +105,11 @@ func (s *Server) SendHeartbeat(event pulse.Event, reply *string) {
 		if gitFileErr != nil {
 			return
 		}
-		s.log.PrintDebug("The session was ended by a heartbeat check. Creating a new one.", map[string]string{
-			"editorID": event.EditorID,
-			"path":     event.Path,
-		})
+		s.log.Debug(
+			"The session was ended by a heartbeat check. Creating a new one.",
+			"editor_id", event.EditorID,
+			"path", event.Path,
+		)
 		s.activeEditor = event.EditorID
 		s.startNewSession(event.EditorID, event.OS, event.Editor)
 		s.setActiveBuffer(gitFile)
@@ -127,26 +122,25 @@ func (s *Server) SendHeartbeat(event pulse.Event, reply *string) {
 
 // EndSession should be called by the *VimLeave* autocommand.
 func (s *Server) EndSession(event pulse.Event, reply *string) {
-	s.log.PrintDebug("Received EndSession event", map[string]string{
-		"editor": event.EditorID,
-	})
+	s.log.Debug("Received EndSession event", "editor_id", event.EditorID)
 
 	// Lock the mutex to prevent race conditions with the heartbeat check.
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
 	if s.activeEditor != "" && s.activeEditor != event.EditorID {
-		s.log.PrintFatal(errors.New("was called by a client that isn't considered active"), map[string]string{
-			"actualClientId":   s.activeEditor,
-			"expectedClientId": event.EditorID,
-		})
+		s.log.Fatal(
+			errors.New("was called by a client that isn't considered active"),
+			"actual_client_id", s.activeEditor,
+			"expected_client_id", event.EditorID,
+		)
 	}
 
 	// This could be the first event after more than ten minutes of inactivity.
 	// If that is the case, the server will have ended the session already.
 	if s.activeEditor == "" {
 		message := "The session was already ended by the server."
-		s.log.PrintDebug(message, nil)
+		s.log.Debug(message)
 		return
 	}
 
@@ -157,7 +151,7 @@ func (s *Server) EndSession(event pulse.Event, reply *string) {
 // CheckHeartbeat is used to check if the session has been inactive for more than
 // ten minutes. If that is the case, the session will be terminated and saved to disk.
 func (s *Server) CheckHeartbeat() {
-	s.log.PrintDebug("Checking heartbeat", nil)
+	s.log.Debug("Checking heartbeat")
 	if s.activeEditor == "" {
 		return
 	}
@@ -166,10 +160,11 @@ func (s *Server) CheckHeartbeat() {
 	defer s.mutex.Unlock()
 
 	if s.lastHeartbeat+HeartbeatTTL.Milliseconds() < s.clock.GetTime() {
-		s.log.PrintInfo("Ending all active sessions due to inactivity", map[string]string{
-			"last_heartbeat": strconv.FormatInt(s.lastHeartbeat, 10),
-			"current_time":   strconv.FormatInt(s.clock.GetTime(), 10),
-		})
+		s.log.Info(
+			"Ending all active sessions due to inactivity",
+			"last_heartbeat", strconv.FormatInt(s.lastHeartbeat, 10),
+			"current_time", strconv.FormatInt(s.clock.GetTime(), 10),
+		)
 		s.saveAllSessions()
 		s.activeEditor = ""
 	}

@@ -3,6 +3,7 @@ package server
 import (
 	"errors"
 
+	"github.com/charmbracelet/log"
 	"github.com/creativecreature/pulse"
 )
 
@@ -47,17 +48,8 @@ func WithStorage(storage pulse.TemporaryStorage) Option {
 	}
 }
 
-// Log is an abstraction for the logger used by the server.
-// It allows us to use a different logger during tests.
-type Log interface {
-	PrintDebug(message string, properties map[string]string)
-	PrintInfo(message string, properties map[string]string)
-	PrintError(err error, properties map[string]string)
-	PrintFatal(err error, properties map[string]string)
-}
-
 // WithLog sets the logger used by the server.
-func WithLog(log Log) Option {
+func WithLog(log *log.Logger) Option {
 	return func(a *Server) error {
 		if log == nil {
 			return errors.New("log is nil")

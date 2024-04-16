@@ -2,12 +2,11 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
 
+	"github.com/charmbracelet/log"
 	"github.com/creativecreature/pulse"
 	"github.com/creativecreature/pulse/disk"
-	"github.com/creativecreature/pulse/logger"
 	"github.com/creativecreature/pulse/mongo"
 )
 
@@ -20,21 +19,21 @@ var (
 // aggregateByDay takes all the temporary coding sessions, merges
 // them by day of occurrence, and moves them to a database. Once
 // that is complete it clears the temporary storage of all files.
-func aggregateByDay(log *logger.Logger, tempStorage pulse.TemporaryStorage, s pulse.PermanentStorage) {
-	log.PrintInfo("Performing aggregation by day", nil)
+func aggregateByDay(log *log.Logger, tempStorage pulse.TemporaryStorage, s pulse.PermanentStorage) {
+	log.Info("Performing aggregation by day")
 	tempSessions, err := tempStorage.Read()
 	if err != nil {
-		log.PrintFatal(err, nil)
+		log.Fatal(err)
 	}
 	err = s.Write(tempSessions.Aggregate())
 	if err != nil {
-		log.PrintFatal(err, nil)
+		log.Fatal(err)
 	}
 	err = tempStorage.Clean()
 	if err != nil {
-		log.PrintFatal(err, nil)
+		log.Fatal(err)
 	}
-	log.PrintInfo("Finished aggregation by day", nil)
+	log.Info("Finished aggregation by day")
 }
 
 // periodString turns a time period into a readable string.
@@ -54,21 +53,21 @@ func periodString(timePeriod pulse.Period) string {
 
 // aggregateByTimePeriod gathers all daily coding sessions,
 // and further consolidates them by week, month, or year.
-func aggregateByTimePeriod(log *logger.Logger, tp pulse.Period, s pulse.PermanentStorage) {
+func aggregateByTimePeriod(log *log.Logger, tp pulse.Period, s pulse.PermanentStorage) {
 	pString := periodString(tp)
-	log.PrintInfo(fmt.Sprintf("Performing aggregation by %s", pString), nil)
+	log.Infof("Performing aggregation by %s", pString)
 	err := s.Aggregate(tp)
 	if err != nil {
-		log.PrintFatal(err, nil)
+		log.Fatal(err)
 	}
-	log.PrintInfo(fmt.Sprintf("Finished aggregation by %s", pString), nil)
+	log.Infof("Finished aggregation by %s", pString)
 }
 
 func main() {
-	log := logger.New(os.Stdout, logger.LevelInfo)
+	log := log.New(os.Stdout)
 	diskStorage, err := disk.NewStorage()
 	if err != nil {
-		log.PrintFatal(err, nil)
+		log.Fatal(err)
 	}
 
 	mongoStorage, disconnect := mongo.New(uri, db)

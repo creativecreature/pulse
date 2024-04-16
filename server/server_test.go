@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/charmbracelet/log"
 	"github.com/creativecreature/pulse"
-	"github.com/creativecreature/pulse/logger"
 	"github.com/creativecreature/pulse/memory"
 	"github.com/creativecreature/pulse/server"
 )
@@ -42,7 +42,7 @@ func TestServerMergesFiles(t *testing.T) {
 
 	reply := ""
 	s, err := server.New("TestApp",
-		server.WithLog(logger.New(io.Discard, logger.LevelOff)),
+		server.WithLog(log.New(io.Discard)),
 		server.WithStorage(mockStorage),
 		server.WithClock(mockClock),
 	)
@@ -149,7 +149,7 @@ func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
 
 	reply := ""
 	s, err := server.New("TestApp",
-		server.WithLog(logger.New(io.Discard, logger.LevelOff)),
+		server.WithLog(log.New(io.Discard)),
 		server.WithStorage(mockStorage),
 		server.WithClock(mockClock),
 	)
@@ -280,7 +280,7 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 
 	reply := ""
 	s, err := server.New("TestApp",
-		server.WithLog(logger.New(io.Discard, logger.LevelOff)),
+		server.WithLog(log.New(io.Discard)),
 		server.WithStorage(mockStorage),
 		server.WithClock(mockClock),
 	)

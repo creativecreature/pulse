@@ -3,7 +3,7 @@ if exists('g:loaded_pulse_client')
 endif
 
 let g:loaded_pulse_client = 1
-let g:pulse_session_id = system(["uuidgen"])
+let g:pulse_session_id = substitute(system('uuidgen'), '\n', '', '')
 
 function! s:RequirePulseClient(host) abort
 	return jobstart(['pulse-client'], {'rpc': v:true})

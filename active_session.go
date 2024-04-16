@@ -1,7 +1,5 @@
 package pulse
 
-import "log"
-
 // CodingSession represents an ongoing coding session.
 type CodingSession struct {
 	// startStops is a slice of timestamps representing the start and stop times of
@@ -68,7 +66,6 @@ func (s *CodingSession) HasBuffers() bool {
 // Duration returns the total duration of the coding session.
 func (s *CodingSession) Duration() int64 {
 	var duration int64
-	log.Println(s.startStops)
 	for i := 0; i < len(s.startStops); i += 2 {
 		duration += s.startStops[i+1] - s.startStops[i]
 	}
