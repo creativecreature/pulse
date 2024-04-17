@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net"
 	"net/http"
 	"net/rpc"
@@ -54,9 +53,9 @@ func New(serverName string, opts ...Option) (*Server, error) {
 	return a, nil
 }
 
-// startNewSession creates a new session and sets it as the current session.
-func (s *Server) startNewSession(id, os, editor string) {
-	s.log.Debug("Starting a new session")
+// createSession creates a new session and sets it as the current session.
+func (s *Server) createSession(id, os, editor string) {
+	s.log.Debug("Creating a new session.")
 	s.activeSessions[id] = pulse.StartSession(id, s.clock.GetTime(), os, editor)
 }
 
@@ -71,8 +70,12 @@ func (s *Server) setActiveBuffer(gitFile pulse.GitFile) {
 		openedAt,
 	)
 	s.activeSessions[s.activeEditor].PushBuffer(buf)
-	updatedBufferMsg := "Successfully updated the current buffer"
-	s.log.Debug(updatedBufferMsg, "name", gitFile.Name, "path", gitFile.Path)
+	s.log.Debug("Successfully updated the current buffer.",
+		"name", gitFile.Name,
+		"relative_path", gitFile.Path,
+		"repository", gitFile.Repository,
+		"filetype", gitFile.Filetype,
+	)
 }
 
 func (s *Server) saveAllSessions() {
@@ -97,7 +100,9 @@ func (s *Server) saveAllSessions() {
 // saveSession ends the current coding session and saves it to the filesystem.
 func (s *Server) saveActiveSession() {
 	if !s.activeSessions[s.activeEditor].HasBuffers() {
-		s.log.Debug("The session wasn't saved because it had no open buffers.")
+		s.log.Debug("The session wasn't saved because it had not opened any buffers.")
+		s.activeEditor = ""
+		delete(s.activeSessions, s.activeEditor)
 		return
 	}
 
@@ -140,7 +145,7 @@ func (s *Server) startServer(port string) (*http.Server, error) {
 	}
 
 	rpc.HandleHTTP()
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
+	listener, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		return nil, err
 	}
@@ -160,11 +165,10 @@ func (s *Server) startServer(port string) (*http.Server, error) {
 // HeartbeatCheck runs a heartbeat ticker that ensures that
 // the current session is not idle for more than ten minutes.
 func (s *Server) HeartbeatCheck() func() {
-	s.log.Info("Starting the ECG")
+	s.log.Info("Starting the heartbeat checks.")
 	ticker, stop := s.clock.NewTicker(heartbeatInterval)
 	go func() {
 		for range ticker {
-			s.log.Debug("Checking the heartbeat")
 			s.CheckHeartbeat()
 		}
 	}()

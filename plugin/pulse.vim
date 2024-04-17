@@ -18,9 +18,13 @@ call remote#host#RegisterPlugin('pulse-client', '0', [
 			\ {'type': 'function', 'name': 'EndSession', 'sync': 1, 'opts': {}},
 			\ ])
 
+
 " We only want track time for one instance nvim instance. We
 " need to let the server know which one we have focused.
 autocmd FocusGained * :call call("OnFocusGained", [g:pulse_session_id, expand('%:p')])
+
+" Send FocusGained when we enter.
+autocmd VimEnter * :call call("OnFocusGained", [g:pulse_session_id, expand('%:p')])
 
 " Let the server know the path of the buffer. Its not a problem to send
 " temporary buffers. The server will figure it out and exit early.

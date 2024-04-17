@@ -6,11 +6,14 @@ import (
 	"github.com/creativecreature/pulse"
 )
 
-// FocusGained is invoked by the FocusGained autocommand. It gives
-// us information about the currently active client. The duration
-// of a coding session should not increase by the number of clients
-// (neovim instances). Only one will be tracked at a time.
+// FocusGained is invoked by the FocusGained autocommand. It is used to set the
+// editor that is currently active. Even though we might have multiple editors
+// open at any given time, we'll only count time for one.
 func (s *Server) FocusGained(event pulse.Event, reply *string) {
+	s.log.Debug("Received FocusGained event.",
+		"editor_id", event.EditorID,
+	)
+
 	// Lock the mutex to prevent race conditions with the heartbeat check.
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
@@ -24,42 +27,40 @@ func (s *Server) FocusGained(event pulse.Event, reply *string) {
 	// forth between a tmux split with test output I don't want it to result in
 	// the creation of several new coding sessions.
 	if s.activeEditor == event.EditorID {
-		s.log.Debug("Jumped back to the same neovim instance")
+		s.log.Debug("Jumped back to the same editor process.",
+			"editor_id", event.EditorID,
+			"editor", event.Editor,
+		)
 		return
 	}
 
-	// If we already have an existing session active, we wont create
-	// a new one until it actually opens a buffer with a path.
+	// If we already have an existing session that we're counting time for, we wont
+	// create a new one until it actually opens a buffer that is backed by a file.
 	gitFile, gitFileErr := s.fileReader.GitFile(event.Path)
 	if s.activeEditor != "" && gitFileErr != nil {
 		return
 	}
 
-	// Check to see if we have another instance of neovim that is
-	// running in another tmux pane. If so, we'll stop recording
-	// time for that session before creating a new one.
+	// Check to see if we have another instance of neovim that is running in a different tmux
+	// pane. If so, we'll stop recording time for that session before creating a new one.
 	if s.activeEditor != "" {
-		// Pause the current session if we have a valid path.
 		s.activeSessions[s.activeEditor].Pause(s.clock.GetTime())
 	}
-	s.activeEditor = event.EditorID
 
-	// Check if we've paused this session. In that case, we'll resume it.
+	// Check if this is an already existing session that we've paused. If that is the case, we'll resume it.
+	s.activeEditor = event.EditorID
 	if session, ok := s.activeSessions[event.EditorID]; ok {
 		s.log.Debug("Resuming session.")
 		session.Resume(s.clock.GetTime())
 		return
 	}
 
-	s.startNewSession(event.EditorID, event.OS, event.Editor)
-	// It could be an already existing neovim instance where a file buffer is already
-	// open. If that is the case we can't count on getting the *OpenFile* event.
-	// We might just be jumping between two neovim instances with one buffer each.
+	s.createSession(event.EditorID, event.OS, event.Editor)
+	*reply = "Successfully updated the client being focused."
 	if gitFileErr != nil {
 		return
 	}
 	s.setActiveBuffer(gitFile)
-	*reply = "Successfully updated the client being focused."
 }
 
 // OpenFile gets invoked by the *BufEnter* autocommand.
@@ -67,7 +68,10 @@ func (s *Server) OpenFile(event pulse.Event, reply *string) {
 	// The FocusGained autocommand wont fire in some terminals,
 	// or if focus-events aren't enabled in TMUX.
 	s.FocusGained(event, reply)
-	s.log.Debug("Received OpenFile event", "path", event.Path, "editor_id", event.EditorID)
+	s.log.Debug("Received OpenFile event.",
+		"absolute_path", event.Path,
+		"editor_id", event.EditorID,
+	)
 	if event.Path == "" {
 		return
 	}
@@ -91,6 +95,11 @@ func (s *Server) OpenFile(event pulse.Event, reply *string) {
 // Its purpose is to notify the server that the current session remains active.
 // The server ends the session if it doesn't receive a heartbeat for 10 minutes.
 func (s *Server) SendHeartbeat(event pulse.Event, reply *string) {
+	s.log.Debug("Received heartbeat.",
+		"editor_id", event.EditorID,
+		"editor", event.Editor,
+	)
+
 	// Lock the mutex to prevent race conditions with the heartbeat check.
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
@@ -110,7 +119,7 @@ func (s *Server) SendHeartbeat(event pulse.Event, reply *string) {
 			"path", event.Path,
 		)
 		s.activeEditor = event.EditorID
-		s.startNewSession(event.EditorID, event.OS, event.Editor)
+		s.createSession(event.EditorID, event.OS, event.Editor)
 		s.setActiveBuffer(gitFile)
 	}
 
@@ -128,7 +137,7 @@ func (s *Server) EndSession(event pulse.Event, reply *string) {
 	defer s.mutex.Unlock()
 
 	if s.activeEditor != "" && s.activeEditor != event.EditorID {
-		s.log.Debug("EndSession was called by a client that isn't considered active",
+		s.log.Debug("EndSession was called by a client that wasn't considered active.",
 			"actual_client_id", s.activeEditor,
 			"expected_client_id", event.EditorID,
 		)
@@ -150,7 +159,11 @@ func (s *Server) EndSession(event pulse.Event, reply *string) {
 // CheckHeartbeat is used to check if the session has been inactive for more than
 // ten minutes. If that is the case, the session will be terminated and saved to disk.
 func (s *Server) CheckHeartbeat() {
-	s.log.Debug("Checking heartbeat")
+	s.log.Debug("Checking heartbeat.",
+		"active_editor_id", s.activeEditor,
+		"last_heartbeat", s.lastHeartbeat,
+		"time_now", s.clock.GetTime(),
+	)
 	if s.activeEditor == "" {
 		return
 	}
