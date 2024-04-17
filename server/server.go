@@ -25,7 +25,7 @@ const (
 
 type Server struct {
 	name           string
-	activeEditor   string
+	activeEditorID string
 	activeSessions map[string]*pulse.CodingSession
 	lastHeartbeat  int64
 	clock          pulse.Clock
@@ -55,7 +55,7 @@ func New(serverName string, opts ...Option) (*Server, error) {
 
 // createSession creates a new session and sets it as the current session.
 func (s *Server) createSession(id, os, editor string) {
-	s.log.Debug("Creating a new session.")
+	s.log.Debug("Creating a new session.", "editor_id", id, "editor", editor, "os", os)
 	s.activeSessions[id] = pulse.StartSession(id, s.clock.GetTime(), os, editor)
 }
 
@@ -69,12 +69,15 @@ func (s *Server) setActiveBuffer(gitFile pulse.GitFile) {
 		gitFile.Path,
 		openedAt,
 	)
-	s.activeSessions[s.activeEditor].PushBuffer(buf)
+	s.activeSessions[s.activeEditorID].PushBuffer(buf)
 	s.log.Debug("Successfully updated the current buffer.",
 		"name", gitFile.Name,
 		"relative_path", gitFile.Path,
 		"repository", gitFile.Repository,
 		"filetype", gitFile.Filetype,
+		"editor_id", s.activeEditorID,
+		"editor", s.activeSessions[s.activeEditorID].Editor,
+		"os", s.activeSessions[s.activeEditorID].OS,
 	)
 }
 
@@ -84,7 +87,11 @@ func (s *Server) saveAllSessions() {
 
 	for _, session := range s.activeSessions {
 		if !session.HasBuffers() {
-			s.log.Debug("The session has not opened any buffers.")
+			s.log.Debug("The session had not opened any buffers.",
+				"editor_id", session.EditorID,
+				"editor", session.Editor,
+				"os", session.OS,
+			)
 			return
 		}
 
@@ -99,23 +106,31 @@ func (s *Server) saveAllSessions() {
 
 // saveSession ends the current coding session and saves it to the filesystem.
 func (s *Server) saveActiveSession() {
-	if !s.activeSessions[s.activeEditor].HasBuffers() {
-		s.log.Debug("The session wasn't saved because it had not opened any buffers.")
-		s.activeEditor = ""
-		delete(s.activeSessions, s.activeEditor)
+	if !s.activeSessions[s.activeEditorID].HasBuffers() {
+		s.log.Debug("The session wasn't saved because it had not opened any buffers.",
+			"editor_id", s.activeEditorID,
+			"editor", s.activeSessions[s.activeEditorID].Editor,
+			"os", s.activeSessions[s.activeEditorID].OS,
+		)
+		s.activeEditorID = ""
+		delete(s.activeSessions, s.activeEditorID)
 		return
 	}
 
-	s.log.Debug("Saving the session.")
+	s.log.Debug("Saving the session.",
+		"editor_id", s.activeEditorID,
+		"editor", s.activeSessions[s.activeEditorID].Editor,
+		"os", s.activeSessions[s.activeEditorID].OS,
+	)
 	now := s.clock.GetTime()
-	finishedSession := s.activeSessions[s.activeEditor].End(now)
+	finishedSession := s.activeSessions[s.activeEditorID].End(now)
 	err := s.storage.Write(finishedSession)
 	if err != nil {
 		s.log.Error(err)
 	}
 
-	delete(s.activeSessions, s.activeEditor)
-	s.activeEditor = ""
+	delete(s.activeSessions, s.activeEditorID)
+	s.activeEditorID = ""
 
 	// Check if we should resume another session.
 	if len(s.activeSessions) < 1 {
@@ -132,8 +147,8 @@ func (s *Server) saveActiveSession() {
 	}
 
 	if editorToResume != "" {
-		s.activeEditor = editorToResume
-		s.activeSessions[s.activeEditor].Resume(s.clock.GetTime())
+		s.activeEditorID = editorToResume
+		s.activeSessions[s.activeEditorID].Resume(s.clock.GetTime())
 	}
 }
 
@@ -205,7 +220,7 @@ func (s *Server) Start(port string) error {
 
 	// Save the all sessions before shutting down.
 	s.saveAllSessions()
-	s.log.Info("Shutting down...")
+	s.log.Info("Shutting down.")
 
 	return nil
 }

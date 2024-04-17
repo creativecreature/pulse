@@ -51,6 +51,12 @@ func TestServerMergesFiles(t *testing.T) {
 	}
 
 	// Open an initial VIM window.
+	s.FocusGained(pulse.Event{
+		EditorID: "123",
+		Path:     "",
+		Editor:   "nvim",
+		OS:       "Linux",
+	}, &reply)
 	s.OpenFile(pulse.Event{
 		EditorID: "123",
 		Path:     "",
