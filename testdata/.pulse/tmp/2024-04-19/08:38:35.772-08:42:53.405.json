@@ -1,0 +1,72 @@
+{
+  "started_at": 1713508715772,
+  "ended_at": 1713508973405,
+  "duration_ms": 257633,
+  "os": "darwin",
+  "editor": "nvim",
+  "files": [
+    {
+      "name": "server.go",
+      "path": "pulse/server/server.go",
+      "repository": "pulse",
+      "filetype": "go",
+      "duration_ms": 8822
+    },
+    {
+      "name": "mongo.go",
+      "path": "pulse/mongo/mongo.go",
+      "repository": "pulse",
+      "filetype": "go",
+      "duration_ms": 78506
+    },
+    {
+      "name": "codecov.yml",
+      "path": "pulse/codecov.yml",
+      "repository": "pulse",
+      "filetype": "yaml",
+      "duration_ms": 20282
+    },
+    {
+      "name": "aggregated_sessions.go",
+      "path": "pulse/aggregated_sessions.go",
+      "repository": "pulse",
+      "filetype": "go",
+      "duration_ms": 16324
+    },
+    {
+      "name": "sessions.go",
+      "path": "pulse/sessions.go",
+      "repository": "pulse",
+      "filetype": "go",
+      "duration_ms": 34917
+    },
+    {
+      "name": "active_session.go",
+      "path": "pulse/active_session.go",
+      "repository": "pulse",
+      "filetype": "go",
+      "duration_ms": 7740
+    },
+    {
+      "name": "logger.go",
+      "path": "pulse/logger/logger.go",
+      "repository": "pulse",
+      "filetype": "go",
+      "duration_ms": 20115
+    },
+    {
+      "name": "buffer_stack.go",
+      "path": "pulse/buffer_stack.go",
+      "repository": "pulse",
+      "filetype": "go",
+      "duration_ms": 27732
+    },
+    {
+      "name": "buffer.go",
+      "path": "pulse/buffer.go",
+      "repository": "pulse",
+      "filetype": "go",
+      "duration_ms": 43194
+    }
+  ]
+}

@@ -6,13 +6,15 @@ import (
 	"github.com/creativecreature/pulse/filetypes"
 )
 
-func TestGet(t *testing.T) {
+type testCase struct {
+	filename string
+	expected string
+}
+
+func TestGetFileType(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		filename string
-		expected string
-	}{
+	tests := []testCase{
 		{"styles.css", "css"},
 		{"index.js", "javascript"},
 		{"component.tsx", "typescript"},

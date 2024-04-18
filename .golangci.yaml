@@ -168,7 +168,7 @@ linters-settings:
       - map
 
   nlreturn:
-    block-size: 8
+    block-size: 120
 
   exhaustruct:
     # Default: []

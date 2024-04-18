@@ -1,5 +1,7 @@
 package pulse
 
+import "context"
+
 // TemporaryStorage is an abstraction for a storage that can be used to store
 // the session data temporarily. Every editor instance is going to have its own
 // session. Therefore, it's common to have several sessions for any given day.
@@ -13,6 +15,5 @@ type TemporaryStorage interface {
 
 // PermanentStorage is an abstraction for a storage that allows you to store sessions permanently.
 type PermanentStorage interface {
-	Write(s []AggregatedSession) error
-	Aggregate(timeperiod Period) error
+	Write(context.Context, []AggregatedSession) error
 }

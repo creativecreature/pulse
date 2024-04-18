@@ -4,3 +4,4 @@ ignore:
   - "clock"
   - "client"
   - "proxy"
+  - "mongo"

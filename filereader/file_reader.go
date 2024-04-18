@@ -99,7 +99,6 @@ func (f FileReader) extractRepositoryName(dirPath string) (string, error) {
 	}
 
 	matches := regularRepoExp.FindStringSubmatch(string(fileContent))
-
 	if len(matches) == 0 {
 		return "", ErrParseRepoPath
 	}
