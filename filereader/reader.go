@@ -6,8 +6,7 @@ import (
 	"path/filepath"
 )
 
-// Reader is an interface for the underlying reader.
-// It is an abstraction to allow for easier testing.
+// Reader is an abstraction for the underlying reader. This allows for easier mocking during tests.
 type Reader interface {
 	Dir(string) string
 	ReadDir(string) ([]fs.DirEntry, error)

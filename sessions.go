@@ -32,9 +32,9 @@ func groupByDay(session []Session) map[int64][]Session {
 }
 
 // Aggregate takes a list of locally stored sessions and aggregates them by day.
-func (s Sessions) Aggregate() []AggregatedSession {
+func (s Sessions) Aggregate() AggregatedSessions {
 	sessionsPerDay := groupByDay(s)
-	aggregatedSessions := make([]AggregatedSession, 0)
+	aggregatedSessions := make(AggregatedSessions, 0)
 
 	for date, tempSessions := range sessionsPerDay {
 		dateString := time.Unix(0, date*int64(time.Millisecond)).Format("2006-01-02")
