@@ -164,7 +164,7 @@ func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
 	}
 
 	// Open an initial VIM window.
-	s.OpenFile(pulse.Event{
+	s.FocusGained(pulse.Event{
 		EditorID: "123",
 		Path:     "",
 		Editor:   "nvim",
@@ -181,6 +181,12 @@ func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
 	mockClock.Add(100 * time.Millisecond)
 
 	// Open the same file in a new editor instance.
+	s.FocusGained(pulse.Event{
+		EditorID: "345",
+		Path:     "",
+		Editor:   "nvim",
+		OS:       "Linux",
+	}, &reply)
 	s.OpenFile(pulse.Event{
 		EditorID: "345",
 		Path:     absolutePath(t, "/testdata/sturdyc/cmd/main.go"),
@@ -191,6 +197,12 @@ func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
 	mockClock.Add(50 * time.Millisecond)
 
 	// Open a third editor. This time, we'll never open a valid file.
+	s.FocusGained(pulse.Event{
+		EditorID: "678",
+		Path:     "",
+		Editor:   "nvim",
+		OS:       "Linux",
+	}, &reply)
 	s.OpenFile(pulse.Event{
 		EditorID: "678",
 		Path:     "",
@@ -208,7 +220,7 @@ func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
 	mockClock.Add(50 * time.Millisecond)
 
 	// Open the first editor again, and close it.
-	s.OpenFile(pulse.Event{
+	s.FocusGained(pulse.Event{
 		EditorID: "123",
 		Path:     absolutePath(t, "/testdata/sturdyc/cmd/main.go"),
 		Editor:   "nvim",
