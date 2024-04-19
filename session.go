@@ -15,15 +15,6 @@ type Session struct {
 	Files      Files  `json:"files"`
 }
 
-// TotalFileDuration calculates the total duration of all files in the session.
-func (s Session) TotalFileDuration() int64 {
-	totalDuration := int64(0)
-	for _, file := range s.Files {
-		totalDuration += file.DurationMs
-	}
-	return totalDuration
-}
-
 // Serialize serializes the session to a JSON byte slice.
 func (s Session) Serialize() ([]byte, error) {
 	return json.MarshalIndent(s, "", "  ")

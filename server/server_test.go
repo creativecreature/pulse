@@ -268,6 +268,98 @@ func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
 	}
 }
 
+func TestResumesThePreviousSession(t *testing.T) {
+	// You can't commit a .git directory. Therefore, we have to rename it to .git in the test runner.
+	err := os.Rename(absolutePath(t, "./testdata/sturdyc/git"), absolutePath(t, "./testdata/sturdyc/.git"))
+	if err != nil {
+		t.Fatal("Failed to set up .git directory for testing:", err)
+	}
+	defer func() {
+		restoreErr := os.Rename(absolutePath(t, "./testdata/sturdyc/.git"), absolutePath(t, "./testdata/sturdyc/git"))
+		if restoreErr != nil {
+			t.Fatal("Failed to store the .git directory:", restoreErr)
+		}
+	}()
+
+	mockStorage := memory.NewStorage()
+	mockClock := pulse.NewTestClock(time.Now())
+
+	reply := ""
+	s, err := server.New("TestApp",
+		server.WithLog(log.New(io.Discard)),
+		server.WithStorage(mockStorage),
+		server.WithClock(mockClock),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Open an initial VIM window.
+	s.OpenFile(pulse.Event{
+		EditorID: "123",
+		Path:     "",
+		Editor:   "nvim",
+		OS:       "Linux",
+	}, &reply)
+
+	s.OpenFile(pulse.Event{
+		EditorID: "123",
+		Path:     absolutePath(t, "/testdata/sturdyc/cmd/main.go"),
+		Editor:   "nvim",
+		OS:       "Linux",
+	}, &reply)
+	// Push the clock forward to simulate that the file was opened for 100 ms.
+	mockClock.Add(100 * time.Millisecond)
+
+	// Open the same file in a new editor instance.
+	s.FocusGained(pulse.Event{
+		EditorID: "345",
+		Path:     "",
+		Editor:   "nvim",
+		OS:       "Linux",
+	}, &reply)
+	mockClock.Add(50 * time.Millisecond)
+	s.OpenFile(pulse.Event{
+		EditorID: "345",
+		Path:     absolutePath(t, "/testdata/sturdyc/cmd/main.go"),
+		Editor:   "nvim",
+		OS:       "Linux",
+	}, &reply)
+	// Push the clock forward to simulate that the file was opened for 50 ms.
+	mockClock.Add(50 * time.Millisecond)
+
+	// Quit the session. It should resume the previous one.
+	s.EndSession(pulse.Event{
+		EditorID: "345",
+		Path:     absolutePath(t, "/testdata/sturdyc/cmd/main.go"),
+		Editor:   "nvim",
+		OS:       "Linux",
+	}, &reply)
+
+	// This time should be added to the the last active session.
+	mockClock.Add(30 * time.Millisecond)
+
+	// Quit the first session.
+	s.EndSession(pulse.Event{
+		EditorID: "123",
+		Path:     absolutePath(t, "/testdata/sturdyc/cmd/main.go"),
+		Editor:   "nvim",
+		OS:       "Linux",
+	}, &reply)
+
+	storedSessions, _ := mockStorage.Read()
+	sort.Sort(storedSessions)
+	if len(storedSessions) != 2 {
+		t.Errorf("expected sessions %d; got %d", 2, len(storedSessions))
+	}
+	if storedSessions[0].DurationMs != 180 {
+		t.Errorf("expected the sessions duration to be 180; got %d", storedSessions[0].DurationMs)
+	}
+	if storedSessions[1].DurationMs != 50 {
+		t.Errorf("expected the sessions duration to be 50; got %d", storedSessions[1].DurationMs)
+	}
+}
+
 func TestNoActivityShouldEndSession(t *testing.T) {
 	// You can't commit a .git directory. Therefore, we have to rename it to .git in the test runner.
 	err := os.Rename(absolutePath(t, "./testdata/sturdyc/git"), absolutePath(t, "./testdata/sturdyc/.git"))
@@ -329,6 +421,10 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 	time.Sleep(10 * time.Millisecond)
 
 	storedSessions, _ := mockStorage.Read()
+	err = mockStorage.Clean()
+	if err != nil {
+		t.Fatal(err)
+	}
 	sort.Sort(storedSessions)
 	if len(storedSessions) != 2 {
 		t.Errorf("expected sessions %d; got %d", 2, len(storedSessions))
