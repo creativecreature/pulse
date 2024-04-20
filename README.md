@@ -13,12 +13,13 @@ would update automatically with data from my coding sessions:
 
 ![Screenshot of website][3]
 
-So far it has been a really fun project!
+It has served as a playground for trying out new technologies, and so far it
+has been a really fun project!
 
 # How it works
 This repository includes the foundation of the project:
-- `RPC server`
-- `RPC client`
+- `rpc server`
+- `rpc client`
 - `nvim plugin`
 - `cli`
 
