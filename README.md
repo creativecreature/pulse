@@ -29,7 +29,7 @@ calls from neovim pertaining to events such as the opening of buffers, windows
 gaining focus, the initiation of new neovim instances, etc:
 
 
-https://github.com/creativecreature/pulse/assets/12787673/04451ae8-32b6-4d89-ae2a-d099584ecc4b
+https://github.com/creativecreature/pulse/assets/12787673/700c2fbc-cd06-4bd8-beec-3824e2ac7985
 
 
 As you can see in the video above, each instance of neovim establishes a new
@@ -41,7 +41,7 @@ The CLI aggregates these temporary sessions by day, week, month, and year. The
 results are then written to a more permanent storage:
 
 
-https://github.com/creativecreature/pulse/assets/12787673/700c2fbc-cd06-4bd8-beec-3824e2ac7985
+https://github.com/creativecreature/pulse/assets/12787673/04451ae8-32b6-4d89-ae2a-d099584ecc4b
 
 
 [1]: https://conner.dev
