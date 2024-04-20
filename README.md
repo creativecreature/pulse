@@ -24,13 +24,12 @@ This repository includes the foundation of the project:
 - `cli`
 
 
-I run the server in the background as a daemon. It receives remote procedure
-calls from neovim pertaining to events such as the opening of buffers, windows
-gaining focus, the initiation of new neovim instances, etc:
+I run the server as a daemon. It receives remote procedure calls from neovim
+pertaining to events such as the opening of buffers, windows gaining focus, the
+initiation of new `nvim` processes, etc:
 
 
-
-https://github.com/creativecreature/pulse/assets/12787673/c4af3f26-a11a-4b8c-bf56-35c34e7c8259
+https://github.com/creativecreature/pulse/assets/12787673/c1cc1dcb-47c3-48c4-a694-056e79f186fe
 
 
 As you can see in the video above, each instance of neovim establishes a new
@@ -38,11 +37,9 @@ coding session. This leads to the creation of several sessions per day. Every
 session is stored temporarily on the file system. This is primarily to avoid
 surpassing any limits set by free database tiers.
 
-The CLI aggregates these temporary sessions by day, week, month, and year. The
-results are then written to a more permanent storage:
-
-
-https://github.com/creativecreature/pulse/assets/12787673/04451ae8-32b6-4d89-ae2a-d099584ecc4b
+I use the CLI to aggregate these temporary sessions by day, week, month, and 
+year. The results are written to permanent storage, enabling me to retrieve
+and display them on my website.
 
 
 [1]: https://conner.dev
