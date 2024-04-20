@@ -29,7 +29,8 @@ calls from neovim pertaining to events such as the opening of buffers, windows
 gaining focus, the initiation of new neovim instances, etc:
 
 
-https://github.com/creativecreature/pulse/assets/12787673/700c2fbc-cd06-4bd8-beec-3824e2ac7985
+
+https://github.com/creativecreature/pulse/assets/12787673/c4af3f26-a11a-4b8c-bf56-35c34e7c8259
 
 
 As you can see in the video above, each instance of neovim establishes a new
