@@ -398,8 +398,6 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	s.HeartbeatCheck()
-
 	// Open an initial VIM window.
 	s.OpenFile(pulse.Event{
 		EditorID: "123",
@@ -445,11 +443,17 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 	if storedSessions[0].DurationMs != 100 {
 		t.Errorf("expected the sessions duration to be 100; got %d", storedSessions[0].DurationMs)
 	}
+	if storedSessions[0].Files[0].DurationMs != 100 {
+		t.Errorf("expected the file duration to be 100; got %d", storedSessions[0].Files[0].DurationMs)
+	}
 
-	// The second session should last for 11 minutes. 10 for the
-	// heartbeat to expire, and 1 for the heartbeat to trigger.
-	dur := int64(11 * time.Minute / time.Millisecond)
+	// The second session should have been terminated by the
+	// heartbeat check after 10 minutes of inactivity.
+	dur := int64(10 * time.Minute / time.Millisecond)
 	if storedSessions[1].DurationMs != dur {
 		t.Errorf("expected the sessions duration to be %d; got %d", dur, storedSessions[1].DurationMs)
+	}
+	if storedSessions[1].Files[0].DurationMs != dur {
+		t.Errorf("expected the file duration to be %d; got %d", dur, storedSessions[1].Files[0].DurationMs)
 	}
 }

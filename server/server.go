@@ -18,39 +18,36 @@ import (
 	"github.com/creativecreature/pulse/proxy"
 )
 
-const (
-	HeartbeatTTL      = time.Minute * 10
-	heartbeatInterval = time.Second * 45
-)
-
 type Server struct {
-	name           string
-	activeEditorID string
-	activeSessions map[string]*pulse.CodingSession
-	lastHeartbeat  int64
-	clock          pulse.Clock
-	fileReader     FileReader
-	log            *log.Logger
-	mutex          sync.Mutex
-	storage        pulse.TemporaryStorage
+	name                string
+	activeEditorID      string
+	activeSessions      map[string]*pulse.CodingSession
+	lastHeartbeat       int64
+	stopHeartbeatChecks chan struct{}
+	clock               pulse.Clock
+	fileReader          FileReader
+	log                 *log.Logger
+	mutex               sync.Mutex
+	storage             pulse.TemporaryStorage
 }
 
 // New creates a new server.
 func New(serverName string, opts ...Option) (*Server, error) {
-	a := &Server{
-		name:           serverName,
-		activeSessions: make(map[string]*pulse.CodingSession),
-		clock:          pulse.NewClock(),
-		fileReader:     filereader.New(),
+	s := &Server{
+		name:                serverName,
+		activeSessions:      make(map[string]*pulse.CodingSession),
+		clock:               pulse.NewClock(),
+		stopHeartbeatChecks: make(chan struct{}),
+		fileReader:          filereader.New(),
 	}
 	for _, opt := range opts {
-		err := opt(a)
+		err := opt(s)
 		if err != nil {
 			return &Server{}, err
 		}
 	}
-
-	return a, nil
+	s.startHeartbeatChecks()
+	return s, nil
 }
 
 // createSession creates a new session and sets it as the current session.
@@ -81,8 +78,7 @@ func (s *Server) setActiveBuffer(gitFile pulse.GitFile) {
 	)
 }
 
-func (s *Server) saveAllSessions() {
-	now := s.clock.GetTime()
+func (s *Server) saveAllSessions(endedAt int64) {
 	s.log.Debug("Saving all sessions.")
 
 	for _, session := range s.activeSessions {
@@ -95,7 +91,7 @@ func (s *Server) saveAllSessions() {
 			return
 		}
 
-		finishedSession := session.End(now)
+		finishedSession := session.End(endedAt)
 		err := s.storage.Write(finishedSession)
 		if err != nil {
 			s.log.Error(err)
@@ -177,20 +173,6 @@ func (s *Server) startServer(port string) (*http.Server, error) {
 	return httpServer, nil
 }
 
-// HeartbeatCheck runs a heartbeat ticker that ensures that
-// the current session is not idle for more than ten minutes.
-func (s *Server) HeartbeatCheck() func() {
-	s.log.Info("Starting the heartbeat checks.")
-	ticker, stop := s.clock.NewTicker(heartbeatInterval)
-	go func() {
-		for range ticker {
-			s.CheckHeartbeat()
-		}
-	}()
-
-	return stop
-}
-
 // Start starts the server on the given port.
 func (s *Server) Start(port string) error {
 	s.log.Info("Starting up...")
@@ -198,9 +180,6 @@ func (s *Server) Start(port string) error {
 	if err != nil {
 		return err
 	}
-
-	// Start the ECG. It will end inactive sessions.
-	stopHeartbeat := s.HeartbeatCheck()
 
 	// Catch shutdown signals from the OS
 	quit := make(chan os.Signal, 1)
@@ -211,7 +190,7 @@ func (s *Server) Start(port string) error {
 	s.log.Info("Received shutdown signal", "signal", sig.String())
 
 	// Stop the heartbeat checks and shutdown the http server.
-	stopHeartbeat()
+	s.stopHeartbeatChecks <- struct{}{}
 	err = httpServer.Shutdown(context.Background())
 	if err != nil {
 		s.log.Error(err)
@@ -219,7 +198,7 @@ func (s *Server) Start(port string) error {
 	}
 
 	// Save the all sessions before shutting down.
-	s.saveAllSessions()
+	s.saveAllSessions(s.clock.GetTime())
 	s.log.Info("Shutting down.")
 
 	return nil

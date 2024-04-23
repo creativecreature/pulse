@@ -1,8 +1,6 @@
 package server
 
 import (
-	"strconv"
-
 	"github.com/creativecreature/pulse"
 )
 
@@ -16,10 +14,9 @@ func (s *Server) FocusGained(event pulse.Event, reply *string) {
 		"os", event.OS,
 	)
 
-	// Lock the mutex to prevent race conditions with the heartbeat check.
+	s.checkHeartbeat()
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-
 	s.lastHeartbeat = s.clock.GetTime()
 
 	// The FocusGained event will be triggered when I switch back to an active
@@ -82,9 +79,10 @@ func (s *Server) OpenFile(event pulse.Event, reply *string) {
 		return
 	}
 
-	// Lock the mutex to prevent race conditions with the heartbeat check.
+	s.checkHeartbeat()
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
+	s.lastHeartbeat = s.clock.GetTime()
 
 	// The editor could have been inactive, while focused, for 10 minutes.
 	// That would end the session, and we could get a OpenFile event without
@@ -96,7 +94,6 @@ func (s *Server) OpenFile(event pulse.Event, reply *string) {
 	}
 
 	// If a new file was opened it means that the session is still active.
-	s.lastHeartbeat = s.clock.GetTime()
 	gitFile, gitFileErr := s.fileReader.GitFile(event.Path)
 	if gitFileErr != nil {
 		s.log.Debug("Failed to get git file.",
@@ -122,9 +119,10 @@ func (s *Server) SendHeartbeat(event pulse.Event, reply *string) {
 		"os", event.OS,
 	)
 
-	// Lock the mutex to prevent race conditions with the heartbeat check.
+	s.checkHeartbeat()
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
+	s.lastHeartbeat = s.clock.GetTime()
 
 	// This is to handle the case where the server would have ended the clients
 	// session due to inactivity. When a session ends it is written to disk and
@@ -147,8 +145,6 @@ func (s *Server) SendHeartbeat(event pulse.Event, reply *string) {
 		s.setActiveBuffer(gitFile)
 	}
 
-	// Update the time for the last heartbeat.
-	s.lastHeartbeat = s.clock.GetTime()
 	*reply = "Successfully sent heartbeat"
 }
 
@@ -160,7 +156,7 @@ func (s *Server) EndSession(event pulse.Event, reply *string) {
 		"os", event.OS,
 	)
 
-	// Lock the mutex to prevent race conditions with the heartbeat check.
+	s.checkHeartbeat()
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -187,30 +183,4 @@ func (s *Server) EndSession(event pulse.Event, reply *string) {
 
 	s.saveActiveSession()
 	*reply = "The session was ended successfully."
-}
-
-// CheckHeartbeat is used to check if the session has been inactive for more than
-// ten minutes. If that is the case, the session will be terminated and saved to disk.
-func (s *Server) CheckHeartbeat() {
-	s.log.Debug("Checking heartbeat.",
-		"active_editor_id", s.activeEditorID,
-		"last_heartbeat", s.lastHeartbeat,
-		"time_now", s.clock.GetTime(),
-	)
-	if s.activeEditorID == "" {
-		return
-	}
-
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
-	if s.lastHeartbeat+HeartbeatTTL.Milliseconds() < s.clock.GetTime() {
-		s.log.Info(
-			"Ending all active sessions due to inactivity",
-			"last_heartbeat", strconv.FormatInt(s.lastHeartbeat, 10),
-			"current_time", strconv.FormatInt(s.clock.GetTime(), 10),
-		)
-		s.saveAllSessions()
-		s.activeEditorID = ""
-	}
 }
