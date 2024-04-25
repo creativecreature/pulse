@@ -18,14 +18,14 @@ func (s Sessions) Swap(i, j int) {
 }
 
 func (s Sessions) Less(i, j int) bool {
-	return s[i].StartedAt < s[j].StartedAt
+	return s[i].StartedAt.Before(s[j].StartedAt)
 }
 
 // groupByDay groups a slice of sessions by day.
 func groupByDay(session []Session) map[int64][]Session {
 	buckets := make(map[int64][]Session)
 	for _, s := range session {
-		d := truncate.Day(s.StartedAt)
+		d := truncate.Day(s.StartedAt.UnixMilli())
 		buckets[d] = append(buckets[d], s)
 	}
 	return buckets
@@ -37,16 +37,15 @@ func (s Sessions) Aggregate() AggregatedSessions {
 	aggregatedSessions := make(AggregatedSessions, 0)
 
 	for date, tempSessions := range sessionsPerDay {
-		dateString := time.Unix(0, date*int64(time.Millisecond)).Format("2006-01-02")
-		var totalTime int64
+		var totalTimeMs int64
 		for _, tempSession := range tempSessions {
-			totalTime += tempSession.DurationMs
+			totalTimeMs += tempSession.Duration.Milliseconds()
 		}
 		session := AggregatedSession{
 			Period:       Day,
 			Date:         date,
-			DateString:   dateString,
-			TotalTimeMs:  totalTime,
+			DateString:   time.UnixMilli(date).Format("2006-01-02"),
+			TotalTimeMs:  totalTimeMs,
 			Repositories: repositories(tempSessions),
 		}
 		aggregatedSessions = append(aggregatedSessions, session)

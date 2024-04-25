@@ -47,34 +47,34 @@ func TestStorageReadWriteClean(t *testing.T) {
 	now := time.Now()
 	sessions := pulse.Sessions{
 		pulse.Session{
-			StartedAt:  now.UnixMilli(),
-			EndedAt:    now.Add(time.Hour).UnixMilli(),
-			DurationMs: time.Hour.Milliseconds(),
-			OS:         "linux",
-			Editor:     "nvim",
+			StartedAt: now,
+			EndedAt:   now.Add(time.Hour),
+			Duration:  time.Hour,
+			OS:        "linux",
+			Editor:    "nvim",
 			Files: pulse.Files{
 				pulse.File{
 					Name:       "main.go",
 					Path:       "/cmd/main.go",
 					Repository: "pulse",
 					Filetype:   "go",
-					DurationMs: time.Hour.Milliseconds(),
+					Duration:   time.Hour,
 				},
 			},
 		},
 		pulse.Session{
-			StartedAt:  now.Add(time.Minute).UnixMilli(),
-			EndedAt:    now.Add(time.Minute * 11).UnixMilli(),
-			DurationMs: time.Hour.Milliseconds(),
-			OS:         "linux",
-			Editor:     "nvim",
+			StartedAt: now.Add(time.Minute),
+			EndedAt:   now.Add(time.Minute * 11),
+			Duration:  time.Hour,
+			OS:        "linux",
+			Editor:    "nvim",
 			Files: pulse.Files{
 				pulse.File{
 					Name:       "main.go",
 					Path:       "/cmd/main.go",
 					Repository: "pulse",
 					Filetype:   "go",
-					DurationMs: time.Minute.Milliseconds() * 10,
+					Duration:   time.Minute * 10,
 				},
 			},
 		},

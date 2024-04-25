@@ -1,8 +1,10 @@
 package pulse
 
+import "time"
+
 // Buffer represents a buffer that has been opened during an active coding session.
 type Buffer struct {
-	OpenedClosed []int64
+	OpenedClosed []time.Time
 	Filename     string
 	Repository   string
 	Filepath     string
@@ -10,9 +12,9 @@ type Buffer struct {
 }
 
 // NewBuffer creates a new buffer.
-func NewBuffer(filename, repo, filetype, filepath string, openedAt int64) Buffer {
+func NewBuffer(filename, repo, filetype, filepath string, openedAt time.Time) Buffer {
 	return Buffer{
-		OpenedClosed: []int64{openedAt},
+		OpenedClosed: []time.Time{openedAt},
 		Filename:     filename,
 		Repository:   repo,
 		Filetype:     filetype,
@@ -21,7 +23,7 @@ func NewBuffer(filename, repo, filetype, filepath string, openedAt int64) Buffer
 }
 
 // Open should be called when a buffer is opened.
-func (b *Buffer) Open(time int64) {
+func (b *Buffer) Open(time time.Time) {
 	b.OpenedClosed = append(b.OpenedClosed, time)
 }
 
@@ -31,20 +33,20 @@ func (b *Buffer) IsOpen() bool {
 }
 
 // LastOpened returns the last time the buffer was opened.
-func (b *Buffer) LastOpened() int64 {
+func (b *Buffer) LastOpened() time.Time {
 	return b.OpenedClosed[len(b.OpenedClosed)-1]
 }
 
 // Close should be called when a buffer is closed.
-func (b *Buffer) Close(time int64) {
+func (b *Buffer) Close(time time.Time) {
 	b.OpenedClosed = append(b.OpenedClosed, time)
 }
 
 // Duration returns the total duration that the buffer has been open.
-func (b *Buffer) Duration() int64 {
-	var duration int64
+func (b *Buffer) Duration() time.Duration {
+	var duration time.Duration
 	for i := 0; i < len(b.OpenedClosed); i += 2 {
-		duration += b.OpenedClosed[i+1] - b.OpenedClosed[i]
+		duration += b.OpenedClosed[i+1].Sub(b.OpenedClosed[i])
 	}
 	return duration
 }

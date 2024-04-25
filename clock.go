@@ -11,7 +11,6 @@ type Clock interface {
 	Now() time.Time
 	NewTicker(d time.Duration) (<-chan time.Time, func())
 	NewTimer(d time.Duration) (<-chan time.Time, func() bool)
-	GetTime() int64
 }
 
 type RealClock struct{}
@@ -32,10 +31,6 @@ func (c *RealClock) NewTicker(d time.Duration) (<-chan time.Time, func()) {
 func (c *RealClock) NewTimer(d time.Duration) (<-chan time.Time, func() bool) {
 	t := time.NewTimer(d)
 	return t.C, t.Stop
-}
-
-func (c *RealClock) GetTime() int64 {
-	return time.Now().UTC().UnixMilli()
 }
 
 type testTimer struct {
@@ -107,12 +102,6 @@ func (c *TestClock) Now() time.Time {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	return c.time
-}
-
-func (c *TestClock) GetTime() int64 {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	return c.time.UnixMilli()
 }
 
 func (c *TestClock) NewTicker(d time.Duration) (<-chan time.Time, func()) {
