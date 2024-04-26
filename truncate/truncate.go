@@ -16,19 +16,19 @@ func Week(timestamp int64) int64 {
 		t = t.AddDate(0, 0, -1)
 	}
 	t = time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
-	return t.UnixNano() / int64(time.Millisecond)
+	return t.UnixMilli()
 }
 
 // Month truncates the timestamp to the start of the month.
 func Month(timestamp int64) int64 {
 	t := time.Unix(0, timestamp*int64(time.Millisecond))
 	t = time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, t.Location())
-	return t.UnixNano() / int64(time.Millisecond)
+	return t.UnixMilli()
 }
 
 // Year truncates the timestamp to the start of the year.
 func Year(timestamp int64) int64 {
 	t := time.Unix(0, timestamp*int64(time.Millisecond))
 	t = time.Date(t.Year(), time.January, 1, 0, 0, 0, 0, t.Location())
-	return t.UnixNano() / int64(time.Millisecond)
+	return t.UnixMilli()
 }

@@ -22,7 +22,7 @@ type Server struct {
 	name                string
 	activeEditorID      string
 	activeSessions      map[string]*pulse.CodingSession
-	lastHeartbeat       int64
+	lastHeartbeat       time.Time
 	stopHeartbeatChecks chan struct{}
 	clock               pulse.Clock
 	fileReader          FileReader
@@ -53,12 +53,12 @@ func New(serverName string, opts ...Option) (*Server, error) {
 // createSession creates a new session and sets it as the current session.
 func (s *Server) createSession(id, os, editor string) {
 	s.log.Debug("Creating a new session.", "editor_id", id, "editor", editor, "os", os)
-	s.activeSessions[id] = pulse.StartSession(id, s.clock.GetTime(), os, editor)
+	s.activeSessions[id] = pulse.StartSession(id, s.clock.Now(), os, editor)
 }
 
 // setActiveBuffer updates the current buffer in the current session.
 func (s *Server) setActiveBuffer(gitFile pulse.GitFile) {
-	openedAt := s.clock.GetTime()
+	openedAt := s.clock.Now()
 	buf := pulse.NewBuffer(
 		gitFile.Name,
 		gitFile.Repository,
@@ -78,7 +78,7 @@ func (s *Server) setActiveBuffer(gitFile pulse.GitFile) {
 	)
 }
 
-func (s *Server) saveAllSessions(endedAt int64) {
+func (s *Server) saveAllSessions(endedAt time.Time) {
 	s.log.Debug("Saving all sessions.")
 
 	for _, session := range s.activeSessions {
@@ -118,7 +118,7 @@ func (s *Server) saveActiveSession() {
 		"editor", s.activeSessions[s.activeEditorID].Editor,
 		"os", s.activeSessions[s.activeEditorID].OS,
 	)
-	now := s.clock.GetTime()
+	now := s.clock.Now()
 	finishedSession := s.activeSessions[s.activeEditorID].End(now)
 	err := s.storage.Write(finishedSession)
 	if err != nil {
@@ -134,9 +134,9 @@ func (s *Server) saveActiveSession() {
 	}
 
 	var editorToResume string
-	var mostRecentPause int64
+	var mostRecentPause time.Time
 	for _, session := range s.activeSessions {
-		if session.PauseTime() > mostRecentPause {
+		if session.PauseTime().After(mostRecentPause) {
 			editorToResume = session.EditorID
 			mostRecentPause = session.PauseTime()
 		}
@@ -144,7 +144,7 @@ func (s *Server) saveActiveSession() {
 
 	if editorToResume != "" {
 		s.activeEditorID = editorToResume
-		s.activeSessions[s.activeEditorID].Resume(s.clock.GetTime())
+		s.activeSessions[s.activeEditorID].Resume(s.clock.Now())
 	}
 }
 
@@ -198,7 +198,7 @@ func (s *Server) Start(port string) error {
 	}
 
 	// Save the all sessions before shutting down.
-	s.saveAllSessions(s.clock.GetTime())
+	s.saveAllSessions(s.clock.Now())
 	s.log.Info("Shutting down.")
 
 	return nil

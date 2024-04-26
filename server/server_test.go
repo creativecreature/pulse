@@ -42,7 +42,7 @@ func TestServerMergesFiles(t *testing.T) {
 
 	reply := ""
 	s, err := server.New("TestApp",
-		server.WithLog(log.New(io.Discard)),
+		server.WithLog(log.New(os.Stdout)),
 		server.WithStorage(mockStorage),
 		server.WithClock(mockClock),
 	)
@@ -111,17 +111,17 @@ func TestServerMergesFiles(t *testing.T) {
 	if len(storedSessions) != 1 {
 		t.Errorf("expected sessions %d; got %d", 1, len(storedSessions))
 	}
-	if storedSessions[0].DurationMs != 190 {
-		t.Errorf("expected the sessions duration to be 190; got %d", storedSessions[0].DurationMs)
+	if storedSessions[0].Duration.Milliseconds() != 190 {
+		t.Errorf("expected the sessions duration to be 190; got %d", storedSessions[0].Duration.Milliseconds())
 	}
 	if len(storedSessions[0].Files) != 2 {
 		t.Errorf("expected files %d; got %d", 2, len(storedSessions[0].Files))
 	}
-	if storedSessions[0].Files[0].DurationMs != 130 {
-		t.Errorf("expected file duration 130; got %d", storedSessions[0].Files[0].DurationMs)
+	if storedSessions[0].Files[0].Duration.Milliseconds() != 130 {
+		t.Errorf("expected file duration 130; got %d", storedSessions[0].Files[0].Duration.Milliseconds())
 	}
-	if storedSessions[0].Files[1].DurationMs != 50 {
-		t.Errorf("expected file duration 50; got %d", storedSessions[0].Files[1].DurationMs)
+	if storedSessions[0].Files[1].Duration.Milliseconds() != 50 {
+		t.Errorf("expected file duration 50; got %d", storedSessions[0].Files[1].Duration.Milliseconds())
 	}
 	if storedSessions[0].Files[0].Path != "sturdyc/cmd/main.go" {
 		t.Errorf("expected file path sturdyc/cmd/main.go; got %s", storedSessions[0].Files[0].Path)
@@ -272,11 +272,11 @@ func TestTimeGetsAddedToTheCorrectSession(t *testing.T) {
 	if len(storedSessions) != 2 {
 		t.Errorf("expected sessions %d; got %d", 2, len(storedSessions))
 	}
-	if storedSessions[0].DurationMs != 110 {
-		t.Errorf("expected the sessions duration to be 110; got %d", storedSessions[0].DurationMs)
+	if storedSessions[0].Duration.Milliseconds() != 110 {
+		t.Errorf("expected the sessions duration to be 110; got %d", storedSessions[0].Duration.Milliseconds())
 	}
-	if storedSessions[1].DurationMs != 130 {
-		t.Errorf("expected the sessions duration to be 130; got %d", storedSessions[1].DurationMs)
+	if storedSessions[1].Duration.Milliseconds() != 130 {
+		t.Errorf("expected the sessions duration to be 130; got %d", storedSessions[1].Duration.Milliseconds())
 	}
 }
 
@@ -364,11 +364,11 @@ func TestResumesThePreviousSession(t *testing.T) {
 	if len(storedSessions) != 2 {
 		t.Errorf("expected sessions %d; got %d", 2, len(storedSessions))
 	}
-	if storedSessions[0].DurationMs != 180 {
-		t.Errorf("expected the sessions duration to be 180; got %d", storedSessions[0].DurationMs)
+	if storedSessions[0].Duration.Milliseconds() != 180 {
+		t.Errorf("expected the sessions duration to be 180; got %d", storedSessions[0].Duration.Milliseconds())
 	}
-	if storedSessions[1].DurationMs != 50 {
-		t.Errorf("expected the sessions duration to be 50; got %d", storedSessions[1].DurationMs)
+	if storedSessions[1].Duration.Milliseconds() != 50 {
+		t.Errorf("expected the sessions duration to be 50; got %d", storedSessions[1].Duration.Milliseconds())
 	}
 }
 
@@ -440,20 +440,20 @@ func TestNoActivityShouldEndSession(t *testing.T) {
 		t.Errorf("expected sessions %d; got %d", 2, len(storedSessions))
 	}
 
-	if storedSessions[0].DurationMs != 100 {
-		t.Errorf("expected the sessions duration to be 100; got %d", storedSessions[0].DurationMs)
+	if storedSessions[0].Duration.Milliseconds() != 100 {
+		t.Errorf("expected the sessions duration to be 100; got %d", storedSessions[0].Duration.Milliseconds())
 	}
-	if storedSessions[0].Files[0].DurationMs != 100 {
-		t.Errorf("expected the file duration to be 100; got %d", storedSessions[0].Files[0].DurationMs)
+	if storedSessions[0].Files[0].Duration.Milliseconds() != 100 {
+		t.Errorf("expected the file duration to be 100; got %d", storedSessions[0].Files[0].Duration.Milliseconds())
 	}
 
 	// The second session should have been terminated by the
 	// heartbeat check after 10 minutes of inactivity.
 	dur := int64(10 * time.Minute / time.Millisecond)
-	if storedSessions[1].DurationMs != dur {
-		t.Errorf("expected the sessions duration to be %d; got %d", dur, storedSessions[1].DurationMs)
+	if storedSessions[1].Duration.Milliseconds() != dur {
+		t.Errorf("expected the sessions duration to be %d; got %d", dur, storedSessions[1].Duration.Milliseconds())
 	}
-	if storedSessions[1].Files[0].DurationMs != dur {
-		t.Errorf("expected the file duration to be %d; got %d", dur, storedSessions[1].Files[0].DurationMs)
+	if storedSessions[1].Files[0].Duration.Milliseconds() != dur {
+		t.Errorf("expected the file duration to be %d; got %d", dur, storedSessions[1].Files[0].Duration.Milliseconds())
 	}
 }

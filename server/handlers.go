@@ -17,7 +17,7 @@ func (s *Server) FocusGained(event pulse.Event, reply *string) {
 	s.checkHeartbeat()
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	s.lastHeartbeat = s.clock.GetTime()
+	s.lastHeartbeat = s.clock.Now()
 
 	// The FocusGained event will be triggered when I switch back to an active
 	// editor from another TMUX split. However, the intent is to only terminate
@@ -49,7 +49,7 @@ func (s *Server) FocusGained(event pulse.Event, reply *string) {
 	// Check to see if we have another instance of neovim that is running in a different tmux
 	// pane. If so, we'll stop recording time for that session before creating a new one.
 	if s.activeEditorID != "" {
-		s.activeSessions[s.activeEditorID].Pause(s.clock.GetTime())
+		s.activeSessions[s.activeEditorID].Pause(s.clock.Now())
 		s.log.Debug("Pausing session.",
 			"editor_id", s.activeEditorID,
 			"editor", s.activeSessions[s.activeEditorID].Editor,
@@ -65,7 +65,7 @@ func (s *Server) FocusGained(event pulse.Event, reply *string) {
 			"editor", event.Editor,
 			"os", event.OS,
 		)
-		session.Resume(s.clock.GetTime())
+		session.Resume(s.clock.Now())
 		return
 	}
 
@@ -82,7 +82,7 @@ func (s *Server) OpenFile(event pulse.Event, reply *string) {
 	s.checkHeartbeat()
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	s.lastHeartbeat = s.clock.GetTime()
+	s.lastHeartbeat = s.clock.Now()
 
 	// The editor could have been inactive, while focused, for 10 minutes.
 	// That would end the session, and we could get a OpenFile event without
@@ -122,7 +122,7 @@ func (s *Server) SendHeartbeat(event pulse.Event, reply *string) {
 	s.checkHeartbeat()
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	s.lastHeartbeat = s.clock.GetTime()
+	s.lastHeartbeat = s.clock.Now()
 
 	// This is to handle the case where the server would have ended the clients
 	// session due to inactivity. When a session ends it is written to disk and

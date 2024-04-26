@@ -55,8 +55,8 @@ func (s *Storage) dayDir() (string, error) {
 
 // filename returns the name we'll use when writing the session to disk.
 func (s *Storage) filename(session pulse.Session) string {
-	startTime := time.UnixMilli(session.StartedAt).Format("15:04:05.000")
-	endTime := time.UnixMilli(session.EndedAt).Format("15:04:05.000")
+	startTime := session.StartedAt.Format("15:04:05.000")
+	endTime := session.EndedAt.Format("15:04:05.000")
 	return fmt.Sprintf("%s-%s.json", startTime, endTime)
 }
 

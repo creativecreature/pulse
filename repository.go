@@ -32,7 +32,7 @@ func repositoryPathFile(sessions []Session) map[string]map[string]AggregatedFile
 				Name:       file.Name,
 				Path:       file.Path,
 				Filetype:   file.Filetype,
-				DurationMs: file.DurationMs,
+				DurationMs: file.Duration.Milliseconds(),
 			}
 
 			// Check if it is the first time we're seeing a repository

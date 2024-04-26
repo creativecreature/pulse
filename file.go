@@ -1,12 +1,14 @@
 package pulse
 
+import "time"
+
 // File represents a file that has been opened during a coding session.
 type File struct {
-	Name       string `json:"name"`
-	Path       string `json:"path"`
-	Repository string `json:"repository"`
-	Filetype   string `json:"filetype"`
-	DurationMs int64  `json:"duration_ms"`
+	Name       string        `json:"name"`
+	Path       string        `json:"path"`
+	Repository string        `json:"repository"`
+	Filetype   string        `json:"filetype"`
+	Duration   time.Duration `json:"duration"`
 }
 
 // fileFromBuffer turns a code buffer into a file.
@@ -16,7 +18,7 @@ func fileFromBuffer(b Buffer) File {
 		Path:       b.Filepath,
 		Repository: b.Repository,
 		Filetype:   b.Filetype,
-		DurationMs: b.Duration(),
+		Duration:   b.Duration(),
 	}
 }
 

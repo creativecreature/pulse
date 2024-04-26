@@ -36,7 +36,7 @@ func (b *bufferStack) files() Files {
 			sortOrder = append(sortOrder, buffer.Filepath)
 			pathFile[buffer.Filepath] = fileFromBuffer(buffer)
 		} else {
-			file.DurationMs += buffer.Duration()
+			file.Duration += buffer.Duration()
 			pathFile[buffer.Filepath] = file
 		}
 	}

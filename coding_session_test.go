@@ -2,51 +2,58 @@ package pulse_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/creativecreature/pulse"
 )
 
 func TestActiveSession(t *testing.T) {
-	// Start a new coding session
-	activeSession := pulse.StartSession("1337", 100, "linux", "nvim")
+	t.Parallel()
 
-	// Open the first buffer
+	mockClock := pulse.NewTestClock(time.Now())
+
+	// Start a new coding session
+	activeSession := pulse.StartSession("1337", mockClock.Now(), "linux", "nvim")
+
+	// Open the first buffer, and wait 400ms.
 	bufferOne := pulse.NewBuffer(
 		"init.lua",
 		"dotfiles",
 		"lua",
 		"dotfiles/editors/nvim/init.lua",
-		101,
+		mockClock.Now(),
 	)
 	activeSession.PushBuffer(bufferOne)
+	mockClock.Add(400 * time.Millisecond)
 
-	// Open a second buffer.
+	// Open a second buffer, and wait 200ms.
 	bufferTwo := pulse.NewBuffer(
 		"plugins.lua",
 		"dotfiles",
 		"lua",
 		"dotfiles/editors/nvim/plugins.lua",
-		301,
+		mockClock.Now(),
 	)
 	activeSession.PushBuffer(bufferTwo)
+	mockClock.Add(200 * time.Millisecond)
 
-	// Open the same file as buffer one. The total duration for these
+	// Open the first buffer again. The total duration for these
 	// buffers should be merged when we end the coding session.
 	bufferThree := pulse.NewBuffer(
 		"init.lua",
 		"dotfiles",
 		"lua",
 		"dotfiles/editors/nvim/init.lua",
-		611,
+		mockClock.Now(),
 	)
 	activeSession.PushBuffer(bufferThree)
+	mockClock.Add(time.Millisecond * 100)
 
-	endedAt := int64(700)
-	finishedSession := activeSession.End(endedAt)
+	finishedSession := activeSession.End(mockClock.Now())
 
 	// Assert that the duration of the session was set correctly.
-	if finishedSession.DurationMs != 600 {
-		t.Errorf("Expected the session duration to be 600, got %d", finishedSession.DurationMs)
+	if finishedSession.Duration.Milliseconds() != 700 {
+		t.Errorf("Expected the session duration to be 600, got %d", finishedSession.Duration.Milliseconds())
 	}
 
 	// Assert that the buffers have been merged into files.
@@ -55,11 +62,13 @@ func TestActiveSession(t *testing.T) {
 	}
 
 	// Assert that the merged buffers has both durations.
-	if finishedSession.Files[0].DurationMs != 289 {
-		t.Errorf("Expected the merged duration for init.lua to be 289, got %d", finishedSession.Files[0].DurationMs)
+	initLuaDuration := finishedSession.Files[0].Duration.Milliseconds()
+	if initLuaDuration != 500 {
+		t.Errorf("Expected the merged duration for init.lua to be 500, got %d", initLuaDuration)
 	}
 
-	if finishedSession.Files[1].DurationMs != 310 {
-		t.Errorf("Expected the duration for plugins.lua to be 310, got %d", finishedSession.Files[1].DurationMs)
+	pluginsLuaDuration := finishedSession.Files[1].Duration.Milliseconds()
+	if pluginsLuaDuration != 200 {
+		t.Errorf("Expected the duration for plugins.lua to be 200, got %d", pluginsLuaDuration)
 	}
 }
