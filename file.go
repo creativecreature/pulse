@@ -1,6 +1,9 @@
 package pulse
 
-import "time"
+import (
+	"cmp"
+	"time"
+)
 
 // File represents a file that has been opened during a coding session.
 type File struct {
@@ -9,6 +12,16 @@ type File struct {
 	Repository string        `json:"repository"`
 	Filetype   string        `json:"filetype"`
 	Duration   time.Duration `json:"duration"`
+}
+
+func (f File) merge(b File) File {
+	return File{
+		Name:       cmp.Or(f.Name, b.Name),
+		Path:       cmp.Or(f.Path, b.Path),
+		Repository: cmp.Or(f.Repository, b.Repository),
+		Filetype:   cmp.Or(f.Filetype, b.Filetype),
+		Duration:   f.Duration + b.Duration,
+	}
 }
 
 // fileFromBuffer turns a code buffer into a file.

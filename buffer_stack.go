@@ -30,16 +30,13 @@ func (b *bufferStack) files() Files {
 	sortOrder := make([]string, 0)
 	pathFile := make(map[string]File)
 
-	// Merge the buffers by filepath.
+	// Turn the buffers into files and merge them by filepath.
 	for _, buffer := range b.buffers {
-		file, exists := pathFile[buffer.Filepath]
-		if !exists {
+		file, ok := pathFile[buffer.Filepath]
+		pathFile[buffer.Filepath] = file.merge(fileFromBuffer(buffer))
+		if !ok {
 			sortOrder = append(sortOrder, buffer.Filepath)
-			pathFile[buffer.Filepath] = fileFromBuffer(buffer)
-			continue
 		}
-		file.Duration += buffer.Duration()
-		pathFile[buffer.Filepath] = file
 	}
 
 	// Return the buffers in the original order.

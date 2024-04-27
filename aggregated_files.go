@@ -18,12 +18,12 @@ func (a AggregatedFiles) merge(b AggregatedFiles) AggregatedFiles {
 	aFileMap := createPathFileMap(a)
 	bFileMap := createPathFileMap(b)
 
-	allPaths := make(map[string]bool)
+	allPaths := make(map[string]struct{})
 	for path := range aFileMap {
-		allPaths[path] = true
+		allPaths[path] = struct{}{}
 	}
 	for path := range bFileMap {
-		allPaths[path] = true
+		allPaths[path] = struct{}{}
 	}
 
 	mergedFiles := make([]AggregatedFile, 0, len(allPaths))
