@@ -5,7 +5,7 @@ package pulse
 type AggregatedSession struct {
 	ID           string       `bson:"_id,omitempty"`
 	Period       Period       `bson:"period"`
-	Date         int64        `bson:"date"`
+	EpochDateMs  int64        `bson:"date"`
 	DateString   string       `bson:"date_string"`
 	TotalTimeMs  int64        `bson:"total_time_ms"`
 	Repositories Repositories `bson:"repositories"`
@@ -15,7 +15,7 @@ type AggregatedSession struct {
 func (a AggregatedSession) merge(b AggregatedSession, date int64, timePeriod Period) AggregatedSession {
 	mergedSession := AggregatedSession{
 		Period:       timePeriod,
-		Date:         date,
+		EpochDateMs:  date,
 		DateString:   a.DateString,
 		TotalTimeMs:  a.TotalTimeMs + b.TotalTimeMs,
 		Repositories: a.Repositories.merge(b.Repositories),

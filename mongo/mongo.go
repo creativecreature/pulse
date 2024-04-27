@@ -58,8 +58,8 @@ func createDateFilter(minDate, maxDate int64) primitive.D {
 func dateRange(sessions []pulse.AggregatedSession) (minDate, maxDate int64) {
 	minDate, maxDate = math.MaxInt64, math.MinInt64
 	for _, s := range sessions {
-		minDate = min(minDate, s.Date)
-		maxDate = max(maxDate, s.Date)
+		minDate = min(minDate, s.EpochDateMs)
+		maxDate = max(maxDate, s.EpochDateMs)
 	}
 	return minDate, maxDate
 }

@@ -43,7 +43,7 @@ func (s Sessions) Aggregate() AggregatedSessions {
 		}
 		session := AggregatedSession{
 			Period:       Day,
-			Date:         date,
+			EpochDateMs:  date,
 			DateString:   time.UnixMilli(date).Format("2006-01-02"),
 			TotalTimeMs:  totalTimeMs,
 			Repositories: repositories(tempSessions),

@@ -7,52 +7,32 @@ import (
 
 type AggregatedSessions []AggregatedSession
 
-type truncateTimeFunc func(AggregatedSession) int64
-
-// merge takes a slice of aggregated sessions as well as a truncate function,
-// which is used to cluster and merge the sessions by time period.
-func merge(sessions AggregatedSessions, truncate truncateTimeFunc, timePeriod Period) AggregatedSessions {
-	sessionMap := make(map[int64]AggregatedSession)
+func merge(sessions AggregatedSessions, truncate func(int64) int64, timePeriod Period) AggregatedSessions {
+	truncatedDateAggregatedSession := make(map[int64]AggregatedSession)
 	for _, s := range sessions {
-		key := truncate(s)
-		if session, ok := sessionMap[key]; !ok {
-			sessionMap[key] = s
-		} else {
-			sessionMap[key] = s.merge(session, truncate(s), timePeriod)
-		}
+		truncatedDate := truncate(s.EpochDateMs)
+		currentSession := truncatedDateAggregatedSession[truncatedDate]
+		truncatedDateAggregatedSession[truncatedDate] = s.merge(currentSession, truncatedDate, timePeriod)
 	}
-
-	return maps.Values(sessionMap)
+	return maps.Values(truncatedDateAggregatedSession)
 }
 
 // MergeByDay merges sessions that occurred the same day.
 func (s AggregatedSessions) MergeByDay() AggregatedSessions {
-	truncateFunc := func(s AggregatedSession) int64 {
-		return truncate.Day(s.Date)
-	}
-	return merge(s, truncateFunc, Day)
+	return merge(s, truncate.Day, Day)
 }
 
 // MergeByWeek merges sessions that occurred the same week.
 func (s AggregatedSessions) MergeByWeek() AggregatedSessions {
-	truncateFunc := func(s AggregatedSession) int64 {
-		return truncate.Week(s.Date)
-	}
-	return merge(s, truncateFunc, Week)
+	return merge(s, truncate.Week, Week)
 }
 
 // MergeByWeek merges sessions that occurred the same month.
 func (s AggregatedSessions) MergeByMonth() AggregatedSessions {
-	truncateFunc := func(s AggregatedSession) int64 {
-		return truncate.Month(s.Date)
-	}
-	return merge(s, truncateFunc, Month)
+	return merge(s, truncate.Month, Month)
 }
 
 // MergeByYear merges sessions that occurred the same year.
 func (s AggregatedSessions) MergeByYear() AggregatedSessions {
-	truncateFunc := func(s AggregatedSession) int64 {
-		return truncate.Year(s.Date)
-	}
-	return merge(s, truncateFunc, Year)
+	return merge(s, truncate.Year, Year)
 }

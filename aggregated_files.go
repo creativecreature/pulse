@@ -14,27 +14,23 @@ func createPathFileMap(files AggregatedFiles) map[string]AggregatedFile {
 	return pathFileMap
 }
 
-// merge takes two slices of aggregated files, merges them, and returns the result.
 func (a AggregatedFiles) merge(b AggregatedFiles) AggregatedFiles {
-	mergedFiles := make([]AggregatedFile, 0)
 	aFileMap := createPathFileMap(a)
 	bFileMap := createPathFileMap(b)
 
-	// Add files that are unique for "a", and merge collisions.
-	for _, aFile := range a {
-		if bFile, ok := bFileMap[aFile.Path]; ok {
-			mergedFiles = append(mergedFiles, aFile.merge(bFile))
-			continue
-		}
-		mergedFiles = append(mergedFiles, aFile)
+	allPaths := make(map[string]bool)
+	for path := range aFileMap {
+		allPaths[path] = true
+	}
+	for path := range bFileMap {
+		allPaths[path] = true
 	}
 
-	// Add the files that are unique for "b".
-	for _, bFile := range b {
-		if _, ok := aFileMap[bFile.Path]; !ok {
-			mergedFiles = append(mergedFiles, bFile)
-		}
+	mergedFiles := make([]AggregatedFile, 0, len(allPaths))
+	for path := range allPaths {
+		aFile := aFileMap[path]
+		bFile := bFileMap[path]
+		mergedFiles = append(mergedFiles, aFile.merge(bFile))
 	}
-
 	return mergedFiles
 }

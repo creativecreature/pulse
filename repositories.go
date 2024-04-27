@@ -5,17 +5,16 @@ type Repositories []Repository
 
 // repositories take a slice of sessions and returns the repositories.
 func repositories(sessions Sessions) Repositories {
-	filesByRepo := repositoryPathFile(sessions)
-	repos := make(Repositories, 0)
+	namesWithFiles := repositoryNamesWithFiles(sessions)
+	repos := make(Repositories, 0, len(namesWithFiles))
 
-	for repositoryName, filenameFileMap := range filesByRepo {
-		var durationMs int64
-		files := make([]AggregatedFile, 0)
-		for _, file := range filenameFileMap {
-			files = append(files, file)
-			durationMs += file.DurationMs
+	for repositoryName, filepathFile := range namesWithFiles {
+		files := make(AggregatedFiles, 0, len(filepathFile))
+		repo := Repository{Name: repositoryName, Files: files}
+		for _, file := range filepathFile {
+			repo.Files = append(repo.Files, file)
+			repo.DurationMs += file.DurationMs
 		}
-		repo := Repository{Name: repositoryName, Files: files, DurationMs: durationMs}
 		repos = append(repos, repo)
 	}
 
@@ -34,25 +33,20 @@ func repositoriesByName(repos Repositories) map[string]Repository {
 
 // merge takes two lists of repositories, merges them, and returns the result.
 func (r Repositories) merge(b Repositories) Repositories {
+	aNames, bNames := repositoriesByName(r), repositoriesByName(b)
+	allNames := make(map[string]bool)
+	for name := range aNames {
+		allNames[name] = true
+	}
+	for name := range bNames {
+		allNames[name] = true
+	}
+
 	mergedRepositories := make([]Repository, 0)
-	aRepoMap, bRepoMap := repositoriesByName(r), repositoriesByName(b)
-
-	// Add repos that are unique for a and merge collisions.
-	for _, aRepo := range r {
-		if bRepo, ok := bRepoMap[aRepo.Name]; !ok {
-			mergedRepositories = append(mergedRepositories, aRepo)
-		} else {
-			mergedRepositories = append(mergedRepositories, aRepo.merge(bRepo))
-		}
+	for name := range allNames {
+		aRepo := aNames[name]
+		bRepo := bNames[name]
+		mergedRepositories = append(mergedRepositories, aRepo.merge(bRepo))
 	}
-
-	// The merging is done at this point. Here we'll add the
-	// repositories that are unique to the new session.
-	for _, newRepo := range b {
-		if _, ok := aRepoMap[newRepo.Name]; !ok {
-			mergedRepositories = append(mergedRepositories, newRepo)
-		}
-	}
-
 	return mergedRepositories
 }

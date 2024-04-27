@@ -18,12 +18,12 @@ func (r Repository) merge(b Repository) Repository {
 	}
 }
 
-// repositoryPathFile processes a slice of coding sessions by creating a nested
+// repositoryNamesWithFiles processes a slice of coding sessions by creating a nested
 // map that organizes and merges file data. The outer map's keys are repository
 // names. Each associated value is another map, where the keys are relative file
 // paths within the repository, and the values are the corresponding file data.
 // Files are merged automatically if they have been modified in multiple sessions.
-func repositoryPathFile(sessions []Session) map[string]map[string]AggregatedFile {
+func repositoryNamesWithFiles(sessions []Session) map[string]map[string]AggregatedFile {
 	repoPathFile := make(map[string]map[string]AggregatedFile)
 	for _, session := range sessions {
 		for _, file := range session.Files {
@@ -41,13 +41,9 @@ func repositoryPathFile(sessions []Session) map[string]map[string]AggregatedFile
 				repoPathFile[file.Repository] = make(map[string]AggregatedFile)
 			}
 
-			// Check if it is the first time we're seeing this file in this
-			// repository. If it is not the first time, we'll merge them.
-			if f, ok := repoPathFile[file.Repository][file.Path]; !ok {
-				repoPathFile[file.Repository][file.Path] = aggregatedFile
-			} else {
-				repoPathFile[file.Repository][file.Path] = f.merge(aggregatedFile)
-			}
+			// Merge the aggregatedFile with a previous file, or the zero value of a file.
+			f := repoPathFile[file.Repository][file.Path]
+			repoPathFile[file.Repository][file.Path] = f.merge(aggregatedFile)
 		}
 	}
 

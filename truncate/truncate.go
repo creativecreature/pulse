@@ -11,24 +11,21 @@ func Day(timestamp int64) int64 {
 
 // Week truncates the timestamp to the start of the week.
 func Week(timestamp int64) int64 {
-	t := time.Unix(0, timestamp*int64(time.Millisecond))
+	t := time.UnixMilli(timestamp)
 	for t.Weekday() != time.Monday {
 		t = t.AddDate(0, 0, -1)
 	}
-	t = time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
-	return t.UnixMilli()
+	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location()).UnixMilli()
 }
 
 // Month truncates the timestamp to the start of the month.
 func Month(timestamp int64) int64 {
-	t := time.Unix(0, timestamp*int64(time.Millisecond))
-	t = time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, t.Location())
-	return t.UnixMilli()
+	t := time.UnixMilli(timestamp)
+	return time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, t.Location()).UnixMilli()
 }
 
 // Year truncates the timestamp to the start of the year.
 func Year(timestamp int64) int64 {
-	t := time.Unix(0, timestamp*int64(time.Millisecond))
-	t = time.Date(t.Year(), time.January, 1, 0, 0, 0, 0, t.Location())
-	return t.UnixMilli()
+	t := time.UnixMilli(timestamp)
+	return time.Date(t.Year(), time.January, 1, 0, 0, 0, 0, t.Location()).UnixMilli()
 }
