@@ -87,7 +87,9 @@ func (s *Server) saveAllSessions(endedAt time.Time) {
 				"editor_id", session.EditorID,
 				"editor", session.Editor,
 				"os", session.OS,
+				"duration_ms", session.Duration().Milliseconds(),
 			)
+			delete(s.activeSessions, session.EditorID)
 			return
 		}
 
