@@ -5,7 +5,6 @@ go 1.21.3
 require (
 	github.com/charmbracelet/lipgloss v0.10.0
 	github.com/charmbracelet/log v0.4.0
-	github.com/google/go-cmp v0.6.0
 	github.com/neovim/go-client v1.2.1
 	go.mongodb.org/mongo-driver v1.11.7
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
@@ -15,6 +14,7 @@ require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
+	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/klauspost/compress v1.16.5 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.18 // indirect

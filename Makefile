@@ -68,7 +68,7 @@ vendor:
 ## build/server: build cmd/server
 build/server:
 	@echo 'Compiling server...'
-	go build -ldflags="-X main.serverName=${SERVER_NAME} -X main.port=${PORT}" -o=./bin/pulse-server ./cmd/server
+	go build -ldflags="-X main.serverName=${SERVER_NAME} -X main.port=${PORT} -X main.uri=${URI} -X main.db=${DB}" -o=./bin/pulse-server ./cmd/server
 .PHONY:build/server
 
 ## build/client: build cmd/client
@@ -77,12 +77,6 @@ build/client:
 	go build -ldflags="-X main.serverName=${SERVER_NAME} -X main.port=${PORT} -X main.hostname=${HOSTNAME}" -o=./bin/pulse-client ./cmd/client
 .PHONY:build/client
 
-## build/aggregate: build cmd/aggregate
-build/aggregate:
-	@echo 'Compiling aggregate...'
-	go build -ldflags="-X main.uri=${URI} -X main.db=${DB}" -o=./bin/pulse-aggregate ./cmd/aggregate
-.PHONY:build/aggregate
-
 ## build: builds the server and client applications
-build: audit build/server build/client build/aggregate
+build: audit build/server build/client
 .PHONY:build

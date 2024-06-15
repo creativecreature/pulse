@@ -106,6 +106,8 @@ func (f FileReader) extractRepositoryName(dirPath string) (string, error) {
 	return extractSubExp(regularRepoExp, matches, "RepoName"), nil
 }
 
+// TODO: Turn this into one of those convenience wrappers so that the API can just be git.ReadFile().
+
 // GitFile returns a GitFile struct from an absolute path. It will return an
 // error if the path is empty, if the path is not a file or if it can't find
 // a parent .git file or folder before it reaches the root of the file tree.

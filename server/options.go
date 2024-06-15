@@ -37,17 +37,6 @@ func WithFileReader(reader FileReader) Option {
 	}
 }
 
-// WithStorage sets the storage used by the server.
-func WithStorage(storage pulse.TemporaryStorage) Option {
-	return func(a *Server) error {
-		if storage == nil {
-			return errors.New("storage is nil")
-		}
-		a.storage = storage
-		return nil
-	}
-}
-
 // WithLog sets the logger used by the server.
 func WithLog(log *log.Logger) Option {
 	return func(a *Server) error {
