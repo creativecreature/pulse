@@ -49,7 +49,7 @@ func NewCodingSession(buffers Buffers, now time.Time) CodingSession {
 
 	session := CodingSession{
 		Period:       Day,
-		EpochDateMs:  now.Truncate(time.Millisecond).UnixMilli(),
+		EpochDateMs:  TruncateDay(now.UnixMilli()),
 		DateString:   now.Format("2006-01-02"),
 		TotalTimeMs:  totalDurationMS,
 		Repositories: repositories,
