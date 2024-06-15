@@ -61,7 +61,7 @@ func TestServerMergesFiles(t *testing.T) {
 		}
 	}()
 
-	mockClock := pulse.NewTestClock(time.Now())
+	mockClock := server.NewTestClock(time.Now())
 	mockStorage := newMockStorage()
 
 	reply := ""

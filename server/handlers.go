@@ -2,38 +2,7 @@ package server
 
 import (
 	"github.com/creativecreature/pulse"
-	"github.com/creativecreature/pulse/git"
 )
-
-func (s *Server) openFile(event pulse.Event) {
-	gitFile, gitFileErr := git.ParseFile(event.Path)
-	if gitFileErr != nil {
-		return
-	}
-
-	if s.activeBuffer != nil {
-		if s.activeBuffer.Filepath == gitFile.Path && s.activeBuffer.Repository == gitFile.Repository {
-			s.log.Debug("This buffer is already considered active.",
-				"path", gitFile.Path,
-				"repository", gitFile.Repository,
-				"editor_id", event.EditorID,
-				"editor", event.Editor,
-				"os", event.OS,
-			)
-			return
-		}
-	}
-
-	s.saveBuffer()
-	buf := pulse.NewBuffer(
-		gitFile.Name,
-		gitFile.Repository,
-		gitFile.Filetype,
-		gitFile.Path,
-		s.clock.Now(),
-	)
-	s.activeBuffer = &buf
-}
 
 // FocusGained is invoked by the FocusGained autocommand.
 func (s *Server) FocusGained(event pulse.Event, reply *string) {

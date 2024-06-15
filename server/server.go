@@ -15,6 +15,7 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/creativecreature/pulse"
+	"github.com/creativecreature/pulse/git"
 	"github.com/creativecreature/pulse/logdb"
 )
 
@@ -27,7 +28,7 @@ type Server struct {
 	activeBuffer  *pulse.Buffer
 	lastHeartbeat time.Time
 	stopJobs      chan struct{}
-	clock         pulse.Clock
+	clock         Clock
 	log           *log.Logger
 	mutex         sync.Mutex
 	db            *logdb.LogDB
@@ -38,7 +39,7 @@ type Server struct {
 func New(serverName, segmentPath string, sessionWriter CodingSessionWriter, opts ...Option) (*Server, error) {
 	s := &Server{
 		name:          serverName,
-		clock:         pulse.NewClock(),
+		clock:         NewClock(),
 		stopJobs:      make(chan struct{}),
 		db:            logdb.New(segmentPath),
 		sessionWriter: sessionWriter,
@@ -55,6 +56,36 @@ func New(serverName, segmentPath string, sessionWriter CodingSessionWriter, opts
 	s.runAggregations()
 
 	return s, nil
+}
+
+func (s *Server) openFile(event pulse.Event) {
+	gitFile, gitFileErr := git.ParseFile(event.Path)
+	if gitFileErr != nil {
+		return
+	}
+
+	if s.activeBuffer != nil {
+		if s.activeBuffer.Filepath == gitFile.Path && s.activeBuffer.Repository == gitFile.Repository {
+			s.log.Debug("This buffer is already considered active.",
+				"path", gitFile.Path,
+				"repository", gitFile.Repository,
+				"editor_id", event.EditorID,
+				"editor", event.Editor,
+				"os", event.OS,
+			)
+			return
+		}
+	}
+
+	s.saveBuffer()
+	buf := pulse.NewBuffer(
+		gitFile.Name,
+		gitFile.Repository,
+		gitFile.Filetype,
+		gitFile.Path,
+		s.clock.Now(),
+	)
+	s.activeBuffer = &buf
 }
 
 // saveBuffer writes the currently open buffer to disk. Should be called with a lock.

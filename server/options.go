@@ -10,7 +10,7 @@ import (
 type Option func(*Server) error
 
 // WithClock sets the clock used by the server.
-func WithClock(clock pulse.Clock) Option {
+func WithClock(clock Clock) Option {
 	return func(a *Server) error {
 		if clock == nil {
 			return errors.New("clock is nil")

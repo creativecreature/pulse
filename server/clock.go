@@ -1,4 +1,4 @@
-package pulse
+package server
 
 import (
 	"sync"
