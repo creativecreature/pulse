@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net"
 	"net/http"
@@ -14,31 +15,34 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/creativecreature/pulse"
-	"github.com/creativecreature/pulse/filereader"
-	"github.com/creativecreature/pulse/proxy"
+	"github.com/creativecreature/pulse/git"
+	"github.com/creativecreature/pulse/logdb"
 )
 
+type CodingSessionWriter interface {
+	Write(context.Context, pulse.CodingSession) error
+}
+
 type Server struct {
-	name                string
-	activeEditorID      string
-	activeSessions      map[string]*pulse.CodingSession
-	lastHeartbeat       time.Time
-	stopHeartbeatChecks chan struct{}
-	clock               pulse.Clock
-	fileReader          FileReader
-	log                 *log.Logger
-	mutex               sync.Mutex
-	storage             pulse.TemporaryStorage
+	name          string
+	activeBuffer  *pulse.Buffer
+	lastHeartbeat time.Time
+	stopJobs      chan struct{}
+	clock         Clock
+	log           *log.Logger
+	mutex         sync.Mutex
+	db            *logdb.LogDB
+	sessionWriter CodingSessionWriter
 }
 
 // New creates a new server.
-func New(serverName string, opts ...Option) (*Server, error) {
+func New(serverName, segmentPath string, sessionWriter CodingSessionWriter, opts ...Option) (*Server, error) {
 	s := &Server{
-		name:                serverName,
-		activeSessions:      make(map[string]*pulse.CodingSession),
-		clock:               pulse.NewClock(),
-		stopHeartbeatChecks: make(chan struct{}),
-		fileReader:          filereader.New(),
+		name:          serverName,
+		clock:         NewClock(),
+		stopJobs:      make(chan struct{}),
+		db:            logdb.New(segmentPath),
+		sessionWriter: sessionWriter,
 	}
 	for _, opt := range opts {
 		err := opt(s)
@@ -46,112 +50,75 @@ func New(serverName string, opts ...Option) (*Server, error) {
 			return &Server{}, err
 		}
 	}
-	s.startHeartbeatChecks()
+
+	// Run the heartbeat checks and aggregations in the background.
+	s.runHeartbeatChecks()
+	s.runAggregations()
+
 	return s, nil
 }
 
-// createSession creates a new session and sets it as the current session.
-func (s *Server) createSession(id, os, editor string) {
-	s.log.Debug("Creating a new session.", "editor_id", id, "editor", editor, "os", os)
-	s.activeSessions[id] = pulse.StartSession(id, s.clock.Now(), os, editor)
-}
+func (s *Server) openFile(event pulse.Event) {
+	gitFile, gitFileErr := git.ParseFile(event.Path)
+	if gitFileErr != nil {
+		return
+	}
 
-// setActiveBuffer updates the current buffer in the current session.
-func (s *Server) setActiveBuffer(gitFile pulse.GitFile) {
-	openedAt := s.clock.Now()
+	if s.activeBuffer != nil {
+		if s.activeBuffer.Filepath == gitFile.Path && s.activeBuffer.Repository == gitFile.Repository {
+			s.log.Debug("This buffer is already considered active.",
+				"path", gitFile.Path,
+				"repository", gitFile.Repository,
+				"editor_id", event.EditorID,
+				"editor", event.Editor,
+				"os", event.OS,
+			)
+			return
+		}
+	}
+
+	s.saveBuffer()
 	buf := pulse.NewBuffer(
 		gitFile.Name,
 		gitFile.Repository,
 		gitFile.Filetype,
 		gitFile.Path,
-		openedAt,
+		s.clock.Now(),
 	)
-	s.activeSessions[s.activeEditorID].PushBuffer(buf)
-	s.log.Debug("Successfully updated the current buffer.",
-		"name", gitFile.Name,
-		"relative_path", gitFile.Path,
-		"repository", gitFile.Repository,
-		"filetype", gitFile.Filetype,
-		"editor_id", s.activeEditorID,
-		"editor", s.activeSessions[s.activeEditorID].Editor,
-		"os", s.activeSessions[s.activeEditorID].OS,
-	)
+	s.activeBuffer = &buf
 }
 
-func (s *Server) saveAllSessions(endedAt time.Time) {
-	s.log.Debug("Saving all sessions.")
+// saveBuffer writes the currently open buffer to disk. Should be called with a lock.
+func (s *Server) saveBuffer() {
+	if s.activeBuffer == nil {
+		return
+	}
 
-	for _, session := range s.activeSessions {
-		if !session.HasBuffers() {
-			s.log.Debug("The session had not opened any buffers.",
-				"editor_id", session.EditorID,
-				"editor", session.Editor,
-				"os", session.OS,
-				"duration_ms", session.Duration().Milliseconds(),
-			)
-			delete(s.activeSessions, session.EditorID)
-			return
-		}
+	s.log.Debug("Writing the buffer.")
+	buf := s.activeBuffer
+	buf.Close(s.clock.Now())
+	key := buf.Key()
 
-		finishedSession := session.End(endedAt)
-		err := s.storage.Write(finishedSession)
+	// Merge the duration with the most recent entry for this day.
+	if bytes, hasMostRecentEntry := s.db.Get(key); hasMostRecentEntry {
+		var b pulse.Buffer
+		err := json.Unmarshal(bytes, &b)
 		if err != nil {
-			s.log.Error(err)
+			panic(err)
 		}
-		delete(s.activeSessions, session.EditorID)
-	}
-}
-
-// saveSession ends the current coding session and saves it to the filesystem.
-func (s *Server) saveActiveSession() {
-	if !s.activeSessions[s.activeEditorID].HasBuffers() {
-		s.log.Debug("The session wasn't saved because it had not opened any buffers.",
-			"editor_id", s.activeEditorID,
-			"editor", s.activeSessions[s.activeEditorID].Editor,
-			"os", s.activeSessions[s.activeEditorID].OS,
-		)
-		s.activeEditorID = ""
-		delete(s.activeSessions, s.activeEditorID)
-		return
+		buf.Duration += b.Duration
 	}
 
-	s.log.Debug("Saving the session.",
-		"editor_id", s.activeEditorID,
-		"editor", s.activeSessions[s.activeEditorID].Editor,
-		"os", s.activeSessions[s.activeEditorID].OS,
-	)
-	now := s.clock.Now()
-	finishedSession := s.activeSessions[s.activeEditorID].End(now)
-	err := s.storage.Write(finishedSession)
+	bytes, err := json.Marshal(buf)
 	if err != nil {
-		s.log.Error(err)
+		panic(err)
 	}
-
-	delete(s.activeSessions, s.activeEditorID)
-	s.activeEditorID = ""
-
-	// Check if we should resume another session.
-	if len(s.activeSessions) < 1 {
-		return
-	}
-
-	var editorToResume string
-	var mostRecentPause time.Time
-	for _, session := range s.activeSessions {
-		if session.PauseTime().After(mostRecentPause) {
-			editorToResume = session.EditorID
-			mostRecentPause = session.PauseTime()
-		}
-	}
-
-	if editorToResume != "" {
-		s.activeEditorID = editorToResume
-		s.activeSessions[s.activeEditorID].Resume(s.clock.Now())
-	}
+	s.db.MustSet(key, bytes)
+	s.activeBuffer = nil
 }
 
 func (s *Server) startServer(port string) (*http.Server, error) {
-	proxy := proxy.New(s)
+	proxy := NewProxy(s)
 	err := rpc.RegisterName(s.name, proxy)
 	if err != nil {
 		return nil, err
@@ -192,15 +159,14 @@ func (s *Server) Start(port string) error {
 	s.log.Info("Received shutdown signal", "signal", sig.String())
 
 	// Stop the heartbeat checks and shutdown the http server.
-	s.stopHeartbeatChecks <- struct{}{}
+	s.stopJobs <- struct{}{}
 	err = httpServer.Shutdown(context.Background())
 	if err != nil {
 		s.log.Error(err)
 		return err
 	}
 
-	// Save the all sessions before shutting down.
-	s.saveAllSessions(s.clock.Now())
+	s.saveBuffer()
 	s.log.Info("Shutting down.")
 
 	return nil

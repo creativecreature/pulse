@@ -20,6 +20,7 @@ has been a really fun project!
 This repository includes the foundation of the project:
 - `rpc server`
 - `rpc client`
+- `log-structured KV store`
 - `nvim plugin`
 - `cli`
 
@@ -31,16 +32,13 @@ initiation of new `nvim` processes, etc:
 
 https://github.com/creativecreature/pulse/assets/12787673/c1cc1dcb-47c3-48c4-a694-056e79f186fe
 
+The buffers I edit are written to an append-only log-structured key-value store
+which performs compaction and auto-segmentation. Every segment is roughly 10KB
+on disk.
 
-As you can see in the video above, each instance of neovim establishes a new
-coding session. This leads to the creation of several sessions per day. Every
-session is stored temporarily on the file system. This is primarily to avoid
-surpassing any limits set by free database tiers.
-
-I use the CLI to aggregate these temporary sessions by day, week, month, and 
-year. The results are written to permanent storage, enabling me to retrieve
-and display them on my website.
-
+Every 15 minutes, the server requests all buffers from the KV store, and writes
+them to a remote mongodb database. I'm doing this primarily to avoid surpassing
+any limits set by the free tier.
 
 [1]: https://conner.dev
 [2]: ./screenshots/website1.png

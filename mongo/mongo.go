@@ -2,7 +2,6 @@ package mongo
 
 import (
 	"context"
-	"math"
 	"time"
 
 	"github.com/charmbracelet/log"
@@ -55,27 +54,18 @@ func createDateFilter(minDate, maxDate int64) primitive.D {
 	}
 }
 
-func dateRange(sessions []pulse.AggregatedSession) (minDate, maxDate int64) {
-	minDate, maxDate = math.MaxInt64, math.MinInt64
-	for _, s := range sessions {
-		minDate = min(minDate, s.EpochDateMs)
-		maxDate = max(maxDate, s.EpochDateMs)
-	}
-	return minDate, maxDate
-}
-
-func (c *Client) getByDateRange(ctx context.Context, minDate, maxDate int64) (pulse.AggregatedSessions, error) {
+func (c *Client) getByDateRange(ctx context.Context, minDate, maxDate int64) (pulse.CodingSessions, error) {
 	filter := createDateFilter(minDate, maxDate)
 	dateSortOpts := options.Find().SetSort(bson.D{{Key: "date", Value: 1}})
 	cursor, err := c.Database(c.database).Collection(collectionDaily).Find(ctx, filter, dateSortOpts)
 	if err != nil {
-		return pulse.AggregatedSessions{}, err
+		return pulse.CodingSessions{}, err
 	}
 
-	results := make([]pulse.AggregatedSession, 0)
+	results := make([]pulse.CodingSession, 0)
 	err = cursor.All(ctx, &results)
 	if err != nil {
-		return pulse.AggregatedSessions{}, err
+		return pulse.CodingSessions{}, err
 	}
 
 	return results, nil
@@ -89,7 +79,7 @@ func (c *Client) deleteByDateRange(ctx context.Context, minDate, maxDate int64) 
 	return err
 }
 
-func (c *Client) insertAll(ctx context.Context, collection string, sessions []pulse.AggregatedSession) error {
+func (c *Client) insertAll(ctx context.Context, collection string, sessions []pulse.CodingSession) error {
 	documents := make([]interface{}, 0)
 	for _, session := range sessions {
 		documents = append(documents, session)
@@ -99,17 +89,17 @@ func (c *Client) insertAll(ctx context.Context, collection string, sessions []pu
 	return err
 }
 
-func (c *Client) readAll(ctx context.Context) (pulse.AggregatedSessions, error) {
+func (c *Client) readAll(ctx context.Context) (pulse.CodingSessions, error) {
 	sortOpts := options.Find().SetSort(bson.D{{Key: "date", Value: 1}})
 	cursor, err := c.Database(c.database).Collection(collectionDaily).Find(ctx, bson.M{}, sortOpts)
 	if err != nil {
-		return pulse.AggregatedSessions{}, err
+		return pulse.CodingSessions{}, err
 	}
 
-	results := make([]pulse.AggregatedSession, 0)
+	results := make([]pulse.CodingSession, 0)
 	err = cursor.All(ctx, &results)
 	if err != nil {
-		return pulse.AggregatedSessions{}, err
+		return pulse.CodingSessions{}, err
 	}
 
 	return results, nil
@@ -156,11 +146,11 @@ func (c *Client) aggregate(ctx context.Context) error {
 }
 
 // Write writes daily coding sessions to a mongodb collection.
-func (c *Client) Write(ctx context.Context, sessions []pulse.AggregatedSession) error {
+func (c *Client) Write(ctx context.Context, session pulse.CodingSession) error {
 	// We might aggregate sessions from the temp storage several times a
 	// day. Therefore, we have to fetch any previous sessions for the same
 	// timeframe. If we have any, we'll merge them with the new ones.
-	minDate, maxDate := dateRange(sessions)
+	minDate, maxDate := session.EpochDateMs, session.EpochDateMs
 	previousSessionsForRange, err := c.getByDateRange(ctx, minDate, maxDate)
 	if err != nil {
 		return err
@@ -168,16 +158,20 @@ func (c *Client) Write(ctx context.Context, sessions []pulse.AggregatedSession) 
 
 	// If there were no previous sessions for this range of dates, we'll simply insert them.
 	if len(previousSessionsForRange) == 0 {
-		c.log.Info("Inserting as is because no previous session have been aggregated for this day.")
-		return c.insertAll(ctx, collectionDaily, sessions)
+		c.log.Info("Inserting as is because no previous session have been aggregated for this day.",
+			"min_date", minDate,
+			"max_date", maxDate,
+		)
+		_, insertErr := c.Database(c.database).Collection(collectionDaily).InsertOne(ctx, session)
+		return insertErr
 	}
 
 	// If we reach this point, it means that we've aggregated sessions for this
 	// day before. We now have to go through the process of merging them.
 	c.log.Info("Merging the disk sessions with the previously aggregated session for this day.")
-	combinedSessions := make(pulse.AggregatedSessions, 0, len(previousSessionsForRange)+len(sessions))
+	combinedSessions := make(pulse.CodingSessions, 0, len(previousSessionsForRange)+1)
 	combinedSessions = append(combinedSessions, previousSessionsForRange...)
-	combinedSessions = append(combinedSessions, sessions...)
+	combinedSessions = append(combinedSessions, session)
 	mergedSessions := combinedSessions.MergeByDay()
 
 	// Delete the previously stored sessions for this range

@@ -1,52 +1,66 @@
 package pulse
 
-import "time"
+import (
+	"cmp"
+	"fmt"
+	"time"
+)
 
-// Buffer represents a buffer that has been opened during an active coding session.
+// Buffer rerpresents a buffer that has been edited during a coding session.
 type Buffer struct {
-	OpenedClosed []time.Time
-	Filename     string
-	Repository   string
-	Filepath     string
-	Filetype     string
+	OpenedAt   time.Time     `json:"-"`
+	ClosedAt   time.Time     `json:"-"`
+	Duration   time.Duration `json:"duration"`
+	Filename   string        `json:"filename"`
+	Filepath   string        `json:"filepath"`
+	Filetype   string        `json:"filetype"`
+	Repository string        `json:"repository"`
 }
 
 // NewBuffer creates a new buffer.
 func NewBuffer(filename, repo, filetype, filepath string, openedAt time.Time) Buffer {
 	return Buffer{
-		OpenedClosed: []time.Time{openedAt},
-		Filename:     filename,
-		Repository:   repo,
-		Filetype:     filetype,
-		Filepath:     filepath,
+		OpenedAt:   openedAt,
+		Filename:   filename,
+		Filepath:   filepath,
+		Filetype:   filetype,
+		Repository: repo,
 	}
 }
 
-// Open should be called when a buffer is opened.
-func (b *Buffer) Open(time time.Time) {
-	b.OpenedClosed = append(b.OpenedClosed, time)
+// Close should be called when the coding session ends, or another buffer is opened.
+func (b *Buffer) Close(closedAt time.Time) {
+	b.ClosedAt = closedAt
+	b.Duration = b.ClosedAt.Sub(b.OpenedAt)
 }
 
-// IsOpen returns true if the given buffer is currently open.
-func (b *Buffer) IsOpen() bool {
-	return len(b.OpenedClosed)%2 == 1
+// Key returns a unique identifier for the buffer.
+func (b *Buffer) Key() string {
+	return fmt.Sprintf("%s_%s_%s", b.OpenedAt.Format("2006-01-02"), b.Repository, b.Filepath)
 }
 
-// LastOpened returns the last time the buffer was opened.
-func (b *Buffer) LastOpened() time.Time {
-	return b.OpenedClosed[len(b.OpenedClosed)-1]
-}
-
-// Close should be called when a buffer is closed.
-func (b *Buffer) Close(time time.Time) {
-	b.OpenedClosed = append(b.OpenedClosed, time)
-}
-
-// Duration returns the total duration that the buffer has been open.
-func (b *Buffer) Duration() time.Duration {
-	var duration time.Duration
-	for i := 0; i < len(b.OpenedClosed); i += 2 {
-		duration += b.OpenedClosed[i+1].Sub(b.OpenedClosed[i])
+// Merge takes two buffers, merges them, and returns the result.
+func (b *Buffer) Merge(other Buffer) Buffer {
+	return Buffer{
+		Filename:   cmp.Or(b.Filename, other.Filename),
+		Filepath:   cmp.Or(b.Filepath, other.Filepath),
+		Filetype:   cmp.Or(b.Filetype, other.Filetype),
+		Repository: cmp.Or(b.Repository, other.Repository),
+		Duration:   b.Duration + other.Duration,
 	}
-	return duration
+}
+
+// Buffers represents a slice of buffers that have been edited during a coding session.
+type Buffers []Buffer
+
+func (b Buffers) Len() int {
+	return len(b)
+}
+
+func (b Buffers) Less(i, j int) bool {
+	return b[i].OpenedAt.Before(b[j].OpenedAt)
+}
+
+func (b Buffers) Swap(i, j int) {
+	b[i], b[j] = b[j], b[i]
 }

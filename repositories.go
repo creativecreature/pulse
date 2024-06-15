@@ -3,24 +3,6 @@ package pulse
 // Repositories represents a list of git repositories.
 type Repositories []Repository
 
-// repositories take a slice of sessions and returns the repositories.
-func repositories(sessions Sessions) Repositories {
-	namesWithFiles := repositoryNamesWithFiles(sessions)
-	repos := make(Repositories, 0, len(namesWithFiles))
-
-	for repositoryName, filepathFile := range namesWithFiles {
-		files := make(AggregatedFiles, 0, len(filepathFile))
-		repo := Repository{Name: repositoryName, Files: files}
-		for _, file := range filepathFile {
-			repo.Files = append(repo.Files, file)
-			repo.DurationMs += file.DurationMs
-		}
-		repos = append(repos, repo)
-	}
-
-	return repos
-}
-
 // repositoriesByName takes a slice of repositories and returns a map
 // where the repository name is the key and the repository the value.
 func repositoriesByName(repos Repositories) map[string]Repository {
