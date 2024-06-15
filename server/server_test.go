@@ -17,23 +17,23 @@ import (
 
 type mockStorage struct {
 	sync.Mutex
-	sessions []pulse.AggregatedSession
+	sessions []pulse.CodingSession
 }
 
 func newMockStorage() *mockStorage {
 	return &mockStorage{
-		sessions: make([]pulse.AggregatedSession, 0),
+		sessions: make([]pulse.CodingSession, 0),
 	}
 }
 
-func (m *mockStorage) Write(_ context.Context, session pulse.AggregatedSession) error {
+func (m *mockStorage) Write(_ context.Context, session pulse.CodingSession) error {
 	m.Lock()
 	defer m.Unlock()
 	m.sessions = append(m.sessions, session)
 	return nil
 }
 
-func (m *mockStorage) GetSessions() []pulse.AggregatedSession {
+func (m *mockStorage) GetSessions() []pulse.CodingSession {
 	m.Lock()
 	defer m.Unlock()
 	return m.sessions

@@ -18,26 +18,30 @@ import (
 	"github.com/creativecreature/pulse/logdb"
 )
 
+type CodingSessionWriter interface {
+	Write(context.Context, pulse.CodingSession) error
+}
+
 type Server struct {
-	name             string
-	activeBuffer     *pulse.Buffer
-	lastHeartbeat    time.Time
-	stopJobs         chan struct{}
-	clock            pulse.Clock
-	log              *log.Logger
-	mutex            sync.Mutex
-	localStorage     *logdb.LogDB
-	permanentStorage pulse.PermanentStorage
+	name          string
+	activeBuffer  *pulse.Buffer
+	lastHeartbeat time.Time
+	stopJobs      chan struct{}
+	clock         pulse.Clock
+	log           *log.Logger
+	mutex         sync.Mutex
+	db            *logdb.LogDB
+	sessionWriter CodingSessionWriter
 }
 
 // New creates a new server.
-func New(serverName, segmentPath string, storage pulse.PermanentStorage, opts ...Option) (*Server, error) {
+func New(serverName, segmentPath string, sessionWriter CodingSessionWriter, opts ...Option) (*Server, error) {
 	s := &Server{
-		name:             serverName,
-		clock:            pulse.NewClock(),
-		stopJobs:         make(chan struct{}),
-		localStorage:     logdb.New(segmentPath),
-		permanentStorage: storage,
+		name:          serverName,
+		clock:         pulse.NewClock(),
+		stopJobs:      make(chan struct{}),
+		db:            logdb.New(segmentPath),
+		sessionWriter: sessionWriter,
 	}
 	for _, opt := range opts {
 		err := opt(s)
@@ -65,7 +69,7 @@ func (s *Server) saveBuffer() {
 	key := buf.Key()
 
 	// Merge the duration with the most recent entry for this day.
-	if bytes, hasMostRecentEntry := s.localStorage.Get(key); hasMostRecentEntry {
+	if bytes, hasMostRecentEntry := s.db.Get(key); hasMostRecentEntry {
 		var b pulse.Buffer
 		err := json.Unmarshal(bytes, &b)
 		if err != nil {
@@ -78,7 +82,7 @@ func (s *Server) saveBuffer() {
 	if err != nil {
 		panic(err)
 	}
-	s.localStorage.MustSet(key, bytes)
+	s.db.MustSet(key, bytes)
 	s.activeBuffer = nil
 }
 

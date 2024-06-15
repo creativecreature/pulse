@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// Buffer represents a buffer that has been opened during a coding session.
+// Buffer rerpresents a buffer that has been edited during a coding session.
 type Buffer struct {
 	OpenedAt   time.Time     `json:"-"`
 	ClosedAt   time.Time     `json:"-"`
@@ -28,15 +28,18 @@ func NewBuffer(filename, repo, filetype, filepath string, openedAt time.Time) Bu
 	}
 }
 
+// Close should be called when the coding session ends, or another buffer is opened.
 func (b *Buffer) Close(closedAt time.Time) {
 	b.ClosedAt = closedAt
 	b.Duration = b.ClosedAt.Sub(b.OpenedAt)
 }
 
+// Key returns a unique identifier for the buffer.
 func (b *Buffer) Key() string {
 	return fmt.Sprintf("%s_%s_%s", b.OpenedAt.Format("2006-01-02"), b.Repository, b.Filepath)
 }
 
+// Merge takes two buffers, merges them, and returns the result.
 func (b *Buffer) Merge(other Buffer) Buffer {
 	return Buffer{
 		Filename:   cmp.Or(b.Filename, other.Filename),
@@ -47,6 +50,7 @@ func (b *Buffer) Merge(other Buffer) Buffer {
 	}
 }
 
+// Buffers represents a slice of buffers that have been edited during a coding session.
 type Buffers []Buffer
 
 func (b Buffers) Len() int {
