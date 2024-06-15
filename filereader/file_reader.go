@@ -8,7 +8,6 @@ import (
 	"regexp"
 
 	"github.com/creativecreature/pulse"
-	"github.com/creativecreature/pulse/filetypes"
 )
 
 var (
@@ -137,7 +136,7 @@ func (f FileReader) GitFile(absolutePath string) (pulse.GitFile, error) {
 
 	// Tries to get the filetype from either the file extension or name.
 	filename := filepath.Base(absolutePath)
-	ft, err := filetypes.Type(filename)
+	ft, err := Type(filename)
 	if err != nil {
 		return pulse.GitFile{}, err
 	}

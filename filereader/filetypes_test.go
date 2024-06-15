@@ -1,9 +1,9 @@
-package filetypes_test
+package filereader_test
 
 import (
 	"testing"
 
-	"github.com/creativecreature/pulse/filetypes"
+	"github.com/creativecreature/pulse/filereader"
 )
 
 type testCase struct {
@@ -26,7 +26,7 @@ func TestGetFileType(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		got, _ := filetypes.Type(test.filename)
+		got, _ := filereader.Type(test.filename)
 		if got != test.expected {
 			t.Errorf("Get(%s) = %s; wanted %s", test.filename, got, test.expected)
 		}

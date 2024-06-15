@@ -1,4 +1,4 @@
-package filetypes
+package filereader
 
 import (
 	"errors"
