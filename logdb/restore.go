@@ -1,7 +1,6 @@
 package logdb
 
 import (
-	"log"
 	"os"
 	"path"
 	"path/filepath"
@@ -50,7 +49,6 @@ func restoreSegment(path string) (*Segment, error) {
 		hashIndex: hashIndex,
 		logFile:   file,
 	}
-	log.Println(segment.index)
 
 	return segment, nil
 }

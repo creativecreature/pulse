@@ -138,16 +138,17 @@ func (db *LogDB) Get(key string) ([]byte, bool) {
 	db.RLock()
 	defer db.RUnlock()
 
-	current := db.head
+	current, head := db.head, db.head
 	for {
 		if value, ok := current.get(key); ok {
 			return value, true
 		}
 
-		if current == db.tail {
+		current = current.next
+
+		if current == nil || current == head {
 			break
 		}
-		current = current.next
 	}
 	return nil, false
 }
