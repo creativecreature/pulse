@@ -23,10 +23,7 @@ func NewCodingSession(buffers Buffers, now time.Time) CodingSession {
 	for _, buf := range buffers {
 		repo, ok := repos[buf.Repository]
 		if !ok {
-			repos[buf.Repository] = Repository{
-				Name:  buf.Repository,
-				Files: make(Files, 0),
-			}
+			repo = Repository{Name: buf.Repository, Files: make(Files, 0)}
 		}
 
 		file := File{
