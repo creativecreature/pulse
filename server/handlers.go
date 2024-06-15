@@ -2,10 +2,11 @@ package server
 
 import (
 	"github.com/creativecreature/pulse"
+	"github.com/creativecreature/pulse/git"
 )
 
 func (s *Server) openFile(event pulse.Event) {
-	gitFile, gitFileErr := s.fileReader.GitFile(event.Path)
+	gitFile, gitFileErr := git.ParseFile(event.Path)
 	if gitFileErr != nil {
 		return
 	}

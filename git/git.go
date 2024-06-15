@@ -1,8 +1,9 @@
-package filereader
+package git
 
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -23,13 +24,21 @@ var (
 	ErrParseBareRepoPath = errors.New("failed to parse bare repository path")
 )
 
-type FileReader struct {
+// Reader is an abstraction for the reader.
+type Reader interface {
+	Dir(string) string
+	ReadDir(string) ([]fs.DirEntry, error)
+	ReadFile(string) ([]byte, error)
+	IsFile(string) bool
+}
+
+type FileParser struct {
 	Reader Reader
 }
 
-// New creates a new FileReader.
-func New() FileReader {
-	return FileReader{reader{}}
+// New creates a new FileParser.
+func New() FileParser {
+	return FileParser{filereader{}}
 }
 
 // extractSubExp extracts a named subgroup from a regexp match.
@@ -43,7 +52,7 @@ func extractSubExp(re *regexp.Regexp, matches []string, subexp string) string {
 }
 
 // extractRepositoryName extracts the name of the repository from a .git file.
-func (f FileReader) extractBareRepositoryPath(filepath string) (string, error) {
+func (f FileParser) extractBareRepositoryPath(filepath string) (string, error) {
 	fileContent, err := f.Reader.ReadFile(filepath)
 	if err != nil {
 		return "", err
@@ -60,7 +69,7 @@ func (f FileReader) extractBareRepositoryPath(filepath string) (string, error) {
 // findGitFolder calls itself recursively until it finds a .git
 // configuration or reaches the root of the filesystem. It returns
 // the name of the repository by parsing the url of the origin.
-func (f FileReader) findGitFolder(dir string) (string, error) {
+func (f FileParser) findGitFolder(dir string) (string, error) {
 	// Stop the recursion if we have reached the root.
 	if dir == "/" {
 		return "", ErrReachedRoot
@@ -91,7 +100,7 @@ func (f FileReader) findGitFolder(dir string) (string, error) {
 // extractRepositoryName extracts the name of the repository by
 // looking at the url. This solves potential issues that could
 // occur if you were to clone a repository under a different name.
-func (f FileReader) extractRepositoryName(dirPath string) (string, error) {
+func (f FileParser) extractRepositoryName(dirPath string) (string, error) {
 	fileContent, err := f.Reader.ReadFile(path.Join(dirPath, "config"))
 	if err != nil {
 		return "", err
@@ -105,12 +114,10 @@ func (f FileReader) extractRepositoryName(dirPath string) (string, error) {
 	return extractSubExp(regularRepoExp, matches, "RepoName"), nil
 }
 
-// TODO: Turn this into one of those convenience wrappers so that the API can just be git.ReadFile().
-
-// GitFile returns a GitFile struct from an absolute path. It will return an
+// ParseFile returns a ParseFile struct from an absolute path. It will return an
 // error if the path is empty, if the path is not a file or if it can't find
 // a parent .git file or folder before it reaches the root of the file tree.
-func (f FileReader) GitFile(absolutePath string) (pulse.GitFile, error) {
+func (f FileParser) ParseFile(absolutePath string) (pulse.GitFile, error) {
 	if absolutePath == "" {
 		return pulse.GitFile{}, ErrEmptyPath
 	}
@@ -136,7 +143,7 @@ func (f FileReader) GitFile(absolutePath string) (pulse.GitFile, error) {
 
 	// Tries to get the filetype from either the file extension or name.
 	filename := filepath.Base(absolutePath)
-	ft, err := Type(filename)
+	ft, err := Filetype(filename)
 	if err != nil {
 		return pulse.GitFile{}, err
 	}
@@ -149,4 +156,8 @@ func (f FileReader) GitFile(absolutePath string) (pulse.GitFile, error) {
 	}
 
 	return gitFile, nil
+}
+
+func ParseFile(absolutePath string) (pulse.GitFile, error) {
+	return New().ParseFile(absolutePath)
 }

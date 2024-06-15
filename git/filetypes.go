@@ -1,4 +1,4 @@
-package filereader
+package git
 
 import (
 	"errors"
@@ -50,8 +50,8 @@ var specialFiles = map[string]string{
 	"docker-compose": "Docker",
 }
 
-// Type extracts the filetype from a filename.
-func Type(filename string) (string, error) {
+// Filetype extracts the filetype from a filename.
+func Filetype(filename string) (string, error) {
 	// Start by checking if it is a special file.
 	if file, ok := specialFiles[strings.Split(filename, ".")[0]]; ok {
 		return file, nil

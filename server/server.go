@@ -15,7 +15,6 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/creativecreature/pulse"
-	"github.com/creativecreature/pulse/filereader"
 	"github.com/creativecreature/pulse/logdb"
 )
 
@@ -25,7 +24,6 @@ type Server struct {
 	lastHeartbeat    time.Time
 	stopJobs         chan struct{}
 	clock            pulse.Clock
-	fileReader       FileReader
 	log              *log.Logger
 	mutex            sync.Mutex
 	localStorage     *logdb.LogDB
@@ -38,7 +36,6 @@ func New(serverName, segmentPath string, storage pulse.PermanentStorage, opts ..
 		name:             serverName,
 		clock:            pulse.NewClock(),
 		stopJobs:         make(chan struct{}),
-		fileReader:       filereader.New(),
 		localStorage:     logdb.New(segmentPath),
 		permanentStorage: storage,
 	}

@@ -1,10 +1,10 @@
-package filereader_test
+package git_test
 
 import (
 	"io/fs"
 	"testing"
 
-	"github.com/creativecreature/pulse/filereader"
+	"github.com/creativecreature/pulse/git"
 	"github.com/creativecreature/pulse/mock"
 )
 
@@ -64,12 +64,12 @@ func TestGetRepositoryFromPath(t *testing.T) {
 		},
 	}
 
-	f := filereader.New()
+	f := git.New()
 	f.Reader = &fileSystemMock
 
 	// This is the absolute path of the file that we want to extract the repository name for.
 	path := "/Users/conner/code/dotfiles/editors/nvim/init.lua"
-	file, err := f.GitFile(path)
+	file, err := f.ParseFile(path)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -141,12 +141,12 @@ func TestGetRepositoryFromPathBare(t *testing.T) {
 		},
 	}
 
-	f := filereader.New()
+	f := git.New()
 	f.Reader = &fileSystemMock
 
 	// This is the absolute path of the file that we want to extract the repository name for.
 	path := "/Users/conner/code/ore-ui/main/src/index.ts"
-	file, err := f.GitFile(path)
+	file, err := f.ParseFile(path)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -218,12 +218,12 @@ func TestPathInBareProject(t *testing.T) {
 		},
 	}
 
-	f := filereader.New()
+	f := git.New()
 	f.Reader = &fileSystemMock
 
 	// This is the absolute path of the file that we want to extract the repository name for.
 	path := "/Users/conner/code/ore-ui/main/src/index.ts"
-	file, err := f.GitFile(path)
+	file, err := f.ParseFile(path)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -293,12 +293,12 @@ func TestPathInProject(t *testing.T) {
 		},
 	}
 
-	f := filereader.New()
+	f := git.New()
 	f.Reader = &fileSystemMock
 
 	// This is the absolute path of the file that we want to extract the repository name for.
 	path := "/Users/conner/code/dotfiles/editors/nvim/init.lua"
-	file, err := f.GitFile(path)
+	file, err := f.ParseFile(path)
 	if err != nil {
 		t.Fatal(err)
 	}
