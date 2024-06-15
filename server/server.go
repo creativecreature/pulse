@@ -17,7 +17,6 @@ import (
 	"github.com/creativecreature/pulse"
 	"github.com/creativecreature/pulse/filereader"
 	"github.com/creativecreature/pulse/logdb"
-	"github.com/creativecreature/pulse/proxy"
 )
 
 type Server struct {
@@ -87,7 +86,7 @@ func (s *Server) saveBuffer() {
 }
 
 func (s *Server) startServer(port string) (*http.Server, error) {
-	proxy := proxy.New(s)
+	proxy := NewProxy(s)
 	err := rpc.RegisterName(s.name, proxy)
 	if err != nil {
 		return nil, err

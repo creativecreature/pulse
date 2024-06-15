@@ -1,26 +1,16 @@
-package proxy
+package server
 
-import (
-	"github.com/creativecreature/pulse"
-)
-
-// Server is the interface that the RPC server must satisfy.
-type Server interface {
-	FocusGained(event pulse.Event, reply *string)
-	OpenFile(event pulse.Event, reply *string)
-	SendHeartbeat(event pulse.Event, reply *string)
-	EndSession(event pulse.Event, reply *string)
-}
+import "github.com/creativecreature/pulse"
 
 // Proxy serves as the intermediary between our client and server. It directs
 // remote procedure calls to the server, mitigating the risk of unintentionally
 // revealing server methods, just because they happen to conform to the RPC interface.
 type Proxy struct {
-	server Server
+	server *Server
 }
 
 // New returns a new proxy.
-func New(server Server) *Proxy {
+func NewProxy(server *Server) *Proxy {
 	return &Proxy{server: server}
 }
 
