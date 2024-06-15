@@ -1,7 +1,6 @@
 package pulse
 
 import (
-	"github.com/creativecreature/pulse/truncate"
 	"golang.org/x/exp/maps"
 )
 
@@ -19,20 +18,20 @@ func merge(sessions AggregatedSessions, truncate func(int64) int64, timePeriod P
 
 // MergeByDay merges sessions that occurred the same day.
 func (s AggregatedSessions) MergeByDay() AggregatedSessions {
-	return merge(s, truncate.Day, Day)
+	return merge(s, TruncateDay, Day)
 }
 
 // MergeByWeek merges sessions that occurred the same week.
 func (s AggregatedSessions) MergeByWeek() AggregatedSessions {
-	return merge(s, truncate.Week, Week)
+	return merge(s, TruncateWeek, Week)
 }
 
 // MergeByWeek merges sessions that occurred the same month.
 func (s AggregatedSessions) MergeByMonth() AggregatedSessions {
-	return merge(s, truncate.Month, Month)
+	return merge(s, TruncateMonth, Month)
 }
 
 // MergeByYear merges sessions that occurred the same year.
 func (s AggregatedSessions) MergeByYear() AggregatedSessions {
-	return merge(s, truncate.Year, Year)
+	return merge(s, TruncateYear, Year)
 }

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/creativecreature/pulse"
-	"github.com/creativecreature/pulse/truncate"
 )
 
 const aggregationInterval = 15 * time.Minute
@@ -42,7 +41,7 @@ func (s *Server) createSession(buffers pulse.Buffers) pulse.AggregatedSession {
 
 	session := pulse.AggregatedSession{
 		Period:       pulse.Day,
-		EpochDateMs:  truncate.Day(s.clock.Now().UnixMilli()),
+		EpochDateMs:  s.clock.Now().Truncate(time.Millisecond).UnixMilli(),
 		DateString:   s.clock.Now().Format("2006-01-02"),
 		TotalTimeMs:  totalDurationMS,
 		Repositories: repositories,

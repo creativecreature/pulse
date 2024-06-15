@@ -1,10 +1,10 @@
-package truncate_test
+package pulse_test
 
 import (
 	"testing"
 	"time"
 
-	"github.com/creativecreature/pulse/truncate"
+	"github.com/creativecreature/pulse"
 )
 
 func TestTruncate(t *testing.T) {
@@ -27,22 +27,22 @@ func TestTruncate(t *testing.T) {
 	// 00:00 Sunday Jan 01 2023
 	expectedYear := int64(1672527600000)
 
-	actualDay := truncate.Day(originalTime)
+	actualDay := pulse.TruncateDay(originalTime)
 	if actualDay != expectedDay {
 		t.Errorf("Expected truncated day to be %d, got %d", expectedDay, actualDay)
 	}
 
-	actualWeek := truncate.Week(originalTime)
+	actualWeek := pulse.TruncateWeek(originalTime)
 	if actualWeek != expectedWeek {
 		t.Errorf("Expected truncated week to be %d, got %d", expectedWeek, actualWeek)
 	}
 
-	actualMonth := truncate.Month(originalTime)
+	actualMonth := pulse.TruncateMonth(originalTime)
 	if actualMonth != expectedMonth {
 		t.Errorf("Expected truncated month to be %d, got %d", expectedMonth, actualMonth)
 	}
 
-	actualYear := truncate.Year(originalTime)
+	actualYear := pulse.TruncateYear(originalTime)
 	if actualYear != expectedYear {
 		t.Errorf("Expected truncated year to be %d, got %d", expectedYear, actualYear)
 	}
