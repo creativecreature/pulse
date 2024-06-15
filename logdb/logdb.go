@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	segmentationIntervall = 10 * time.Minute
+	segmentationInterval = 10 * time.Minute
 	segmentSizeBytes      = 10 * 1024 // 10KB
 )
 
@@ -43,7 +43,7 @@ func New(dirPath string) *LogDB {
 	// Leak a goroutine that compacts the segments.
 	defer func() {
 		go func() {
-			ticker := time.NewTicker(segmentationIntervall)
+			ticker := time.NewTicker(segmentationInterval)
 			for {
 				<-ticker.C
 				logDB.compact()
