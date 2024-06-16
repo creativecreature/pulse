@@ -16,7 +16,6 @@ import (
 	"github.com/charmbracelet/log"
 	"github.com/creativecreature/pulse"
 	"github.com/creativecreature/pulse/git"
-	"github.com/creativecreature/pulse/logdb"
 )
 
 type CodingSessionWriter interface {
@@ -31,7 +30,7 @@ type Server struct {
 	clock         Clock
 	log           *log.Logger
 	mutex         sync.Mutex
-	db            *logdb.LogDB
+	db            *pulse.LogDB
 	sessionWriter CodingSessionWriter
 }
 
@@ -41,7 +40,8 @@ func New(serverName, segmentPath string, sessionWriter CodingSessionWriter, opts
 		name:          serverName,
 		clock:         NewClock(),
 		stopJobs:      make(chan struct{}),
-		db:            logdb.New(segmentPath),
+		db:            pulse.NewDB(segmentPath),
+		log:           pulse.NewLogger(),
 		sessionWriter: sessionWriter,
 	}
 	for _, opt := range opts {

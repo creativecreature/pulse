@@ -1,4 +1,4 @@
-package logdb
+package pulse
 
 import (
 	"encoding/json"
@@ -98,10 +98,8 @@ func (s *Segment) size() int64 {
 }
 
 // delete closes the file descriptor and removes the segment file from disk.
+// should be called with a lock.
 func (s *Segment) delete() {
-	s.Lock()
-	defer s.Unlock()
-
 	s.logFile.Close()
 	err := os.Remove(s.logFile.Name())
 	if err != nil {

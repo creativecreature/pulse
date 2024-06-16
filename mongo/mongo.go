@@ -26,7 +26,7 @@ type Client struct {
 	log      *log.Logger
 }
 
-func New(uri, database string, log *log.Logger) *Client {
+func New(uri, database string) *Client {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -38,7 +38,7 @@ func New(uri, database string, log *log.Logger) *Client {
 	return &Client{
 		Client:   client,
 		database: database,
-		log:      log,
+		log:      pulse.NewLogger(),
 	}
 }
 

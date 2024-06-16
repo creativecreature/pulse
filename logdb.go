@@ -1,14 +1,16 @@
-package logdb
+package pulse
 
 import (
 	"os"
 	"sync"
 	"time"
+
+	"github.com/charmbracelet/log"
 )
 
 const (
-	segmentationInterval = 10 * time.Minute
-	segmentSizeBytes      = 10 * 1024 // 10KB
+	segmentationInterval = 5 * time.Minute
+	segmentSizeBytes     = 10 * 1024 // 10KB
 )
 
 // Record represents a key-value pair in our database.
@@ -21,24 +23,28 @@ type Record struct {
 type LogDB struct {
 	sync.RWMutex
 	dirPath string
+	log     *log.Logger
 	head    *Segment
 	tail    *Segment
 }
 
-// New creates a new LogDB that will read and write to a file at the given path.
-func New(dirPath string) *LogDB {
+// NewDB creates a new log database.
+func NewDB(dirPath string) *LogDB {
+	log := NewLogger()
+
 	// Create the directory if it doesn't exist.
 	if err := os.MkdirAll(dirPath, 0o755); err != nil {
-		panic("could not create segment directory")
+		log.Fatal(err)
 	}
 
 	segmentPaths, err := getSegmentPaths(dirPath)
 	if err != nil {
-		panic("could not get segment paths")
+		log.Fatal("could not get segment paths")
 	}
 
 	var logDB LogDB
 	logDB.dirPath = dirPath
+	logDB.log = log
 
 	// Leak a goroutine that compacts the segments.
 	defer func() {
@@ -90,20 +96,24 @@ func (db *LogDB) appendSegment() {
 
 // compact compacts all of the segments together, removing any duplicate keys.
 func (db *LogDB) compact() {
+	db.log.Info("Compacting segments")
+
 	head, current := db.head, db.tail
+	if current == nil {
+		db.log.Info("No segments to compact")
+		return
+	}
+
 	for {
-		current.RLock()
 		for key := range current.hashIndex {
 			var found bool
 
 			for cursor := head; cursor != current; cursor = cursor.next {
 				_, found = cursor.get(key)
 				if found {
-					current.RUnlock()
 					current.Lock()
 					delete(current.hashIndex, key)
 					current.Unlock()
-					current.RLock()
 					break
 				}
 			}
@@ -114,10 +124,11 @@ func (db *LogDB) compact() {
 				db.MustSet(key, bytes)
 			}
 		}
-		current.RUnlock()
 
 		// Delete the segment file once we've compacted it.
+		current.Lock()
 		current.delete()
+		current.Unlock()
 
 		// Exit the loop if we've reached the head.
 		if current.prev == head {
@@ -131,10 +142,12 @@ func (db *LogDB) compact() {
 		db.tail = current
 		db.Unlock()
 	}
+	log.Info("Finished compacting segments")
 }
 
 // Get retrieves a value from the database.
 func (db *LogDB) Get(key string) ([]byte, bool) {
+	db.log.Debug("Getting key", key)
 	db.RLock()
 	defer db.RUnlock()
 
@@ -155,6 +168,7 @@ func (db *LogDB) Get(key string) ([]byte, bool) {
 
 // Set writes a key-value pair to the log file.
 func (db *LogDB) Set(key string, value []byte) error {
+	db.log.Debug("writing key", key)
 	db.Lock()
 	defer db.Unlock()
 
@@ -179,6 +193,7 @@ func (db *LogDB) MustSet(key string, value []byte) {
 // Aggregate gathers all the unique key-value pairs in the database,
 // and then removes all the segments and resets the state.
 func (db *LogDB) Aggregate() map[string][]byte {
+	db.log.Debug("Aggregating segments")
 	db.Lock()
 	defer db.Unlock()
 
@@ -197,7 +212,10 @@ func (db *LogDB) Aggregate() map[string][]byte {
 			}
 			delete(current.hashIndex, key)
 		}
+
+		current.Lock()
 		current.delete()
+		current.Unlock()
 
 		// Update current and break if we've reached the tail.
 		current = current.next
@@ -213,5 +231,6 @@ func (db *LogDB) Aggregate() map[string][]byte {
 	segment := newSegment(db.dirPath, 0)
 	db.head, db.tail = segment, segment
 
+	db.log.Debug("Finished the aggrementation process")
 	return values
 }

@@ -1,4 +1,4 @@
-package logdb
+package pulse
 
 import (
 	"bufio"

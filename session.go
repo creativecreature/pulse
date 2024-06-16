@@ -7,6 +7,16 @@ import (
 	"golang.org/x/exp/maps"
 )
 
+// Period represents the time period for which the coding sessions have been aggregated.
+type Period int8
+
+const (
+	Day Period = iota
+	Week
+	Month
+	Year
+)
+
 // CodingSession represents a coding session that has been aggregated
 // for a given time period (day, week, month, year).
 type CodingSession struct {

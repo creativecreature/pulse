@@ -1,18 +1,18 @@
-package logdb_test
+package pulse_test
 
 import (
 	"runtime"
 	"sync"
 	"testing"
 
-	"github.com/creativecreature/pulse/logdb"
+	"github.com/creativecreature/pulse"
 )
 
 func TestConcurrentGetSet(t *testing.T) {
 	cpus := runtime.NumCPU()
 	writeCPUs, readCPUs := cpus/2, cpus/2
 	numIterations := 10_000
-	db := logdb.New(t.TempDir())
+	db := pulse.NewDB(t.TempDir())
 
 	wg := sync.WaitGroup{}
 	wg.Add(numIterations * (writeCPUs + readCPUs))
@@ -37,3 +37,11 @@ func TestConcurrentGetSet(t *testing.T) {
 
 	wg.Wait()
 }
+
+// func TestAggregation(t *testing.T) {
+// 	db := pulse.NewDB("testdata/segments")
+// 	values := db.Aggregate()
+// 	if len(values) != 0 {
+// 		t.Fatalf("expected 0 values, got %d", len(values))
+// 	}
+// }

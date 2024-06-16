@@ -1,4 +1,4 @@
-package logger
+package pulse
 
 import (
 	"os"
@@ -9,7 +9,7 @@ import (
 
 // New wraps the construction of a charmbracelet logger
 // in order to achieve coherent styles and settings.
-func New() *log.Logger {
+func NewLogger() *log.Logger {
 	logger := log.New(os.Stdout)
 	logger.SetColorProfile(0)
 	logger.SetLevel(log.DebugLevel)

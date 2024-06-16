@@ -1,9 +1,9 @@
-package logdb_test
+package pulse_test
 
 import (
 	"testing"
 
-	"github.com/creativecreature/pulse/logdb"
+	"github.com/creativecreature/pulse"
 )
 
 type filenameTest struct {
@@ -23,7 +23,7 @@ func TestFilename(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.expected, func(t *testing.T) {
-			actual := logdb.Filename(tc.index)
+			actual := pulse.Filename(tc.index)
 			if actual != tc.expected {
 				t.Errorf("expected %s, got %s", tc.expected, actual)
 			}
@@ -49,7 +49,7 @@ func TestIndex(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.filename, func(t *testing.T) {
-			actual := logdb.Index(tc.filename)
+			actual := pulse.Index(tc.filename)
 			if actual != tc.expected {
 				t.Errorf("expected %d, got %d", tc.expected, actual)
 			}

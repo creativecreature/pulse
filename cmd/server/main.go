@@ -6,7 +6,6 @@ import (
 	"path"
 	"time"
 
-	"github.com/creativecreature/pulse/logger"
 	"github.com/creativecreature/pulse/mongo"
 	"github.com/creativecreature/pulse/server"
 )
@@ -20,17 +19,15 @@ var (
 )
 
 func main() {
-	log := logger.New()
-
 	ctx := context.Background()
 	timeoutCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
 
-	client := mongo.New(uri, db, log)
+	client := mongo.New(uri, db)
 	defer func() {
 		disconnectErr := client.Disconnect(timeoutCtx)
 		if disconnectErr != nil {
-			log.Fatal(disconnectErr)
+			panic(disconnectErr)
 		}
 	}()
 
@@ -46,14 +43,13 @@ func main() {
 		serverName,
 		segmentPath,
 		client,
-		server.WithLog(log),
 	)
 	if err != nil {
-		log.Fatal(err, nil)
+		panic(err)
 	}
 
 	err = server.Start(port)
 	if err != nil {
-		log.Fatal(err, nil)
+		panic(err)
 	}
 }
