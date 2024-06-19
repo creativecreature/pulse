@@ -13,10 +13,10 @@ const (
 // CheckHeartbeat is used to check if the session has been inactive for more than
 // ten minutes. If that is the case, the session will be terminated and saved to disk.
 func (s *Server) checkHeartbeat() {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
-	s.log.Debug("Checking heartbeat.",
+	s.log.Debug("Checking heartbeat",
 		"last_heartbeat", s.lastHeartbeat,
 		"time_now", s.clock.Now().UnixMilli(),
 	)
@@ -27,7 +27,7 @@ func (s *Server) checkHeartbeat() {
 
 	if s.clock.Now().After(s.lastHeartbeat.Add(HeartbeatTTL)) {
 		s.log.Info(
-			"Writing the current buffer to disk due to inactivity.",
+			"Writing the current buffer to disk due to inactivity",
 			"last_heartbeat", strconv.FormatInt(s.lastHeartbeat.UnixMilli(), 10),
 			"current_time", strconv.FormatInt(s.clock.Now().UnixMilli(), 10),
 			"end_time", strconv.FormatInt(s.lastHeartbeat.Add(HeartbeatTTL).UnixMilli(), 10),

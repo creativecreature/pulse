@@ -63,6 +63,25 @@ func (s *Segment) get(key string) ([]byte, bool) {
 	return record.Value, true
 }
 
+func (s *Segment) getNoLock(key string) ([]byte, bool) {
+	offset, ok := s.hashIndex[key]
+	if !ok {
+		return nil, false
+	}
+	_, err := s.logFile.Seek(offset, io.SeekStart)
+	if err != nil {
+		return nil, false
+	}
+
+	var record Record
+	decoder := json.NewDecoder(s.logFile)
+	if decodeErr := decoder.Decode(&record); decodeErr != nil {
+		return nil, false
+	}
+
+	return record.Value, true
+}
+
 // set writes a key-value pair to the segments log file.
 func (s *Segment) set(key string, value []byte) error {
 	s.Lock()
@@ -99,10 +118,7 @@ func (s *Segment) size() int64 {
 
 // delete closes the file descriptor and removes the segment file from disk.
 // should be called with a lock.
-func (s *Segment) delete() {
+func (s *Segment) delete() error {
 	s.logFile.Close()
-	err := os.Remove(s.logFile.Name())
-	if err != nil {
-		panic(err)
-	}
+	return os.Remove(s.logFile.Name())
 }

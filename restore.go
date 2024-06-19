@@ -56,7 +56,7 @@ func restoreSegment(path string) (*Segment, error) {
 // connectSegments links all segments together in a circular doubly linked list.
 func connectSegments(segments []*Segment) {
 	for i := 0; i < len(segments); i++ {
-		if i == 0 {
+		if i == 0 && len(segments) > 1 {
 			segments[i].prev = segments[len(segments)-1]
 			segments[i].next = segments[i+1]
 			continue

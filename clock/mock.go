@@ -1,4 +1,4 @@
-package server
+package clock
 
 import (
 	"sync"
@@ -6,62 +6,37 @@ import (
 	"time"
 )
 
-// Clock is a simple abstraction to allow for time based assertions in tests.
-type Clock interface {
-	Now() time.Time
-	NewTicker(d time.Duration) (<-chan time.Time, func())
-	NewTimer(d time.Duration) (<-chan time.Time, func() bool)
-}
-
-type RealClock struct{}
-
-func NewClock() *RealClock {
-	return &RealClock{}
-}
-
-func (c *RealClock) Now() time.Time {
-	return time.Now()
-}
-
-func (c *RealClock) NewTicker(d time.Duration) (<-chan time.Time, func()) {
-	t := time.NewTicker(d)
-	return t.C, t.Stop
-}
-
-func (c *RealClock) NewTimer(d time.Duration) (<-chan time.Time, func() bool) {
-	t := time.NewTimer(d)
-	return t.C, t.Stop
-}
-
-type testTimer struct {
+type mockTimer struct {
 	deadline time.Time
 	ch       chan time.Time
 	stopped  *atomic.Bool
 }
 
-type testTicker struct {
+type mockTicker struct {
 	nextTick time.Time
 	interval time.Duration
 	ch       chan time.Time
 	stopped  *atomic.Bool
 }
 
-type TestClock struct {
+// MockClock is a mock implementation of the Clock interface.
+type MockClock struct {
 	mu      sync.Mutex
 	time    time.Time
-	timers  []*testTimer
-	tickers []*testTicker
+	timers  []*mockTimer
+	tickers []*mockTicker
 }
 
-func NewTestClock(time time.Time) *TestClock {
-	var c TestClock
+func NewMock(time time.Time) *MockClock {
+	var c MockClock
 	c.time = time
-	c.timers = make([]*testTimer, 0)
-	c.tickers = make([]*testTicker, 0)
+	c.timers = make([]*mockTimer, 0)
+	c.tickers = make([]*mockTicker, 0)
 	return &c
 }
 
-func (c *TestClock) Set(t time.Time) {
+// Set sets the time of the clock and triggers any timers or tickers that should fire.
+func (c *MockClock) Set(t time.Time) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -72,7 +47,7 @@ func (c *TestClock) Set(t time.Time) {
 	c.time = t
 	for _, ticker := range c.tickers {
 		if !ticker.stopped.Load() && !ticker.nextTick.Add(ticker.interval).After(c.time) {
-			//nolint: durationcheck // This is a test clock where we can ignore overflows.
+			//nolint: durationcheck // This is a test clock, we don't care about overflows.
 			nextTick := (c.time.Sub(ticker.nextTick) / ticker.interval) * ticker.interval
 			ticker.nextTick = ticker.nextTick.Add(nextTick)
 			select {
@@ -82,7 +57,7 @@ func (c *TestClock) Set(t time.Time) {
 		}
 	}
 
-	unfiredTimers := make([]*testTimer, 0)
+	unfiredTimers := make([]*mockTimer, 0)
 	for i, timer := range c.timers {
 		if timer.deadline.After(c.time) && !timer.stopped.Load() {
 			unfiredTimers = append(unfiredTimers, c.timers[i])
@@ -94,23 +69,26 @@ func (c *TestClock) Set(t time.Time) {
 	c.timers = unfiredTimers
 }
 
-func (c *TestClock) Add(d time.Duration) {
+// Add advances the clock by the duration and triggers any timers or tickers that should fire.
+func (c *MockClock) Add(d time.Duration) {
 	c.Set(c.time.Add(d))
 }
 
-func (c *TestClock) Now() time.Time {
+// Now returns the current time of the clock.
+func (c *MockClock) Now() time.Time {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	return c.time
 }
 
-func (c *TestClock) NewTicker(d time.Duration) (<-chan time.Time, func()) {
+// NewTicker creates a new ticker that will fire once you advance the clock by the duration.
+func (c *MockClock) NewTicker(d time.Duration) (<-chan time.Time, func()) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	ch := make(chan time.Time, 1)
 	stopped := &atomic.Bool{}
-	ticker := &testTicker{nextTick: c.time, interval: d, ch: ch, stopped: stopped}
+	ticker := &mockTicker{nextTick: c.time, interval: d, ch: ch, stopped: stopped}
 	c.tickers = append(c.tickers, ticker)
 	stop := func() {
 		stopped.Store(true)
@@ -119,7 +97,8 @@ func (c *TestClock) NewTicker(d time.Duration) (<-chan time.Time, func()) {
 	return ch, stop
 }
 
-func (c *TestClock) NewTimer(d time.Duration) (<-chan time.Time, func() bool) {
+// NewTimer creates a new timer that will fire once you advance the clock by the duration.
+func (c *MockClock) NewTimer(d time.Duration) (<-chan time.Time, func() bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -132,11 +111,16 @@ func (c *TestClock) NewTimer(d time.Duration) (<-chan time.Time, func() bool) {
 		return ch, func() bool { return false }
 	}
 
-	timer := &testTimer{deadline: c.time.Add(d), ch: ch, stopped: stopped}
+	timer := &mockTimer{deadline: c.time.Add(d), ch: ch, stopped: stopped}
 	c.timers = append(c.timers, timer)
 	stop := func() bool {
 		return stopped.CompareAndSwap(false, true)
 	}
 
 	return ch, stop
+}
+
+// Since calculates the time since the given time t.
+func (c *MockClock) Since(t time.Time) time.Duration {
+	return c.Now().Sub(t)
 }
