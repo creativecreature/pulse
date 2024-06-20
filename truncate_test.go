@@ -8,8 +8,6 @@ import (
 )
 
 func TestTruncate(t *testing.T) {
-	t.Parallel()
-
 	loc, err := time.LoadLocation("Europe/Stockholm")
 	if err != nil {
 		t.Fatal("Failed to load Stockholm timezone:", err)

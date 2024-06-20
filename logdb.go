@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/log"
+	"github.com/creativecreature/pulse/clock"
 )
 
 const (
@@ -23,13 +24,14 @@ type Record struct {
 type LogDB struct {
 	sync.RWMutex
 	dirPath string
+	clock   clock.Clock
 	log     *log.Logger
 	head    *Segment
 	tail    *Segment
 }
 
 // NewDB creates a new log database.
-func NewDB(dirPath string) *LogDB {
+func NewDB(dirPath string, clock clock.Clock) *LogDB {
 	log := NewLogger()
 
 	// Create the directory if it doesn't exist.
@@ -45,13 +47,15 @@ func NewDB(dirPath string) *LogDB {
 	var logDB LogDB
 	logDB.dirPath = dirPath
 	logDB.log = log
+	logDB.clock = clock
 
 	// Leak a goroutine that compacts the segments.
 	defer func() {
 		go func() {
-			ticker := time.NewTicker(segmentationInterval)
+			c, cancel := clock.NewTicker(segmentationInterval)
+			defer cancel()
 			for {
-				<-ticker.C
+				<-c
 				logDB.compact()
 			}
 		}()
@@ -60,7 +64,7 @@ func NewDB(dirPath string) *LogDB {
 	// If the directory is empty, we'll simply create the initial segment and return.
 	if len(segmentPaths) == 0 {
 		segment := newSegment(dirPath, 0)
-		logDB.head, logDB.tail = segment, segment
+		logDB.head, logDB.tail = segment, nil
 		return &logDB
 	}
 
@@ -79,6 +83,8 @@ func NewDB(dirPath string) *LogDB {
 // appendSegment creates a new segment and appends it to the
 // head of the linked list. should be called with a lock.
 func (db *LogDB) appendSegment() {
+	db.log.Info("Appending a new segment")
+
 	nextSegmentIndex := db.head.index + 1
 	segment := newSegment(db.dirPath, nextSegmentIndex)
 
@@ -96,58 +102,84 @@ func (db *LogDB) appendSegment() {
 
 // compact compacts all of the segments together, removing any duplicate keys.
 func (db *LogDB) compact() {
-	db.log.Info("Compacting segments")
+	db.Lock()
+	defer db.Unlock()
 
-	head, current := db.head, db.tail
+	currentHead, currentTail := db.head, db.tail
+	current := currentTail
 	if current == nil {
-		db.log.Info("No segments to compact")
+		db.log.Info("Not enough segments to necessitate a compaction")
 		return
 	}
 
-	for {
+	db.log.Info("Compacting segments")
+	valuesToWrite := make(map[string][]byte)
+
+	for current != nil {
+		current.Lock()
 		for key := range current.hashIndex {
 			var found bool
-
-			for cursor := head; cursor != current; cursor = cursor.next {
-				_, found = cursor.get(key)
+			for cursor := currentHead; cursor != current; cursor = cursor.next {
+				_, found = cursor.getNoLock(key)
 				if found {
-					current.Lock()
-					delete(current.hashIndex, key)
-					current.Unlock()
 					break
 				}
 			}
 
 			// If this key was unique for all previous segments, we'll write it to the head.
 			if !found {
-				bytes, _ := current.get(key)
-				db.MustSet(key, bytes)
+				bytes, _ := current.getNoLock(key)
+				valuesToWrite[key] = bytes
 			}
 		}
 
-		// Delete the segment file once we've compacted it.
-		current.Lock()
-		current.delete()
-		current.Unlock()
-
-		// Exit the loop if we've reached the head.
-		if current.prev == head {
+		// Adjust pointers to remove the current segment
+		if current == currentHead {
+			// Only one segment left, no need to delete it
+			current.Unlock()
 			break
 		}
 
-		db.Lock()
-		current = current.prev
-		current.next = db.head
-		db.head.prev = current
-		db.tail = current
-		db.Unlock()
+		prev := current.prev
+		next := current.next
+
+		if prev != nil {
+			prev.next = next
+		}
+		if next != nil {
+			next.prev = prev
+		}
+
+		if current == db.tail {
+			db.tail = prev
+		}
+		if current == db.head {
+			db.head = next
+		}
+
+		if err := current.delete(); err != nil {
+			db.log.Error(err)
+			current.Unlock()
+			return
+		}
+
+		nextSegment := prev
+		current.Unlock()
+		current = nextSegment
 	}
-	log.Info("Finished compacting segments")
+
+	if db.head == db.tail {
+		db.tail = nil
+	}
+
+	for key, value := range valuesToWrite {
+		db.mustSet(key, value)
+	}
+	db.log.Info("Finished compacting segments")
 }
 
 // Get retrieves a value from the database.
 func (db *LogDB) Get(key string) ([]byte, bool) {
-	db.log.Debug("Getting key", key)
 	db.RLock()
 	defer db.RUnlock()
 
@@ -166,12 +198,47 @@ func (db *LogDB) Get(key string) ([]byte, bool) {
 	return nil, false
 }
 
-// Set writes a key-value pair to the log file.
-func (db *LogDB) Set(key string, value []byte) error {
-	db.log.Debug("writing key", key)
+func (db *LogDB) GetAllUnique() map[string][]byte {
 	db.Lock()
 	defer db.Unlock()
 
+	values := make(map[string][]byte, len(db.head.hashIndex))
+	current := db.head
+	for {
+		for key := range current.hashIndex {
+			if _, ok := values[key]; !ok {
+				value, _ := current.get(key)
+				values[key] = value
+			}
+		}
+
+		// Update current and break if we've reached the tail.
+		if current.next == db.head || current.next == nil {
+			break
+		}
+
+		current = current.next
+	}
+	return values
+}
+
+// Set writes a key-value pair to the log file.
+func (db *LogDB) Set(key string, value []byte) error {
+	db.Lock()
+	defer db.Unlock()
+
+	err := db.head.set(key, value)
+	if err != nil {
+		return err
+	}
+	if db.head.size() >= segmentSizeBytes {
+		db.appendSegment()
+	}
+	return nil
+}
+
+// Set writes a key-value pair without locking the database.
+func (db *LogDB) set(key string, value []byte) error {
 	err := db.head.set(key, value)
 	if err != nil {
 		return err
@@ -186,6 +253,16 @@ func (db *LogDB) Set(key string, value []byte) error {
 func (db *LogDB) MustSet(key string, value []byte) {
 	err := db.Set(key, value)
 	if err != nil {
+		db.log.Error("%v", err)
+		panic(err)
+	}
+}
+
+// mustSet writes a key-value pair without a lock and panics on error.
+func (db *LogDB) mustSet(key string, value []byte) {
+	err := db.set(key, value)
+	if err != nil {
+		db.log.Error("%v", err)
 		panic(err)
 	}
 }
@@ -193,44 +270,49 @@ func (db *LogDB) MustSet(key string, value []byte) {
 // Aggregate gathers all the unique key-value pairs in the database,
 // and then removes all the segments and resets the state.
 func (db *LogDB) Aggregate() map[string][]byte {
-	db.log.Debug("Aggregating segments")
+	db.log.Info("Aggregating segments")
 	db.Lock()
 	defer db.Unlock()
 
 	values := make(map[string][]byte, len(db.head.hashIndex))
-
-	// Break the connection between the tail and head.
-	if db.tail != nil {
-		db.tail.next = nil
-	}
-
-	for current := db.head; current != nil; {
+	current := db.head
+	for {
 		for key := range current.hashIndex {
 			if _, ok := values[key]; !ok {
 				value, _ := current.get(key)
 				values[key] = value
 			}
-			delete(current.hashIndex, key)
 		}
 
+		// Check if we've reached the end of the linked list.
 		current.Lock()
-		current.delete()
-		current.Unlock()
-
-		// Update current and break if we've reached the tail.
-		current = current.next
-		if current == nil {
+		if current.next == db.head || current.next == nil {
+			err := current.delete()
+			if err != nil {
+				db.log.Error(err)
+			}
+			current.next = nil
+			current.Unlock()
 			break
 		}
 
-		// Update the references so it can be GC'd.
+		err := current.delete()
+		if err != nil {
+			db.log.Error(err)
+		}
+
 		current.prev.next = nil
 		current.prev = nil
+		current.Unlock()
+		current = current.next
 	}
 
-	segment := newSegment(db.dirPath, 0)
-	db.head, db.tail = segment, segment
+	db.head = nil
+	db.tail = nil
 
-	db.log.Debug("Finished the aggrementation process")
+	segment := newSegment(db.dirPath, 0)
+	db.head, db.tail = segment, nil
+
+	db.log.Info("Aggregation completed")
 	return values
 }

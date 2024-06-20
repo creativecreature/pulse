@@ -15,6 +15,7 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/creativecreature/pulse"
+	"github.com/creativecreature/pulse/clock"
 	"github.com/creativecreature/pulse/git"
 )
 
@@ -23,33 +24,35 @@ type CodingSessionWriter interface {
 }
 
 type Server struct {
-	name          string
-	activeBuffer  *pulse.Buffer
-	lastHeartbeat time.Time
-	stopJobs      chan struct{}
-	clock         Clock
+	mu            sync.Mutex
+	clock         clock.Clock
 	log           *log.Logger
-	mutex         sync.Mutex
-	db            *pulse.LogDB
+	activeBuffer  *pulse.Buffer
+	name          string
+	lastHeartbeat time.Time
 	sessionWriter CodingSessionWriter
+	db            *pulse.LogDB
+	stopJobs      chan struct{}
 }
 
 // New creates a new server.
 func New(serverName, segmentPath string, sessionWriter CodingSessionWriter, opts ...Option) (*Server, error) {
 	s := &Server{
-		name:          serverName,
-		clock:         NewClock(),
-		stopJobs:      make(chan struct{}),
-		db:            pulse.NewDB(segmentPath),
+		clock:         clock.New(),
 		log:           pulse.NewLogger(),
+		name:          serverName,
 		sessionWriter: sessionWriter,
+		stopJobs:      make(chan struct{}),
 	}
+
 	for _, opt := range opts {
 		err := opt(s)
 		if err != nil {
 			return &Server{}, err
 		}
 	}
+
+	s.db = pulse.NewDB(segmentPath, s.clock)
 
 	// Run the heartbeat checks and aggregations in the background.
 	s.runHeartbeatChecks()
@@ -66,7 +69,7 @@ func (s *Server) openFile(event pulse.Event) {
 
 	if s.activeBuffer != nil {
 		if s.activeBuffer.Filepath == gitFile.Path && s.activeBuffer.Repository == gitFile.Repository {
-			s.log.Debug("This buffer is already considered active.",
+			s.log.Debug("This buffer is already considered active",
 				"path", gitFile.Path,
 				"repository", gitFile.Repository,
 				"editor_id", event.EditorID,
@@ -94,13 +97,14 @@ func (s *Server) saveBuffer() {
 		return
 	}
 
-	s.log.Debug("Writing the buffer.")
+	s.log.Debug("Writing the buffer")
 	buf := s.activeBuffer
 	buf.Close(s.clock.Now())
 	key := buf.Key()
 
 	// Merge the duration with the most recent entry for this day.
 	if bytes, hasMostRecentEntry := s.db.Get(key); hasMostRecentEntry {
+		s.log.Debug("Merging with the most recent entry for this buffer")
 		var b pulse.Buffer
 		err := json.Unmarshal(bytes, &b)
 		if err != nil {
@@ -167,7 +171,7 @@ func (s *Server) Start(port string) error {
 	}
 
 	s.saveBuffer()
-	s.log.Info("Shutting down.")
+	s.log.Info("Shutting down")
 
 	return nil
 }

@@ -12,6 +12,7 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/creativecreature/pulse"
+	"github.com/creativecreature/pulse/clock"
 	"github.com/creativecreature/pulse/server"
 )
 
@@ -61,7 +62,7 @@ func TestServerMergesFiles(t *testing.T) {
 		}
 	}()
 
-	mockClock := server.NewTestClock(time.Now())
+	mockClock := clock.NewMock(time.Now())
 	mockStorage := newMockStorage()
 
 	reply := ""

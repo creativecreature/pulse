@@ -5,12 +5,13 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/creativecreature/pulse"
+	"github.com/creativecreature/pulse/clock"
 )
 
 type Option func(*Server) error
 
 // WithClock sets the clock used by the server.
-func WithClock(clock Clock) Option {
+func WithClock(clock clock.Clock) Option {
 	return func(a *Server) error {
 		if clock == nil {
 			return errors.New("clock is nil")
