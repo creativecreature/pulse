@@ -33,7 +33,7 @@ databases. It is a work in progress, but it now includes some core features
 such as hash indexes, segmentation, and compaction. As a bonus, it helps me
 avoid surpassing the limits set by the free tier for the MongoDB database!
 
-This project has evolved into a bit of a playground where I can experiment with
+This project has evolved into a playground where I can experiment with
 different ideas and technologies. The most challenging part so far has been
 designing the website, as I wanted it to have a unique look and feel and to
 build all of the components from scratch. I'm in the process of making it open
