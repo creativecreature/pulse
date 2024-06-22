@@ -36,7 +36,8 @@ avoid surpassing the limits set by the free tier for the MongoDB database!
 This project has evolved into a bit of a playground where I can experiment with
 different ideas and technologies. The most challenging part so far has been
 designing the website, as I wanted it to have a unique look and feel and to
-build all of the components from scratch.
+build all of the components from scratch. I'm in the process of making it open
+source, but I have a few things that I'd like to clean up first.
 
 
 [1]: https://conner.dev
