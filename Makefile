@@ -1,6 +1,3 @@
-# Include variables from the .envrc file
-include .envrc
-
 .DEFAULT_GOAL := build
 
 # ==================================================================================== #
@@ -36,19 +33,18 @@ test: test
 	@echo 'Removing test cache...'
 	go clean -testcache
 	@echo 'Running tests...'
-	go test -race -vet=off -timeout 30s ./...
+	go test -race -vet=off -timeout 10s ./...
 
 
 ## audit: tidy and vendor dependencies and format, vet and test all code
+.PHONY: audit
 audit: vendor
 	@echo 'Formatting code...'
 	go fmt ./...
-	@echo 'Vetting code...'
-	go vet ./...
-	staticcheck ./...
+	@echo 'Linting code...'
+	golangci-lint run
 	@echo 'Running tests...'
 	go test -race -vet=off ./...
-.PHONY:audit
 
 ## vendor: tidy and vendor dependencies
 vendor:

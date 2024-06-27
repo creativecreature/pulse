@@ -40,13 +40,13 @@ func (s *Server) aggregate() {
 	go s.writeToRemote(codingSession)
 }
 
-func (s *Server) runAggregations() {
+func (s *Server) runAggregations(ctx context.Context) {
 	go func() {
 		ticker, stopTicker := s.clock.NewTicker(aggregationInterval)
 		defer stopTicker()
 		for {
 			select {
-			case <-s.stopJobs:
+			case <-ctx.Done():
 				return
 			case <-ticker:
 				s.aggregate()

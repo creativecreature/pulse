@@ -1,23 +1,17 @@
 package server
 
 import (
-	"errors"
-
 	"github.com/charmbracelet/log"
 	"github.com/creativecreature/pulse"
 	"github.com/creativecreature/pulse/clock"
 )
 
-type Option func(*Server) error
+type Option func(*Server)
 
 // WithClock sets the clock used by the server.
 func WithClock(clock clock.Clock) Option {
-	return func(a *Server) error {
-		if clock == nil {
-			return errors.New("clock is nil")
-		}
+	return func(a *Server) {
 		a.clock = clock
-		return nil
 	}
 }
 
@@ -29,11 +23,7 @@ type FileReader interface {
 
 // WithLog sets the logger used by the server.
 func WithLog(log *log.Logger) Option {
-	return func(a *Server) error {
-		if log == nil {
-			return errors.New("log is nil")
-		}
+	return func(a *Server) {
 		a.log = log
-		return nil
 	}
 }

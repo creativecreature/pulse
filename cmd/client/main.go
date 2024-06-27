@@ -1,19 +1,18 @@
 package main
 
 import (
+	"github.com/creativecreature/pulse"
 	"github.com/creativecreature/pulse/client"
 	"github.com/neovim/go-client/nvim/plugin"
 )
 
-// ldflags.
-var (
-	serverName string
-	port       string
-	hostname   string
-)
-
 func main() {
-	client, err := client.New(serverName, port, hostname)
+	cfg, err := pulse.ParseConfig()
+	if err != nil {
+		panic("failed to parse config")
+	}
+
+	client, err := client.New(cfg.Server.Name, cfg.Server.Port, cfg.Server.Hostname)
 	if err != nil {
 		panic(err)
 	}
