@@ -55,6 +55,7 @@ server:
   port: "1122"
   aggregationInterval: "10m"
   segmentationInterval: "5m"
+  segmentSizeKB: "10"
 database:
   uri: "mongodb+srv://<USERNAME>:xxxxxxx@serverless.xxxx.mongodb.net/?retryWrites=true"
   name: "pulse"
