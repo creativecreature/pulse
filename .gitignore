@@ -5,6 +5,7 @@
 *.so
 *.dylib
 bin
+dist
 
 # environment variables
 .envrc

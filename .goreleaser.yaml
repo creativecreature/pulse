@@ -1,8 +1,10 @@
 before:
   hooks:
     - go mod tidy
+
 builds:
-  - main: ./cmd/server
+  - id: server
+    main: ./cmd/server
     binary: server
     env:
       - CGO_ENABLED=0
@@ -13,10 +15,9 @@ builds:
       - arm64
       - amd64
       - 386
-    output:
-      dir: dist/{{ .Os }}/{{ .Arch }}
 
-  - main: ./cmd/client
+  - id: client
+    main: ./cmd/client
     binary: client
     env:
       - CGO_ENABLED=0
@@ -24,24 +25,45 @@ builds:
       - linux
       - darwin
     goarch:
+      - arm64
       - amd64
       - 386
-    output:
-      dir: dist/{{ .Os }}/{{ .Arch }}
 
 archives:
-  - format: tar.gz
+  - id: server_archive
+    builds:
+      - server
+    format: tar.gz
     name_template: >-
-      {{ .ProjectName }}_
+      server_
       {{- title .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
       {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
       {{- if .Arm }}v{{ .Arm }}{{ end }}
+    files:
+      - server
+
+  - id: client_archive
+    builds:
+      - client
+    format: tar.gz
+    name_template: >-
+      client_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    files:
+      - client
+
 checksum:
   name_template: 'checksums.txt'
+
 snapshot:
   name_template: "{{ incpatch .Version }}-next"
+
 changelog:
   sort: asc
   filters:
