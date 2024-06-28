@@ -40,6 +40,7 @@ func New(serverName, port, hostname string) (*Client, error) {
 func (c *Client) FocusGained(args []string) {
 	event, reply := createEvent(args), ""
 	serviceMethod := c.serverName + ".FocusGained"
+	//nolint: errcheck // I don't want to print eventual errors in the editor.
 	c.rpcClient.Call(serviceMethod, event, &reply)
 }
 
@@ -48,6 +49,7 @@ func (c *Client) FocusGained(args []string) {
 func (c *Client) OpenFile(args []string) {
 	event, reply := createEvent(args), ""
 	serviceMethod := c.serverName + ".OpenFile"
+	//nolint: errcheck // I don't want to print eventual errors in the editor.
 	c.rpcClient.Call(serviceMethod, event, &reply)
 }
 
@@ -57,6 +59,7 @@ func (c *Client) OpenFile(args []string) {
 func (c *Client) SendHeartbeat(args []string) {
 	event, reply := createEvent(args), ""
 	serviceMethod := c.serverName + ".SendHeartbeat"
+	//nolint: errcheck // I don't want to print eventual errors in the editor.
 	c.rpcClient.Call(serviceMethod, event, &reply)
 }
 
@@ -64,5 +67,6 @@ func (c *Client) SendHeartbeat(args []string) {
 func (c *Client) EndSession(args []string) {
 	event, reply := createEvent(args), ""
 	serviceMethod := c.serverName + ".EndSession"
+	//nolint: errcheck // I don't want to print eventual errors in the editor.
 	c.rpcClient.Call(serviceMethod, event, &reply)
 }

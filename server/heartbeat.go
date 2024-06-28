@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"strconv"
 	"time"
 )
@@ -38,13 +39,13 @@ func (s *Server) checkHeartbeat() {
 
 // runHeartbeatChecks runs in a separate goroutine and makes sure
 // that no session is allowed to be idle for more than 10 minutes.
-func (s *Server) runHeartbeatChecks() {
+func (s *Server) runHeartbeatChecks(ctx context.Context) {
 	go func() {
 		ticker, stopTicker := s.clock.NewTicker(heartbeatInterval)
 		defer stopTicker()
 		for {
 			select {
-			case <-s.stopJobs:
+			case <-ctx.Done():
 				return
 			case <-ticker:
 				s.checkHeartbeat()

@@ -1,6 +1,7 @@
 package pulse_test
 
 import (
+	"context"
 	"io"
 	"os"
 	"path/filepath"
@@ -66,10 +67,12 @@ func copyDir(srcDir, dstDir string) error {
 }
 
 func TestConcurrentGetSet(t *testing.T) {
+	t.Parallel()
+
 	cpus := runtime.NumCPU()
 	writeCPUs, readCPUs := cpus/2, cpus/2
 	numIterations := 10_000
-	db := pulse.NewDB(t.TempDir(), clock.New())
+	db := pulse.NewDB(t.TempDir(), 10, clock.New())
 
 	wg := sync.WaitGroup{}
 	wg.Add(numIterations * (writeCPUs + readCPUs))
@@ -105,7 +108,11 @@ func TestUniqueValues(t *testing.T) {
 	}
 
 	mockClock := clock.NewMock(time.Now())
-	db := pulse.NewDB(path, mockClock)
+	db := pulse.NewDB(path, 10, mockClock)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go db.RunSegmentations(ctx, time.Minute*5)
 
 	values := db.GetAllUnique()
 	if len(values) != 11 {
@@ -123,7 +130,11 @@ func TestAggregation(t *testing.T) {
 	}
 
 	mockClock := clock.NewMock(time.Now())
-	db := pulse.NewDB(path, mockClock)
+	db := pulse.NewDB(path, 10, mockClock)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go db.RunSegmentations(ctx, time.Minute*5)
 
 	values := db.GetAllUnique()
 	if len(values) != 11 {
@@ -146,7 +157,11 @@ func TestCompaction(t *testing.T) {
 	}
 
 	mockClock := clock.NewMock(time.Now())
-	db := pulse.NewDB(path, mockClock)
+	db := pulse.NewDB(path, 10, mockClock)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go db.RunSegmentations(ctx, time.Minute*5)
 
 	values := db.GetAllUnique()
 	if len(values) != 11 {
@@ -172,7 +187,11 @@ func TestAggregationAfterCompaction(t *testing.T) {
 	}
 
 	mockClock := clock.NewMock(time.Now())
-	db := pulse.NewDB(path, mockClock)
+	db := pulse.NewDB(path, 10, mockClock)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go db.RunSegmentations(ctx, time.Minute*5)
 
 	values := db.GetAllUnique()
 	if len(values) != 11 {
@@ -203,7 +222,11 @@ func TestCompactionWritesAggregation(t *testing.T) {
 	}
 
 	mockClock := clock.NewMock(time.Now())
-	db := pulse.NewDB(path, mockClock)
+	db := pulse.NewDB(path, 10, mockClock)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go db.RunSegmentations(ctx, time.Minute*5)
 
 	values := db.GetAllUnique()
 	if len(values) != 11 {
@@ -259,7 +282,11 @@ func TestAppendingCompactingWritesAggregation(t *testing.T) {
 	}
 
 	mockClock := clock.NewMock(time.Now())
-	db := pulse.NewDB(path, mockClock)
+	db := pulse.NewDB(path, 10, mockClock)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go db.RunSegmentations(ctx, time.Minute*5)
 
 	values := db.GetAllUnique()
 	if len(values) != 11 {
@@ -310,7 +337,11 @@ func TestWritesCompacting(t *testing.T) {
 	t.Parallel()
 
 	mockClock := clock.NewMock(time.Now())
-	db := pulse.NewDB(t.TempDir(), mockClock)
+	db := pulse.NewDB(t.TempDir(), 10, mockClock)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go db.RunSegmentations(ctx, time.Minute*5)
 
 	values := db.GetAllUnique()
 	if len(values) != 0 {

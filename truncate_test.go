@@ -7,12 +7,18 @@ import (
 	"github.com/creativecreature/pulse"
 )
 
-func TestTruncate(t *testing.T) {
+func TestMain(m *testing.M) {
 	loc, err := time.LoadLocation("Europe/Stockholm")
 	if err != nil {
-		t.Fatal("Failed to load Stockholm timezone:", err)
+		panic(err)
 	}
 	time.Local = loc
+
+	m.Run()
+}
+
+func TestTruncate(t *testing.T) {
+	t.Parallel()
 
 	// 09:32 Friday June 16 2023
 	originalTime := int64(1686907956000)

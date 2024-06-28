@@ -12,6 +12,8 @@ type filenameTest struct {
 }
 
 func TestFilename(t *testing.T) {
+	t.Parallel()
+
 	testCases := []filenameTest{
 		{0, "aaaaaaaaaaaaaaaa.log"},
 		{25, "aaaaaaaaaaaaaaaz.log"},
@@ -21,8 +23,11 @@ func TestFilename(t *testing.T) {
 		{52, "aaaaaaaaaaaaaaca.log"},
 		{702, "aaaaaaaaaaaaabba.log"},
 	}
+
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.expected, func(t *testing.T) {
+			t.Parallel()
 			actual := pulse.Filename(tc.index)
 			if actual != tc.expected {
 				t.Errorf("expected %s, got %s", tc.expected, actual)
@@ -37,6 +42,8 @@ type indexTest struct {
 }
 
 func TestIndex(t *testing.T) {
+	t.Parallel()
+
 	testCases := []indexTest{
 		{"aaaaaaaaaaaaaaaa.log", 0},
 		{"aaaaaaaaaaaaaaaz.log", 25},
@@ -48,7 +55,9 @@ func TestIndex(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.filename, func(t *testing.T) {
+			t.Parallel()
 			actual := pulse.Index(tc.filename)
 			if actual != tc.expected {
 				t.Errorf("expected %d, got %d", tc.expected, actual)

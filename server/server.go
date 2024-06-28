@@ -7,10 +7,7 @@ import (
 	"net"
 	"net/http"
 	"net/rpc"
-	"os"
-	"os/signal"
 	"sync"
-	"syscall"
 	"time"
 
 	"github.com/charmbracelet/log"
@@ -19,7 +16,8 @@ import (
 	"github.com/creativecreature/pulse/git"
 )
 
-type CodingSessionWriter interface {
+// SessionWriter is an abstraction for writing coding sessions to a permanent storage.
+type SessionWriter interface {
 	Write(context.Context, pulse.CodingSession) error
 }
 
@@ -30,35 +28,26 @@ type Server struct {
 	activeBuffer  *pulse.Buffer
 	name          string
 	lastHeartbeat time.Time
-	sessionWriter CodingSessionWriter
+	sessionWriter SessionWriter
 	db            *pulse.LogDB
-	stopJobs      chan struct{}
 }
 
 // New creates a new server.
-func New(serverName, segmentPath string, sessionWriter CodingSessionWriter, opts ...Option) (*Server, error) {
+func New(cfg *pulse.Config, segmentPath string, sessionWriter SessionWriter, opts ...Option) *Server {
 	s := &Server{
 		clock:         clock.New(),
 		log:           pulse.NewLogger(),
-		name:          serverName,
+		name:          cfg.Server.Name,
 		sessionWriter: sessionWriter,
-		stopJobs:      make(chan struct{}),
 	}
 
 	for _, opt := range opts {
-		err := opt(s)
-		if err != nil {
-			return &Server{}, err
-		}
+		opt(s)
 	}
 
-	s.db = pulse.NewDB(segmentPath, s.clock)
+	s.db = pulse.NewDB(segmentPath, cfg.Server.SegmentSizeKB, s.clock)
 
-	// Run the heartbeat checks and aggregations in the background.
-	s.runHeartbeatChecks()
-	s.runAggregations()
-
-	return s, nil
+	return s
 }
 
 func (s *Server) openFile(event pulse.Event) {
@@ -121,21 +110,31 @@ func (s *Server) saveBuffer() {
 	s.activeBuffer = nil
 }
 
-func (s *Server) startServer(port string) (*http.Server, error) {
+// RunBackgroundJobs starts the heartbeat, aggregation, and segmentation jobs.
+func (s *Server) RunBackgroundJobs(ctx context.Context, segmentationInterval time.Duration) {
+	go s.runHeartbeatChecks(ctx)
+	go s.runAggregations(ctx)
+	go s.db.RunSegmentations(ctx, segmentationInterval)
+}
+
+// Start starts the server on the given port.
+func (s *Server) StartServer(ctx context.Context, port string) error {
+	s.log.Info("Starting up...")
 	proxy := NewProxy(s)
 	err := rpc.RegisterName(s.name, proxy)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	rpc.HandleHTTP()
 	listener, err := net.Listen("tcp", ":"+port)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	httpServer := &http.Server{
 		ReadHeaderTimeout: time.Second * 5,
 	}
+
 	go func() {
 		serveErr := httpServer.Serve(listener)
 		if !errors.Is(serveErr, http.ErrServerClosed) {
@@ -143,35 +142,13 @@ func (s *Server) startServer(port string) (*http.Server, error) {
 		}
 	}()
 
-	return httpServer, nil
-}
-
-// Start starts the server on the given port.
-func (s *Server) Start(port string) error {
-	s.log.Info("Starting up...")
-	httpServer, err := s.startServer(port)
-	if err != nil {
-		return err
-	}
-
-	// Catch shutdown signals from the OS
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-
-	// Blocks until a shutdown signal is received.
-	sig := <-quit
-	s.log.Info("Received shutdown signal", "signal", sig.String())
-
-	// Stop the heartbeat checks and shutdown the http server.
-	s.stopJobs <- struct{}{}
-	err = httpServer.Shutdown(context.Background())
-	if err != nil {
-		s.log.Error(err)
-		return err
-	}
-
-	s.saveBuffer()
+	// Blocks until the context is cancelled.
+	<-ctx.Done()
 	s.log.Info("Shutting down")
+	s.saveBuffer()
 
-	return nil
+	shutdownContext, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	//nolint: contextcheck // This is a new cancellation tree.
+	return httpServer.Shutdown(shutdownContext)
 }

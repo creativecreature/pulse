@@ -1,17 +1,13 @@
 package pulse
 
 import (
+	"context"
 	"os"
 	"sync"
 	"time"
 
 	"github.com/charmbracelet/log"
 	"github.com/creativecreature/pulse/clock"
-)
-
-const (
-	segmentationInterval = 5 * time.Minute
-	segmentSizeBytes     = 10 * 1024 // 10KB
 )
 
 // Record represents a key-value pair in our database.
@@ -23,15 +19,16 @@ type Record struct {
 // LogDB is a simple key-value store that persists data to a log file.
 type LogDB struct {
 	sync.RWMutex
-	dirPath string
-	clock   clock.Clock
-	log     *log.Logger
-	head    *Segment
-	tail    *Segment
+	dirPath          string
+	segmentSizeBytes int64
+	clock            clock.Clock
+	log              *log.Logger
+	head             *Segment
+	tail             *Segment
 }
 
 // NewDB creates a new log database.
-func NewDB(dirPath string, clock clock.Clock) *LogDB {
+func NewDB(dirPath string, segmentSizeKB int, c clock.Clock) *LogDB {
 	log := NewLogger()
 
 	// Create the directory if it doesn't exist.
@@ -46,20 +43,9 @@ func NewDB(dirPath string, clock clock.Clock) *LogDB {
 
 	var logDB LogDB
 	logDB.dirPath = dirPath
+	logDB.segmentSizeBytes = int64(segmentSizeKB) * 1024
 	logDB.log = log
-	logDB.clock = clock
-
-	// Leak a goroutine that compacts the segments.
-	defer func() {
-		go func() {
-			c, cancel := clock.NewTicker(segmentationInterval)
-			defer cancel()
-			for {
-				<-c
-				logDB.compact()
-			}
-		}()
-	}()
+	logDB.clock = c
 
 	// If the directory is empty, we'll simply create the initial segment and return.
 	if len(segmentPaths) == 0 {
@@ -78,6 +64,20 @@ func NewDB(dirPath string, clock clock.Clock) *LogDB {
 	logDB.head, logDB.tail = segments[0], tail
 
 	return &logDB
+}
+
+// RunSegmentations starts the database's compaction process.
+func (db *LogDB) RunSegmentations(ctx context.Context, segmentationInterval time.Duration) {
+	c, cancel := db.clock.NewTicker(segmentationInterval)
+	defer cancel()
+	for {
+		select {
+		case <-c:
+			db.compact()
+		case <-ctx.Done():
+			return
+		}
+	}
 }
 
 // appendSegment creates a new segment and appends it to the
@@ -231,7 +231,7 @@ func (db *LogDB) Set(key string, value []byte) error {
 	if err != nil {
 		return err
 	}
-	if db.head.size() >= segmentSizeBytes {
+	if db.head.size() >= db.segmentSizeBytes {
 		db.appendSegment()
 	}
 	return nil
@@ -243,7 +243,7 @@ func (db *LogDB) set(key string, value []byte) error {
 	if err != nil {
 		return err
 	}
-	if db.head.size() >= segmentSizeBytes {
+	if db.head.size() >= db.segmentSizeBytes {
 		db.appendSegment()
 	}
 	return nil

@@ -50,6 +50,8 @@ func absolutePath(t *testing.T, relativePath string) string {
 }
 
 func TestServerMergesFiles(t *testing.T) {
+	t.Parallel()
+
 	// You can't commit a .git directory. Therefore, we have to rename it to .git in the test runner.
 	err := os.Rename(absolutePath(t, "./testdata/sturdyc/git"), absolutePath(t, "./testdata/sturdyc/.git"))
 	if err != nil {
@@ -64,18 +66,24 @@ func TestServerMergesFiles(t *testing.T) {
 
 	mockClock := clock.NewMock(time.Now())
 	mockStorage := newMockStorage()
+	var cfg pulse.Config
+	cfg.Server.Name = "TestApp"
+	cfg.Server.AggregationInterval = 10 * time.Minute
+	cfg.Server.SegmentationInterval = 5 * time.Minute
+	cfg.Server.SegmentSizeKB = 10
 
 	reply := ""
-	s, err := server.New(
-		"TestApp",
-		t.TempDir(),
-		mockStorage,
+	s := server.New(&cfg, t.TempDir(), mockStorage,
 		server.WithLog(log.New(io.Discard)),
 		server.WithClock(mockClock),
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go func() {
+		s.RunBackgroundJobs(ctx, cfg.Server.SegmentationInterval)
+	}()
+	time.Sleep(100 * time.Millisecond)
 
 	// Open an initial VIM window.
 	s.FocusGained(pulse.Event{
