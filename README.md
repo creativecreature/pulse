@@ -14,8 +14,8 @@ on my [website][1]
 
 # How it works
 
-After spending some time debugging different language servers in Neovim, I felt
-inspired to write my own server that would simply parse metadata and aggregate
+After spending some time debugging different language servers in Neovim, I got
+the idea to write my own server that would simply parse metadata and aggregate
 statistics about my coding sessions.
 
 I run the server from this repository as a daemon, and it receives remote
@@ -37,7 +37,7 @@ retrieves the data and the website that displays it. The website has been the
 most challenging part so far because I wanted it to have a unique look and feel
 and to build all of the components from scratch. I'm in the process of making
 it open source, but there are still a few things that I'd like to clean up
-first.
+first!
 
 # Running this project
 
