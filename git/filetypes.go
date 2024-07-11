@@ -43,6 +43,7 @@ var extensions = map[string]string{
 	"scss":   "css",
 	"sh":     "bash",
 	"swift":  "swift",
+	"templ":  "go",
 	"tf":     "terraform",
 	"tfvars": "terraform",
 	"toml":   "toml",
