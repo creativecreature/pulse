@@ -5,7 +5,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/creativecreature/pulse)](https://goreportcard.com/report/github.com/creativecreature/pulse)
 [![Test](https://github.com/creativecreature/pulse/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/creativecreature/pulse/actions/workflows/main.yml)
 
-This repository contains all of the code I use to gather data for my
+This repository contains all of the code I've written to gather data for my
 [website][1]
 
 ![Screenshot of website][2]
