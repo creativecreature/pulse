@@ -8,7 +8,7 @@ import (
 	"github.com/creativecreature/pulse"
 )
 
-const aggregationInterval = 10 * time.Minute
+const aggregationInterval = 30 * time.Minute
 
 // writeToRemote will write the session to the remote storage.
 func (s *Server) writeToRemote(session pulse.CodingSession) {

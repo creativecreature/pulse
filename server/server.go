@@ -14,6 +14,8 @@ import (
 	"github.com/creativecreature/pulse"
 	"github.com/creativecreature/pulse/clock"
 	"github.com/creativecreature/pulse/git"
+	"github.com/creativecreature/pulse/logdb"
+	"github.com/creativecreature/pulse/logger"
 )
 
 // SessionWriter is an abstraction for writing coding sessions to a permanent storage.
@@ -29,14 +31,14 @@ type Server struct {
 	name          string
 	lastHeartbeat time.Time
 	sessionWriter SessionWriter
-	db            *pulse.LogDB
+	db            *logdb.LogDB
 }
 
 // New creates a new server.
 func New(cfg *pulse.Config, segmentPath string, sessionWriter SessionWriter, opts ...Option) *Server {
 	s := &Server{
 		clock:         clock.New(),
-		log:           pulse.NewLogger(),
+		log:           logger.New(),
 		name:          cfg.Server.Name,
 		sessionWriter: sessionWriter,
 	}
@@ -45,7 +47,7 @@ func New(cfg *pulse.Config, segmentPath string, sessionWriter SessionWriter, opt
 		opt(s)
 	}
 
-	s.db = pulse.NewDB(segmentPath, cfg.Server.SegmentSizeKB, s.clock)
+	s.db = logdb.NewDB(segmentPath, cfg.Server.SegmentSizeKB, s.clock)
 
 	return s
 }

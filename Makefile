@@ -64,13 +64,13 @@ vendor:
 ## build/server: build cmd/server
 build/server:
 	@echo 'Compiling server...'
-	go build -ldflags="-X main.serverName=${SERVER_NAME} -X main.port=${PORT} -X main.uri=${URI} -X main.db=${DB}" -o=./bin/pulse-server ./cmd/server
+	go build -o=./bin/pulse-server ./cmd/server
 .PHONY:build/server
 
 ## build/client: build cmd/client
 build/client:
 	@echo 'Compiling client...'
-	go build -ldflags="-X main.serverName=${SERVER_NAME} -X main.port=${PORT} -X main.hostname=${HOSTNAME}" -o=./bin/pulse-client ./cmd/client
+	go build -o=./bin/pulse-client ./cmd/client
 .PHONY:build/client
 
 ## build: builds the server and client applications

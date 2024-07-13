@@ -141,7 +141,7 @@ func TestServerMergesFiles(t *testing.T) {
 		OS:       "Linux",
 	}, &reply)
 
-	mockClock.Add(time.Minute * 15)
+	mockClock.Add(time.Minute * 30)
 	mockClock.Add(time.Minute)
 	time.Sleep(200 * time.Millisecond)
 

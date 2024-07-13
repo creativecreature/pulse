@@ -2,6 +2,7 @@ package pulse
 
 import (
 	"cmp"
+	"sort"
 	"time"
 
 	"golang.org/x/exp/maps"
@@ -16,6 +17,13 @@ const (
 	Month
 	Year
 )
+
+const millisecondDay int64 = 24 * 60 * 60 * 1000
+
+// TruncateDay truncates the timestamp to the start of the day.
+func TruncateDay(timestamp int64) int64 {
+	return timestamp - (timestamp % millisecondDay)
+}
 
 // CodingSession represents a coding session that has been aggregated
 // for a given time period (day, week, month, year).
@@ -80,15 +88,29 @@ func (a CodingSession) merge(b CodingSession, epochDateMs int64, timePeriod Peri
 // CodingSessions represents a slice of coding sessions.
 type CodingSessions []CodingSession
 
+func (s CodingSessions) Len() int {
+	return len(s)
+}
+
+func (s CodingSessions) Less(i, j int) bool {
+	return s[i].EpochDateMs < s[j].EpochDateMs
+}
+
+func (s CodingSessions) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
 // merge takes two slices of coding sessions, merges them, and returns the result.
 func merge(sessions CodingSessions, truncate func(int64) int64, timePeriod Period) CodingSessions {
 	truncatedDateAggregatedSession := make(map[int64]CodingSession)
 	for _, s := range sessions {
-		truncatedDate := truncate(s.EpochDateMs)
-		currentSession := truncatedDateAggregatedSession[truncatedDate]
-		truncatedDateAggregatedSession[truncatedDate] = s.merge(currentSession, truncatedDate, timePeriod)
+		date := truncate(s.EpochDateMs)
+		currentSession := truncatedDateAggregatedSession[date]
+		truncatedDateAggregatedSession[date] = s.merge(currentSession, date, timePeriod)
 	}
-	return maps.Values(truncatedDateAggregatedSession)
+	values := CodingSessions(maps.Values(truncatedDateAggregatedSession))
+	sort.Sort(values)
+	return values
 }
 
 // MergeByDay merges sessions that occurred the same day.
@@ -98,15 +120,30 @@ func (s CodingSessions) MergeByDay() CodingSessions {
 
 // MergeByWeek merges sessions that occurred the same week.
 func (s CodingSessions) MergeByWeek() CodingSessions {
-	return merge(s, TruncateWeek, Week)
+	truncate := func(timestamp int64) int64 {
+		t := time.UnixMilli(timestamp)
+		for t.Weekday() != time.Monday {
+			t = t.AddDate(0, 0, -1)
+		}
+		return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location()).UnixMilli()
+	}
+	return merge(s, truncate, Week)
 }
 
-// MergeByWeek merges sessions that occurred the same month.
+// MergeByMonth merges sessions that occurred the same month.
 func (s CodingSessions) MergeByMonth() CodingSessions {
-	return merge(s, TruncateMonth, Month)
+	truncate := func(timestamp int64) int64 {
+		t := time.UnixMilli(timestamp)
+		return time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, t.Location()).UnixMilli()
+	}
+	return merge(s, truncate, Month)
 }
 
 // MergeByYear merges sessions that occurred the same year.
 func (s CodingSessions) MergeByYear() CodingSessions {
-	return merge(s, TruncateYear, Year)
+	truncate := func(timestamp int64) int64 {
+		t := time.UnixMilli(timestamp)
+		return time.Date(t.Year(), time.January, 1, 0, 0, 0, 0, t.Location()).UnixMilli()
+	}
+	return merge(s, truncate, Year)
 }

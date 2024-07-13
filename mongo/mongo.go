@@ -6,6 +6,7 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/creativecreature/pulse"
+	"github.com/creativecreature/pulse/logger"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -38,7 +39,7 @@ func New(uri, database string) *Client {
 	return &Client{
 		Client:   client,
 		database: database,
-		log:      pulse.NewLogger(),
+		log:      logger.New(),
 	}
 }
 
