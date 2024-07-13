@@ -5,8 +5,8 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/creativecreature/pulse)](https://goreportcard.com/report/github.com/creativecreature/pulse)
 [![Test](https://github.com/creativecreature/pulse/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/creativecreature/pulse/actions/workflows/main.yml)
 
-This repository contains all of the code for gathering the data which I display
-on my [website][1]
+This repository contains all of the code I use to gather data for my
+[website][1]
 
 ![Screenshot of website][2]
 
@@ -23,21 +23,20 @@ procedure calls from the neovim plugin pertaining to events such as the opening
 of buffers, windows gaining focus, the initiation of new `nvim` processes, etc.
 
 These calls contains the path to the buffer, which the server parses and writes
-to a log-structured key-value store. The store is a work in progress, but it
-now includes some core features such as hash indexes, segmentation, and
-compaction.
+to a log-structured append-only key-value store. The store is a work in
+progress, but it now includes some core features such as hash indexes,
+segmentation, and compaction.
 
 The server runs a background job which requests all of the buffers from the KV
-store, and proceeds to aggregate them to a remote database. I chose this
-approach primarily because I wanted to avoid surpassing the limits set by the
-free tier for the MongoDB database.
+store, and proceeds to aggregate them to a remote database. I did it this way
+primarily because I wanted to avoid surpassing the limits set by the free tier
+for the remote database.
 
 The only things that aren't included in this repository is the API which
 retrieves the data and the website that displays it. The website has been the
-most challenging part so far because I wanted it to have a unique look and feel
-and to build all of the components from scratch. I'm in the process of making
-it open source, but there are still a few things that I'd like to clean up
-first!
+most challenging part so far. I wanted it to have a unique look and feel and to
+build all of the components from scratch. I'm in the process of making it open
+source, but there are still a few things that I'd like to clean up first!
 
 # Running this project
 
