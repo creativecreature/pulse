@@ -30,7 +30,8 @@ segmentation, and compaction.
 The server runs a background job which requests all of the buffers from the KV
 store, and proceeds to aggregate them to a remote database. I did it this way
 primarily because I wanted to avoid surpassing the limits set by the free tier
-for the remote database.
+for the remote database. If you aren't concerned about costs you could use a
+much lower aggregation interval than me.
 
 The only things that aren't included in this repository is the API which
 retrieves the data and the website that displays it. The website has been the
@@ -52,7 +53,7 @@ server:
   name: "pulse-server"
   hostname: "localhost"
   port: "1122"
-  aggregationInterval: "10m"
+  aggregationInterval: "15m"
   segmentationInterval: "5m"
   segmentSizeKB: "10"
 database:
