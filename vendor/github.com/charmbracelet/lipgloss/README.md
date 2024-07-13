@@ -1,11 +1,11 @@
-Lip Gloss
-=========
+# Lip Gloss
 
 <p>
-    <img src="https://stuff.charm.sh/lipgloss/lipgloss-header-github.png" width="340" alt="Lip Gloss Title Treatment"><br>
+    <a href="https://stuff.charm.sh/lipgloss/lipgloss-mascot-2k.png"><img width="340" alt="Lip Gloss title treatment" src="https://github.com/charmbracelet/lipgloss/assets/25087/147cadb1-4254-43ec-ae6b-8d6ca7b029a1"></a><br>
     <a href="https://github.com/charmbracelet/lipgloss/releases"><img src="https://img.shields.io/github/release/charmbracelet/lipgloss.svg" alt="Latest Release"></a>
     <a href="https://pkg.go.dev/github.com/charmbracelet/lipgloss?tab=doc"><img src="https://godoc.org/github.com/golang/gddo?status.svg" alt="GoDoc"></a>
     <a href="https://github.com/charmbracelet/lipgloss/actions"><img src="https://github.com/charmbracelet/lipgloss/workflows/build/badge.svg" alt="Build Status"></a>
+    <a href="https://www.phorm.ai/query?projectId=a0e324b6-b706-4546-b951-6671ea60c13f"><img src="https://stuff.charm.sh/misc/phorm-badge.svg" alt="phorm.ai"></a>
 </p>
 
 Style definitions for nice terminal layouts. Built with TUIs in mind.
@@ -64,7 +64,6 @@ The terminal's color profile will be automatically detected, and colors outside
 the gamut of the current palette will be automatically coerced to their closest
 available value.
 
-
 ### Adaptive Colors
 
 You can also specify color options for light and dark backgrounds:
@@ -115,7 +114,6 @@ var style = lipgloss.NewStyle().
     Reverse(true)
 ```
 
-
 ## Block-Level Formatting
 
 Lip Gloss also supports rules for block-level formatting:
@@ -154,7 +152,6 @@ lipgloss.NewStyle().Padding(1, 4, 2)
 lipgloss.NewStyle().Margin(2, 4, 3, 1)
 ```
 
-
 ## Aligning Text
 
 You can align paragraphs of text to the left, right, or center.
@@ -167,7 +164,6 @@ var style = lipgloss.NewStyle().
     Align(lipgloss.Center) // just kidding, align it in the center
 ```
 
-
 ## Width and Height
 
 Setting a minimum width and height is simple and straightforward.
@@ -179,7 +175,6 @@ var style = lipgloss.NewStyle().
     Height(32).
     Foreground(lipgloss.Color("63"))
 ```
-
 
 ## Borders
 
@@ -228,21 +223,22 @@ lipgloss.NewStyle().
 
 For more on borders see [the docs][docs].
 
-
 ## Copying Styles
 
-Just use `Copy()`:
+Just use assignment:
 
 ```go
-var style = lipgloss.NewStyle().Foreground(lipgloss.Color("219"))
+style := lipgloss.NewStyle().Foreground(lipgloss.Color("219"))
 
-var wildStyle = style.Copy().Blink(true)
+copiedStyle := style // this is a true copy
+
+wildStyle := style.Blink(true) // this is also true copy, with blink added
+
 ```
 
-`Copy()` performs a copy on the underlying data structure ensuring that you get
-a true, dereferenced copy of a style. Without copying, it's possible to mutate
-styles.
-
+Since `Style` data structures contains only primitive types, assigning a style
+to another effectively creates a new copy of the style without mutating the
+original.
 
 ## Inheritance
 
@@ -261,7 +257,6 @@ var styleB = lipgloss.NewStyle().
     Inherit(styleA)
 ```
 
-
 ## Unsetting Rules
 
 All rules can be unset:
@@ -275,7 +270,6 @@ var style = lipgloss.NewStyle().
 ```
 
 When a rule is unset, it won't be inherited or copied.
-
 
 ## Enforcing Rules
 
@@ -353,7 +347,6 @@ For an example on using a custom renderer over SSH with [Wish][wish] see the
 In addition to pure styling, Lip Gloss also ships with some utilities to help
 assemble your layouts.
 
-
 ### Joining Paragraphs
 
 Horizontally and vertically joining paragraphs is a cinch.
@@ -369,7 +362,6 @@ lipgloss.JoinVertical(lipgloss.Center, paragraphA, paragraphB)
 // from the top of the tallest
 lipgloss.JoinHorizontal(0.2, paragraphA, paragraphB, paragraphC)
 ```
-
 
 ### Measuring Width and Height
 
@@ -463,7 +455,114 @@ fmt.Println(t)
 
 For more on tables see [the docs](https://pkg.go.dev/github.com/charmbracelet/lipgloss?tab=doc) and [examples](https://github.com/charmbracelet/lipgloss/tree/master/examples/table).
 
-***
+## Rendering Lists
+
+Lip Gloss ships with a list rendering sub-package.
+
+```go
+import "github.com/charmbracelet/lipgloss/list"
+```
+
+Define a new list.
+
+```go
+l := list.New("A", "B", "C")
+```
+
+Print the list.
+
+```go
+fmt.Println(l)
+
+// • A
+// • B
+// • C
+```
+
+Lists have the ability to nest.
+
+```go
+l := list.New(
+  "A", list.New("Artichoke"),
+  "B", list.New("Baking Flour", "Bananas", "Barley", "Bean Sprouts"),
+  "C", list.New("Cashew Apple", "Cashews", "Coconut Milk", "Curry Paste", "Currywurst"),
+  "D", list.New("Dill", "Dragonfruit", "Dried Shrimp"),
+  "E", list.New("Eggs"),
+  "F", list.New("Fish Cake", "Furikake"),
+  "J", list.New("Jicama"),
+  "K", list.New("Kohlrabi"),
+  "L", list.New("Leeks", "Lentils", "Licorice Root"),
+)
+```
+
+Print the list.
+
+```go
+fmt.Println(l)
+```
+
+<p align="center">
+<img width="600" alt="image" src="https://github.com/charmbracelet/lipgloss/assets/42545625/0dc9f440-0748-4151-a3b0-7dcf29dfcdb0">
+</p>
+
+Lists can be customized via their enumeration function as well as using
+`lipgloss.Style`s.
+
+```go
+enumeratorStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("99")).MarginRight(1)
+itemStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("212")).MarginRight(1)
+
+l := list.New(
+  "Glossier",
+  "Claire’s Boutique",
+  "Nyx",
+  "Mac",
+  "Milk",
+).
+  Enumerator(list.Roman).
+  EnumeratorStyle(enumeratorStyle).
+  ItemStyle(itemStyle)
+```
+
+Print the list.
+
+<p align="center">
+<img width="600" alt="List example" src="https://github.com/charmbracelet/lipgloss/assets/42545625/360494f1-57fb-4e13-bc19-0006efe01561">
+</p>
+
+In addition to the predefined enumerators (`Arabic`, `Alphabet`, `Roman`, `Bullet`, `Tree`),
+you may also define your own custom enumerator:
+
+```go
+l := list.New("Duck", "Duck", "Duck", "Duck", "Goose", "Duck", "Duck")
+
+func DuckDuckGooseEnumerator(l list.Items, i int) string {
+    if l.At(i).Value() == "Goose" {
+        return "Honk →"
+    }
+    return ""
+}
+
+l = l.Enumerator(DuckDuckGooseEnumerator)
+```
+
+Print the list:
+
+<p align="center">
+<img width="600" alt="image" src="https://github.com/charmbracelet/lipgloss/assets/42545625/157aaf30-140d-4948-9bb4-dfba46e5b87e">
+</p>
+
+If you need, you can also build lists incrementally:
+
+```go
+l := list.New()
+
+for i := 0; i < repeat; i++ {
+    l.Item("Lip Gloss")
+}
+```
+
+---
 
 ## FAQ
 
@@ -499,10 +598,11 @@ import (
 lipgloss.SetColorProfile(termenv.TrueColor)
 ```
 
-*Note:* this option limits the flexibility of your application and can cause
+_Note:_ this option limits the flexibility of your application and can cause
 ANSI escape codes to be output in cases where that might not be desired. Take
 careful note of your use case and environment before choosing to force a color
 profile.
+
 </details>
 
 ## What about [Bubble Tea][tea]?
@@ -516,7 +616,6 @@ In simple terms, you can use Lip Gloss to help build your Bubble Tea views.
 
 [tea]: https://github.com/charmbracelet/tea
 
-
 ## Under the Hood
 
 Lip Gloss is built on the excellent [Termenv][termenv] and [Reflow][reflow]
@@ -526,7 +625,6 @@ For many use cases Termenv and Reflow will be sufficient for your needs.
 [termenv]: https://github.com/muesli/termenv
 [reflow]: https://github.com/muesli/reflow
 
-
 ## Rendering Markdown
 
 For a more document-centric rendering solution with support for things like
@@ -535,27 +633,25 @@ the stylesheet-based Markdown renderer.
 
 [glamour]: https://github.com/charmbracelet/glamour
 
-
 ## Feedback
 
 We’d love to hear your thoughts on this project. Feel free to drop us a note!
 
-* [Twitter](https://twitter.com/charmcli)
-* [The Fediverse](https://mastodon.social/@charmcli)
-* [Discord](https://charm.sh/chat)
+- [Twitter](https://twitter.com/charmcli)
+- [The Fediverse](https://mastodon.social/@charmcli)
+- [Discord](https://charm.sh/chat)
 
 ## License
 
 [MIT](https://github.com/charmbracelet/lipgloss/raw/master/LICENSE)
 
-***
+---
 
 Part of [Charm](https://charm.sh).
 
 <a href="https://charm.sh/"><img alt="The Charm logo" src="https://stuff.charm.sh/charm-badge.jpg" width="400"></a>
 
 Charm热爱开源 • Charm loves open source
-
 
 [docs]: https://pkg.go.dev/github.com/charmbracelet/lipgloss?tab=doc
 [wish]: https://github.com/charmbracelet/wish
