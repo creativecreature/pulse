@@ -18,7 +18,6 @@ import (
 	"github.com/creativecreature/pulse/logger"
 )
 
-// SessionWriter is an abstraction for writing coding sessions to a permanent storage.
 type SessionWriter interface {
 	Write(context.Context, pulse.CodingSession) error
 }

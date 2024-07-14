@@ -57,9 +57,8 @@ server:
   segmentationInterval: "5m"
   segmentSizeKB: "10"
 database:
-  uri: "mongodb+srv://<USERNAME>:xxxxxxx@serverless.xxxx.mongodb.net/?retryWrites=true"
-  name: "pulse"
-  collection: "sessions"
+  address: "redis-<PORT>.xxxxxxxx.redis-cloud.com:<PORT>"
+  password: "xxxxxxxx"
 ```
 
 ## 3. Launch the server as a daemon

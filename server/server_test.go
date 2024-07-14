@@ -149,11 +149,11 @@ func TestServerMergesFiles(t *testing.T) {
 	if len(storedSessions) != 1 {
 		t.Errorf("expected sessions %d; got %d", 1, len(storedSessions))
 	}
-	if storedSessions[0].TotalTimeMs != 180 {
-		t.Errorf("expected the sessions duration to be 180; got %d", storedSessions[0].TotalTimeMs)
+	if storedSessions[0].Duration != 180*time.Millisecond {
+		t.Errorf("expected the sessions duration to be 180 ms; got %d", storedSessions[0].Duration)
 	}
-	if storedSessions[0].Repositories[0].DurationMs != 180 {
-		t.Errorf("expected the repositories duration to be 180; got %d", storedSessions[0].Repositories[0].DurationMs)
+	if storedSessions[0].Repositories[0].Duration != 180*time.Millisecond {
+		t.Errorf("expected the repositories duration to be 180 ms; got %d", storedSessions[0].Repositories[0].Duration)
 	}
 	if len(storedSessions[0].Repositories[0].Files) != 2 {
 		t.Errorf("expected the repositories files to be 2; got %d", len(storedSessions[0].Repositories[0].Files))
