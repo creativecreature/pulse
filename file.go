@@ -1,6 +1,9 @@
 package pulse
 
-import "cmp"
+import (
+	"cmp"
+	"time"
+)
 
 // GitFile represents a file within a git repository.
 type GitFile struct {
@@ -13,19 +16,19 @@ type GitFile struct {
 // File represents a file that has been aggregated
 // for a given time period (day, week, month, year).
 type File struct {
-	Name       string `bson:"name"`
-	Path       string `bson:"path"`
-	Filetype   string `bson:"filetype"`
-	DurationMs int64  `bson:"duration_ms"`
+	Name     string        `json:"name"`
+	Path     string        `json:"path"`
+	Filetype string        `json:"filetype"`
+	Duration time.Duration `json:"duration"`
 }
 
 // merge takes two files, merges them, and returns the result.
 func (a File) merge(b File) File {
 	return File{
-		Name:       cmp.Or(a.Name, b.Name),
-		Path:       cmp.Or(a.Path, b.Path),
-		Filetype:   cmp.Or(a.Filetype, b.Filetype),
-		DurationMs: a.DurationMs + b.DurationMs,
+		Name:     cmp.Or(a.Name, b.Name),
+		Path:     cmp.Or(a.Path, b.Path),
+		Filetype: cmp.Or(a.Filetype, b.Filetype),
+		Duration: a.Duration + b.Duration,
 	}
 }
 

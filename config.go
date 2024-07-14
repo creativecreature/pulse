@@ -16,9 +16,8 @@ type Config struct {
 		SegmentSizeKB        int
 	}
 	Database struct {
-		Name       string
-		URI        string
-		Collection string
+		Address  string
+		Password string
 	}
 }
 
