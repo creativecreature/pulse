@@ -24,10 +24,8 @@ func New(addr, password string) *Client {
 }
 
 func (c *Client) Write(ctx context.Context, session pulse.CodingSession) error {
-	key := session.Date.Format("2006-01-02")
-
 	// Check if we already have a session for this date.
-	cmd := c.redisClient.Get(ctx, key)
+	cmd := c.redisClient.Get(ctx, session.DateString())
 	data, err := cmd.Result()
 	if err != nil && !errors.Is(err, redis.Nil) {
 		var prevSession pulse.CodingSession
@@ -43,7 +41,7 @@ func (c *Client) Write(ctx context.Context, session pulse.CodingSession) error {
 		return err
 	}
 
-	return c.redisClient.Set(ctx, key, bytes, 0).Err()
+	return c.redisClient.Set(ctx, session.DateString(), bytes, 0).Err()
 }
 
 func (c *Client) ReadAll(ctx context.Context) (pulse.CodingSessions, error) {

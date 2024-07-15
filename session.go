@@ -54,14 +54,18 @@ func NewCodingSession(buffers Buffers, now time.Time) CodingSession {
 }
 
 // Merge takes two coding sessions, merges them, and returns the result.
-func (a CodingSession) Merge(b CodingSession) CodingSession {
+func (c CodingSession) Merge(other CodingSession) CodingSession {
 	mergedSession := CodingSession{
-		Date:         cmp.Or(a.Date, b.Date),
-		Duration:     a.Duration + b.Duration,
-		Repositories: a.Repositories.merge(b.Repositories),
+		Date:         cmp.Or(c.Date, other.Date),
+		Duration:     c.Duration + other.Duration,
+		Repositories: c.Repositories.merge(other.Repositories),
 	}
 
 	return mergedSession
+}
+
+func (c CodingSession) DateString() string {
+	return c.Date.Format("2006-01-02")
 }
 
 // CodingSessions represents a slice of coding sessions.
