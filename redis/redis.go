@@ -28,12 +28,16 @@ func (c *Client) Write(ctx context.Context, session pulse.CodingSession) error {
 	cmd := c.redisClient.Get(ctx, session.DateString())
 	data, err := cmd.Result()
 	if err != nil && !errors.Is(err, redis.Nil) {
+		return err
+	}
+
+	if !errors.Is(err, redis.Nil) {
 		var prevSession pulse.CodingSession
 		unmarshalErr := json.Unmarshal([]byte(data), &prevSession)
 		if unmarshalErr != nil {
 			return unmarshalErr
 		}
-		session = prevSession.Merge(session)
+		session = session.Merge(prevSession)
 	}
 
 	bytes, err := json.Marshal(session)
