@@ -10,7 +10,7 @@ func (s *Server) FocusGained(event pulse.Event, reply *string) {
 	defer s.mu.Unlock()
 
 	s.lastHeartbeat = s.clock.Now()
-	s.log.Debug("Received FocusGained event",
+	s.logger.Debug("Received FocusGained event",
 		"editor_id", event.EditorID,
 		"editor", event.Editor,
 		"os", event.OS,
@@ -30,7 +30,7 @@ func (s *Server) OpenFile(event pulse.Event, reply *string) {
 	defer s.mu.Unlock()
 
 	s.lastHeartbeat = s.clock.Now()
-	s.log.Debug("Received OpenFile event",
+	s.logger.Debug("Received OpenFile event",
 		"editor_id", event.EditorID,
 		"editor", event.Editor,
 		"os", event.OS,
@@ -52,7 +52,7 @@ func (s *Server) SendHeartbeat(event pulse.Event, reply *string) {
 	defer s.mu.Unlock()
 
 	s.lastHeartbeat = s.clock.Now()
-	s.log.Debug("Received heartbeat",
+	s.logger.Debug("Received heartbeat",
 		"editor_id", event.EditorID,
 		"editor", event.Editor,
 		"os", event.OS,
@@ -65,7 +65,7 @@ func (s *Server) EndSession(event pulse.Event, reply *string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	s.log.Debug("Received EndSession event",
+	s.logger.Debug("Received EndSession event",
 		"editor_id", event.EditorID,
 		"editor", event.Editor,
 		"os", event.OS,

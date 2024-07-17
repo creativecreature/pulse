@@ -23,22 +23,22 @@ type SessionWriter interface {
 }
 
 type Server struct {
-	mu            sync.Mutex
+	cfg           *pulse.Config
 	clock         clock.Clock
-	log           *log.Logger
+	logDB         *logdb.LogDB
+	logger        *log.Logger
+	mu            sync.Mutex
 	activeBuffer  *pulse.Buffer
-	name          string
 	lastHeartbeat time.Time
 	sessionWriter SessionWriter
-	db            *logdb.LogDB
 }
 
 // New creates a new server.
 func New(cfg *pulse.Config, segmentPath string, sessionWriter SessionWriter, opts ...Option) *Server {
 	s := &Server{
+		cfg:           cfg,
 		clock:         clock.New(),
-		log:           logger.New(),
-		name:          cfg.Server.Name,
+		logger:        logger.New(),
 		sessionWriter: sessionWriter,
 	}
 
@@ -46,7 +46,7 @@ func New(cfg *pulse.Config, segmentPath string, sessionWriter SessionWriter, opt
 		opt(s)
 	}
 
-	s.db = logdb.NewDB(segmentPath, cfg.Server.SegmentSizeKB, s.clock)
+	s.logDB = logdb.NewDB(segmentPath, cfg.Server.SegmentSizeKB, s.clock)
 
 	return s
 }
@@ -59,7 +59,7 @@ func (s *Server) openFile(event pulse.Event) {
 
 	if s.activeBuffer != nil {
 		if s.activeBuffer.Filepath == gitFile.Path && s.activeBuffer.Repository == gitFile.Repository {
-			s.log.Debug("This buffer is already considered active",
+			s.logger.Debug("This buffer is already considered active",
 				"path", gitFile.Path,
 				"repository", gitFile.Repository,
 				"editor_id", event.EditorID,
@@ -87,14 +87,14 @@ func (s *Server) saveBuffer() {
 		return
 	}
 
-	s.log.Debug("Writing the buffer")
+	s.logger.Debug("Writing the buffer")
 	buf := s.activeBuffer
 	buf.Close(s.clock.Now())
 	key := buf.Key()
 
 	// Merge the duration with the most recent entry for this day.
-	if bytes, hasMostRecentEntry := s.db.Get(key); hasMostRecentEntry {
-		s.log.Debug("Merging with the most recent entry for this buffer")
+	if bytes, hasMostRecentEntry := s.logDB.Get(key); hasMostRecentEntry {
+		s.logger.Debug("Merging with the most recent entry for this buffer")
 		var b pulse.Buffer
 		err := json.Unmarshal(bytes, &b)
 		if err != nil {
@@ -107,7 +107,7 @@ func (s *Server) saveBuffer() {
 	if err != nil {
 		panic(err)
 	}
-	s.db.MustSet(key, bytes)
+	s.logDB.MustSet(key, bytes)
 	s.activeBuffer = nil
 }
 
@@ -115,14 +115,14 @@ func (s *Server) saveBuffer() {
 func (s *Server) RunBackgroundJobs(ctx context.Context, segmentationInterval time.Duration) {
 	go s.runHeartbeatChecks(ctx)
 	go s.runAggregations(ctx)
-	go s.db.RunSegmentations(ctx, segmentationInterval)
+	go s.logDB.RunSegmentations(ctx, segmentationInterval)
 }
 
 // Start starts the server on the given port.
 func (s *Server) StartServer(ctx context.Context, port string) error {
-	s.log.Info("Starting up...")
+	s.logger.Info("Starting up...")
 	proxy := NewProxy(s)
-	err := rpc.RegisterName(s.name, proxy)
+	err := rpc.RegisterName(s.cfg.Server.Name, proxy)
 	if err != nil {
 		return err
 	}
@@ -145,7 +145,7 @@ func (s *Server) StartServer(ctx context.Context, port string) error {
 
 	// Blocks until the context is cancelled.
 	<-ctx.Done()
-	s.log.Info("Shutting down")
+	s.logger.Info("Shutting down")
 	s.saveBuffer()
 
 	shutdownContext, cancel := context.WithTimeout(context.Background(), time.Second*5)
