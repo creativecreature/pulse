@@ -24,6 +24,6 @@ type FileReader interface {
 // WithLog sets the logger used by the server.
 func WithLog(log *log.Logger) Option {
 	return func(a *Server) {
-		a.log = log
+		a.logger = log
 	}
 }

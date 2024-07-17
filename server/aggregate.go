@@ -3,12 +3,9 @@ package server
 import (
 	"context"
 	"encoding/json"
-	"time"
 
 	"github.com/creativecreature/pulse"
 )
-
-const aggregationInterval = 30 * time.Minute
 
 // writeToRemote will write the session to the remote storage.
 func (s *Server) writeToRemote(session pulse.CodingSession) {
@@ -18,7 +15,7 @@ func (s *Server) writeToRemote(session pulse.CodingSession) {
 
 	err := s.sessionWriter.Write(context.Background(), session)
 	if err != nil {
-		s.log.Errorf("Failed to write the session to the permanent storage: %v", err)
+		s.logger.Errorf("Failed to write the session to the permanent storage: %v", err)
 	}
 }
 
@@ -27,7 +24,7 @@ func (s *Server) aggregate() {
 	defer s.mu.Unlock()
 
 	buffers := make(pulse.Buffers, 0)
-	values := s.db.Aggregate()
+	values := s.logDB.Aggregate()
 	for _, value := range values {
 		var buf pulse.Buffer
 		err := json.Unmarshal(value, &buf)
@@ -42,7 +39,7 @@ func (s *Server) aggregate() {
 
 func (s *Server) runAggregations(ctx context.Context) {
 	go func() {
-		ticker, stopTicker := s.clock.NewTicker(aggregationInterval)
+		ticker, stopTicker := s.clock.NewTicker(s.cfg.Server.AggregationInterval)
 		defer stopTicker()
 		for {
 			select {

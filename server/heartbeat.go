@@ -17,7 +17,7 @@ func (s *Server) checkHeartbeat() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	s.log.Debug("Checking heartbeat",
+	s.logger.Debug("Checking heartbeat",
 		"last_heartbeat", s.lastHeartbeat,
 		"time_now", s.clock.Now().UnixMilli(),
 	)
@@ -27,7 +27,7 @@ func (s *Server) checkHeartbeat() {
 	}
 
 	if s.clock.Now().After(s.lastHeartbeat.Add(HeartbeatTTL)) {
-		s.log.Info(
+		s.logger.Info(
 			"Writing the current buffer to disk due to inactivity",
 			"last_heartbeat", strconv.FormatInt(s.lastHeartbeat.UnixMilli(), 10),
 			"current_time", strconv.FormatInt(s.clock.Now().UnixMilli(), 10),
