@@ -57,6 +57,12 @@ func (s *Server) openFile(event pulse.Event) {
 		return
 	}
 
+	s.logger.Debug("Successfully parsed the git file",
+		"name", gitFile.Name,
+		"filetype", gitFile.Filetype,
+		"repository", gitFile.Repository,
+	)
+
 	if s.activeBuffer != nil {
 		if s.activeBuffer.Filepath == gitFile.Path && s.activeBuffer.Repository == gitFile.Repository {
 			s.logger.Debug("This buffer is already considered active",

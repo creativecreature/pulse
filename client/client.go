@@ -18,9 +18,15 @@ type Client struct {
 // createEvents creates a new event from the slice of arguments
 // that we receive from the neovim client.
 func createEvent(args []string) pulse.Event {
+	filetype := args[2]
+	if filetype == "typescript.tsx" {
+		filetype = "typescript"
+	}
+
 	return pulse.Event{
 		EditorID: args[0],
 		Path:     args[1],
+		Filetype: filetype,
 		Editor:   "nvim",
 		OS:       runtime.GOOS,
 	}
