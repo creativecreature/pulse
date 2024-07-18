@@ -132,7 +132,7 @@ func TestGetRepositoryFromPath(t *testing.T) {
 
 	// This is the absolute path of the file that we want to extract the repository name for.
 	path := "/Users/conner/code/dotfiles/editors/nvim/init.lua"
-	file, err := f.ParseFile(path)
+	file, err := f.ParseFile(path, "lua")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -209,7 +209,7 @@ func TestGetRepositoryFromPathBare(t *testing.T) {
 
 	// This is the absolute path of the file that we want to extract the repository name for.
 	path := "/Users/conner/code/ore-ui/main/src/index.ts"
-	file, err := f.ParseFile(path)
+	file, err := f.ParseFile(path, "typescript")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -286,7 +286,7 @@ func TestPathInBareProject(t *testing.T) {
 
 	// This is the absolute path of the file that we want to extract the repository name for.
 	path := "/Users/conner/code/ore-ui/main/src/index.ts"
-	file, err := f.ParseFile(path)
+	file, err := f.ParseFile(path, "typescript")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -361,7 +361,7 @@ func TestPathInProject(t *testing.T) {
 
 	// This is the absolute path of the file that we want to extract the repository name for.
 	path := "/Users/conner/code/dotfiles/editors/nvim/init.lua"
-	file, err := f.ParseFile(path)
+	file, err := f.ParseFile(path, "typescript")
 	if err != nil {
 		t.Fatal(err)
 	}

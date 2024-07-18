@@ -4,6 +4,7 @@ package pulse
 type Event struct {
 	EditorID string
 	Path     string
+	Filetype string
 	Editor   string
 	OS       string
 }
