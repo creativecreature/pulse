@@ -5,7 +5,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/creativecreature/pulse)](https://goreportcard.com/report/github.com/creativecreature/pulse)
 [![Test](https://github.com/creativecreature/pulse/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/creativecreature/pulse/actions/workflows/main.yml)
 
-This repository contains all of the code I've written to gather data for my
+This repository contains all of the code I'm using to gather data for my
 [website.][1]
 
 ![Screenshot of website][2]
@@ -15,8 +15,8 @@ This repository contains all of the code I've written to gather data for my
 # How it works
 
 After spending some time debugging different language servers in Neovim, I got
-the idea to write my own server that would simply parse metadata and aggregate
-statistics about my coding sessions.
+the idea to write my own RPC server that would simply parse metadata and
+aggregate statistics about my coding sessions.
 
 I run the server from this repository as a daemon, and it receives remote
 procedure calls from the neovim plugin pertaining to events such as the opening
