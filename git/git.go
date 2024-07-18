@@ -117,7 +117,7 @@ func (f FileParser) extractRepositoryName(dirPath string) (string, error) {
 // ParseFile returns a ParseFile struct from an absolute path. It will return an
 // error if the path is empty, if the path is not a file or if it can't find
 // a parent .git file or folder before it reaches the root of the file tree.
-func (f FileParser) ParseFile(absolutePath string) (pulse.GitFile, error) {
+func (f FileParser) ParseFile(absolutePath, filetype string) (pulse.GitFile, error) {
 	if absolutePath == "" {
 		return pulse.GitFile{}, ErrEmptyPath
 	}
@@ -143,14 +143,9 @@ func (f FileParser) ParseFile(absolutePath string) (pulse.GitFile, error) {
 
 	// Tries to get the filetype from either the file extension or name.
 	filename := filepath.Base(absolutePath)
-	ft, err := Filetype(filename)
-	if err != nil {
-		return pulse.GitFile{}, err
-	}
-
 	gitFile := pulse.GitFile{
 		Name:       filename,
-		Filetype:   ft,
+		Filetype:   filetype,
 		Repository: repositoryName,
 		Path:       path,
 	}
@@ -158,6 +153,6 @@ func (f FileParser) ParseFile(absolutePath string) (pulse.GitFile, error) {
 	return gitFile, nil
 }
 
-func ParseFile(absolutePath string) (pulse.GitFile, error) {
-	return New().ParseFile(absolutePath)
+func ParseFile(absolutePath, filetype string) (pulse.GitFile, error) {
+	return New().ParseFile(absolutePath, filetype)
 }

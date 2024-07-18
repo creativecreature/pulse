@@ -52,7 +52,7 @@ func New(cfg *pulse.Config, segmentPath string, sessionWriter SessionWriter, opt
 }
 
 func (s *Server) openFile(event pulse.Event) {
-	gitFile, gitFileErr := git.ParseFile(event.Path)
+	gitFile, gitFileErr := git.ParseFile(event.Path, event.Filetype)
 	if gitFileErr != nil {
 		return
 	}
