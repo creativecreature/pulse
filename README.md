@@ -42,7 +42,7 @@ source, but there are still a few things that I'd like to clean up first!
 # Running this project
 
 ## 1. Download the binaries
-Download and unpack the server **and** client binaries from the [releases](https://github.com/creativecreature/sturdyc/releases).
+Download and unpack the server **and** client binaries from the [releases](https://github.com/creativecreature/pulse/releases).
 Next, you'll want to make sure that they are reachable from your `$PATH`.
 
 ## 2. Create a configuration file
