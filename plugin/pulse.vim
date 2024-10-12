@@ -36,3 +36,34 @@ autocmd BufWrite * :call call("SendHeartbeat", [g:pulse_session_id, expand('%:p'
 
 " When we exit VIM we inform the server that our coding session has ended.
 autocmd VimLeave * :call call("EndSession", [g:pulse_session_id, expand('%:p'), &filetype])
+
+" Timer variable to control heartbeat frequency for cursor movement.
+let s:heartbeat_timer = -1
+" Flag to indicate if the cursor has moved
+let s:cursor_moved = 0
+
+function! s:StartHeartbeatTimer() abort
+  " Stop the existing timer if it's running
+  if s:heartbeat_timer != -1
+    call timer_stop(s:heartbeat_timer)
+  endif
+  " Start a new timer that repeats every 10 seconds (-1 is used for infinite repeats)
+  let s:heartbeat_timer = timer_start(10000, function('s:HeartbeatTimerCallback'), {'repeat': -1})
+endfunction
+
+function! s:HeartbeatTimerCallback(timer_id) abort
+  if s:cursor_moved
+    " Send the heartbeat
+    call call("SendHeartbeat", [g:pulse_session_id, expand('%:p'), &filetype])
+    " Reset the cursor moved flag
+    let s:cursor_moved = 0
+  endif
+endfunction
+
+" Set the cursor moved flag when the cursor moves in normal mode
+autocmd CursorMoved * let s:cursor_moved = 1
+
+" Set the cursor moved flag when the cursor moves in insert mode
+autocmd CursorMovedI * let s:cursor_moved = 1
+
+autocmd VimEnter * call s:StartHeartbeatTimer()
