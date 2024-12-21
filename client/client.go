@@ -6,7 +6,7 @@ import (
 	"net/rpc"
 	"runtime"
 
-	"github.com/creativecreature/pulse"
+	"github.com/viccon/pulse"
 )
 
 // Client for making remote procedure calls to the server.

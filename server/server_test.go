@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/charmbracelet/log"
-	"github.com/creativecreature/pulse"
-	"github.com/creativecreature/pulse/clock"
-	"github.com/creativecreature/pulse/server"
+	"github.com/viccon/pulse"
+	"github.com/viccon/pulse/clock"
+	"github.com/viccon/pulse/server"
 )
 
 type mockStorage struct {

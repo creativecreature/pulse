@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/creativecreature/pulse"
+	"github.com/viccon/pulse"
 )
 
 var (

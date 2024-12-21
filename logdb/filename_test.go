@@ -3,7 +3,7 @@ package logdb_test
 import (
 	"testing"
 
-	"github.com/creativecreature/pulse/logdb"
+	"github.com/viccon/pulse/logdb"
 )
 
 type filenameTest struct {

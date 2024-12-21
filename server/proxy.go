@@ -1,6 +1,6 @@
 package server
 
-import "github.com/creativecreature/pulse"
+import "github.com/viccon/pulse"
 
 // Proxy serves as the intermediary between our client and server. It directs
 // remote procedure calls to the server, mitigating the risk of unintentionally

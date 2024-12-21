@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/creativecreature/pulse/git"
+	"github.com/viccon/pulse/git"
 )
 
 type readerMock struct {
@@ -84,7 +84,7 @@ func TestGetRepositoryFromPath(t *testing.T) {
 			ignorecase = true
 			precomposeunicode = true
 		[remote "origin"]
-			url = git@github.com:creativecreature/dotfiles.git
+			url = git@github.com:viccon/dotfiles.git
 			fetch = +refs/heads/*:refs/remotes/origin/*
 			gh-resolved = base
 		[branch "master"]
@@ -313,7 +313,7 @@ func TestPathInProject(t *testing.T) {
 			ignorecase = true
 			precomposeunicode = true
 		[remote "origin"]
-			url = git@github.com:creativecreature/dotfiles.git
+			url = git@github.com:viccon/dotfiles.git
 			fetch = +refs/heads/*:refs/remotes/origin/*
 			gh-resolved = base
 		[branch "master"]

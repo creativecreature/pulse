@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/creativecreature/pulse"
+	"github.com/viccon/pulse"
 )
 
 // writeToRemote will write the session to the remote storage.

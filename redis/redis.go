@@ -6,7 +6,7 @@ import (
 	"errors"
 	"sort"
 
-	"github.com/creativecreature/pulse"
+	"github.com/viccon/pulse"
 	"github.com/redis/go-redis/v9"
 )
 

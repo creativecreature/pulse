@@ -1,9 +1,9 @@
 # `pulse`: like a fitness tracker for your coding sessions
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/creativecreature/pulse.svg)](https://pkg.go.dev/github.com/creativecreature/pulse)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/creativecreature/pulse/blob/master/LICENSE)
-[![Go Report Card](https://goreportcard.com/badge/github.com/creativecreature/pulse)](https://goreportcard.com/report/github.com/creativecreature/pulse)
-[![Test](https://github.com/creativecreature/pulse/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/creativecreature/pulse/actions/workflows/main.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/viccon/pulse.svg)](https://pkg.go.dev/github.com/viccon/pulse)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/viccon/pulse/blob/master/LICENSE)
+[![Go Report Card](https://goreportcard.com/badge/github.com/viccon/pulse)](https://goreportcard.com/report/github.com/viccon/pulse)
+[![Test](https://github.com/viccon/pulse/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/viccon/pulse/actions/workflows/main.yml)
 
 This repository contains all of the code I'm using to gather data for my
 [website.][1]
@@ -42,7 +42,7 @@ source, but there are still a few things that I'd like to clean up first!
 # Running this project
 
 ## 1. Download the binaries
-Download and unpack the server **and** client binaries from the [releases](https://github.com/creativecreature/pulse/releases).
+Download and unpack the server **and** client binaries from the [releases](https://github.com/viccon/pulse/releases).
 Next, you'll want to make sure that they are reachable from your `$PATH`.
 
 ## 2. Create a configuration file
@@ -112,7 +112,7 @@ Here is an example using lazy.nvim:
 ```lua
 return {
 	-- Does not require any configuration.
-	{ "creativecreature/pulse" },
+	{ "viccon/pulse" },
 }
 ```
 

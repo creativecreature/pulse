@@ -1,7 +1,7 @@
 package server
 
 import (
-	"github.com/creativecreature/pulse"
+	"github.com/viccon/pulse"
 )
 
 // FocusGained is invoked by the FocusGained autocommand.

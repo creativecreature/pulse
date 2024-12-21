@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/creativecreature/pulse"
+	"github.com/viccon/pulse"
 )
 
 func TestMain(m *testing.M) {

@@ -11,11 +11,11 @@ import (
 	"time"
 
 	"github.com/charmbracelet/log"
-	"github.com/creativecreature/pulse"
-	"github.com/creativecreature/pulse/clock"
-	"github.com/creativecreature/pulse/git"
-	"github.com/creativecreature/pulse/logdb"
-	"github.com/creativecreature/pulse/logger"
+	"github.com/viccon/pulse"
+	"github.com/viccon/pulse/clock"
+	"github.com/viccon/pulse/git"
+	"github.com/viccon/pulse/logdb"
+	"github.com/viccon/pulse/logger"
 )
 
 type SessionWriter interface {

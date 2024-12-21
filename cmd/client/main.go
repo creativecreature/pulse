@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/creativecreature/pulse"
-	"github.com/creativecreature/pulse/client"
+	"github.com/viccon/pulse"
+	"github.com/viccon/pulse/client"
 	"github.com/neovim/go-client/nvim/plugin"
 )
 

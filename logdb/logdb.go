@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/charmbracelet/log"
-	"github.com/creativecreature/pulse/clock"
-	"github.com/creativecreature/pulse/logger"
+	"github.com/viccon/pulse/clock"
+	"github.com/viccon/pulse/logger"
 )
 
 // Record represents a key-value pair in our database.

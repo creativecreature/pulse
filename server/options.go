@@ -2,8 +2,8 @@ package server
 
 import (
 	"github.com/charmbracelet/log"
-	"github.com/creativecreature/pulse"
-	"github.com/creativecreature/pulse/clock"
+	"github.com/viccon/pulse"
+	"github.com/viccon/pulse/clock"
 )
 
 type Option func(*Server)

@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/creativecreature/pulse/clock"
-	"github.com/creativecreature/pulse/logdb"
+	"github.com/viccon/pulse/clock"
+	"github.com/viccon/pulse/logdb"
 )
 
 func copyFile(src, dst string) error {

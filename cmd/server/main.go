@@ -7,9 +7,9 @@ import (
 	"path"
 	"syscall"
 
-	"github.com/creativecreature/pulse"
-	"github.com/creativecreature/pulse/redis"
-	"github.com/creativecreature/pulse/server"
+	"github.com/viccon/pulse"
+	"github.com/viccon/pulse/redis"
+	"github.com/viccon/pulse/server"
 )
 
 func main() {

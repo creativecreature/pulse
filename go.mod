@@ -1,4 +1,4 @@
-module github.com/creativecreature/pulse
+module github.com/viccon/pulse
 
 go 1.22.5
 
